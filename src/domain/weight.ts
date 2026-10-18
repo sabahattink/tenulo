@@ -1,0 +1,33 @@
+/**
+ * Body weight is stored as an integer number of grams. Floats never reach the database, so
+ * repeated unit conversions and edits cannot drift. Conversion to display units happens at the
+ * edge, once.
+ */
+
+export type WeightUnit = "kg" | "lb";
+
+/** Exact by definition (international avoirdupois pound, 1959). */
+export const GRAMS_PER_POUND = 453.59237;
+
+/** Plausible human body weight; anything outside is almost certainly a typo. */
+export const MIN_WEIGHT_G = 20_000;
+export const MAX_WEIGHT_G = 400_000;
+
+export function toGrams(value: number, unit: WeightUnit): number {
+  if (!Number.isFinite(value)) throw new RangeError(`Weight must be a finite number: ${value}`);
+  const grams = unit === "kg" ? value * 1000 : value * GRAMS_PER_POUND;
+  return Math.round(grams);
+}
+
+export function fromGrams(grams: number, unit: WeightUnit): number {
+  return unit === "kg" ? grams / 1000 : grams / GRAMS_PER_POUND;
+}
+
+export function isPlausibleWeight(grams: number): boolean {
+  return Number.isInteger(grams) && grams >= MIN_WEIGHT_G && grams <= MAX_WEIGHT_G;
+}
+
+/** Display value rounded to one decimal, e.g. 82.4 kg or 181.7 lb. */
+export function formatWeight(grams: number, unit: WeightUnit): string {
+  return `${fromGrams(grams, unit).toFixed(1)} ${unit}`;
+}
