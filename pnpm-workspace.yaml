@@ -1,0 +1,5 @@
+# Packages allowed to run install scripts. pnpm fails the install (strictDepBuilds) on any
+# unreviewed build script, so every new entry here is a deliberate decision.
+allowBuilds:
+  # Native binary check for the bundler used by drizzle-kit and vitest. Dev-only, never shipped.
+  esbuild: true
