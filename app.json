@@ -29,7 +29,18 @@
       },
       "predictiveBackGestureEnabled": false
     },
-    "plugins": ["expo-router", "expo-sqlite"],
+    "plugins": [
+      "expo-router",
+      "expo-sqlite",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "cmakeVersion": "4.1.2"
+          }
+        }
+      ]
+    ],
     "experiments": {
       "typedRoutes": true
     }

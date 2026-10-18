@@ -3,3 +3,8 @@
 allowBuilds:
   # Native binary check for the bundler used by drizzle-kit and vitest. Dev-only, never shipped.
   esbuild: true
+
+# React Native's native (CMake/ninja) builds break on Windows when packages are reached through
+# pnpm's isolated-store junctions: prefab paths resolve relative to the real path and ninja loops
+# with "build.ninja still dirty". A flat, npm-style node_modules avoids the junctions.
+nodeLinker: hoisted
