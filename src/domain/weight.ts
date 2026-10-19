@@ -31,3 +31,15 @@ export function isPlausibleWeight(grams: number): boolean {
 export function formatWeight(grams: number, unit: WeightUnit): string {
   return `${fromGrams(grams, unit).toFixed(1)} ${unit}`;
 }
+
+/** Signed change for display, with a true minus sign: "−0.6 kg", "+1.2 lb", "0.0 kg". */
+export function formatWeightChange(grams: number, unit: WeightUnit): string {
+  const value = fromGrams(Math.abs(grams), unit).toFixed(1);
+  if (value === "0.0") return `0.0 ${unit}`;
+  return `${grams < 0 ? "\u2212" : "+"}${value} ${unit}`;
+}
+
+/** Number only, for input fields and big headline figures. */
+export function weightNumber(grams: number, unit: WeightUnit): string {
+  return fromGrams(grams, unit).toFixed(1);
+}

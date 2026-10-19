@@ -106,3 +106,41 @@ describe("schema constraints", () => {
     expect(() => insertEffect("euphoria", 1)).toThrow(/CHECK/);
   });
 });
+
+describe("delete all data", () => {
+  it("covers every table in the schema", async () => {
+    const { is, getTableName } = await import("drizzle-orm");
+    const { SQLiteTable } = await import("drizzle-orm/sqlite-core");
+    const schema = await import("./schema");
+    const { ALL_TABLES_DELETE_ORDER } = await import("./tables");
+    const inSchema = Object.values(schema)
+      .filter((v) => is(v, SQLiteTable))
+      .map((t) => getTableName(t as InstanceType<typeof SQLiteTable>))
+      .sort();
+    const inList = ALL_TABLES_DELETE_ORDER.map((t) => getTableName(t)).sort();
+    expect(inList).toEqual(inSchema);
+  });
+
+  it("empties a fully linked database without foreign key errors", async () => {
+    const { getTableName } = await import("drizzle-orm");
+    const { ALL_TABLES_DELETE_ORDER } = await import("./tables");
+    db.prepare("INSERT INTO settings (id, updated_at) VALUES (1, ?)").run(now);
+    insertWeight({});
+    db.prepare("INSERT INTO medication (id, name, created_at, updated_at) VALUES ('m', 'Pen', ?, ?)").run(now, now);
+    db.prepare(
+      "INSERT INTO plan_step (id, medication_id, start_date, dose_mcg, created_at, updated_at) VALUES ('p', 'm', '2026-10-01', 250, ?, ?)",
+    ).run(now, now);
+    db.prepare(
+      "INSERT INTO injection (id, medication_id, taken_at, local_date, dose_mcg, created_at, updated_at) VALUES ('i', 'm', ?, '2026-10-18', 250, ?, ?)",
+    ).run(now, now, now);
+    db.prepare(
+      "INSERT INTO side_effect (id, local_date, type, severity, injection_id, created_at, updated_at) VALUES ('s', '2026-10-18', 'nausea', 1, 'i', ?, ?)",
+    ).run(now, now);
+
+    for (const table of ALL_TABLES_DELETE_ORDER) db.exec(`DELETE FROM "${getTableName(table)}"`);
+
+    for (const table of ALL_TABLES_DELETE_ORDER) {
+      expect(db.prepare(`SELECT count(*) AS n FROM "${getTableName(table)}"`).get()).toEqual({ n: 0 });
+    }
+  });
+});
