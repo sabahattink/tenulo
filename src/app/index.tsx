@@ -5,6 +5,7 @@ import { deleteWeight, today, useSettings, useWeightEntries } from "@/data/repo"
 import { parseLocalDate } from "@/domain/date";
 import { summarizeWeights } from "@/domain/summary";
 import { formatWeight, formatWeightChange, weightNumber } from "@/domain/weight";
+import { InjectionCard } from "@/ui/InjectionCard";
 import { TrendChart } from "@/ui/TrendChart";
 import { forecastText, relativeDay } from "@/ui/copy";
 import { Button, Card, Label } from "@/ui/kit";
@@ -38,15 +39,19 @@ export default function Home() {
 
   if (summary === undefined) {
     return (
-      <View style={[styles.empty, { backgroundColor: theme.background }]}>
+      <ScrollView style={{ backgroundColor: theme.background }} contentContainerStyle={styles.content}>
         <Stack.Screen options={{ headerRight: () => settingsLink }} />
-        <Text style={[styles.emptyTitle, { color: theme.text }]}>Your trend starts with one weigh-in</Text>
-        <Text style={[styles.emptyBody, { color: theme.muted }]}>
-          Daily weight jumps around with water and salt. Tenulo smooths it into a trend line, so you can see the
-          direction you are really heading. Everything stays on this phone.
-        </Text>
-        <Button theme={theme} label="Log your weight" onPress={() => router.push("/add-weight")} />
-      </View>
+        <InjectionCard theme={theme} today={now} />
+        <Card theme={theme}>
+          <Label theme={theme}>Weight</Label>
+          <Text style={[styles.emptyTitle, { color: theme.text }]}>Your trend starts with one weigh-in</Text>
+          <Text style={[styles.emptyBody, { color: theme.muted }]}>
+            Daily weight jumps around with water and salt. Tenulo smooths it into a trend line, so you can see the
+            direction you are really heading. Everything stays on this phone.
+          </Text>
+          <Button theme={theme} label="Log your weight" onPress={() => router.push("/add-weight")} />
+        </Card>
+      </ScrollView>
     );
   }
 
@@ -59,6 +64,7 @@ export default function Home() {
   return (
     <ScrollView style={{ backgroundColor: theme.background }} contentContainerStyle={styles.content}>
       <Stack.Screen options={{ headerRight: () => settingsLink }} />
+      <InjectionCard theme={theme} today={now} />
 
       <Card theme={theme}>
         <Label theme={theme}>Trend</Label>
@@ -120,7 +126,7 @@ function Stat({ theme, label, value }: { theme: ReturnType<typeof useTheme>; lab
 const styles = StyleSheet.create({
   content: { padding: space.l, gap: space.l, paddingBottom: space.xxl },
   empty: { flex: 1, justifyContent: "center", padding: space.xl, gap: space.l },
-  emptyTitle: { fontSize: 26, fontWeight: "700", lineHeight: 32 },
+  emptyTitle: { fontSize: 22, fontWeight: "700", lineHeight: 28 },
   emptyBody: { fontSize: 16, lineHeight: 23 },
   headlineRow: { flexDirection: "row", alignItems: "baseline", gap: space.s },
   headline: { fontSize: 52, fontWeight: "700", fontVariant: ["tabular-nums"] },

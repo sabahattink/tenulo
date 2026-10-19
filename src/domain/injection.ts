@@ -102,3 +102,50 @@ export function nextDueDate(lastInjection: LocalDate, intervalDays: number): Loc
 export function daysUntilDue(lastInjection: LocalDate, intervalDays: number, today: LocalDate): number {
   return diffDays(today, nextDueDate(lastInjection, intervalDays));
 }
+
+export interface LoggedInjection {
+  readonly date: LocalDate;
+  readonly site: InjectionSite | null;
+  readonly doseMcg: number;
+}
+
+export interface InjectionStatus {
+  readonly lastDate: LocalDate | undefined;
+  readonly lastSite: InjectionSite | undefined;
+  readonly lastDoseMcg: number | undefined;
+  readonly intervalDays: number;
+  /** Undefined until the first injection is logged. */
+  readonly nextDue: LocalDate | undefined;
+  /** Positive: days until due. 0: due today. Negative: overdue. */
+  readonly daysUntilDue: number | undefined;
+  readonly plan: PlanPosition | undefined;
+  /** Dose for the next shot: the user's plan if they have one, else what they logged last. */
+  readonly expectedDoseMcg: number | undefined;
+  /** Hint only: the enabled site used longest ago. */
+  readonly suggestedSite: InjectionSite | undefined;
+}
+
+export const DEFAULT_INTERVAL_DAYS = 7;
+
+export function injectionStatus(
+  history: readonly LoggedInjection[],
+  steps: readonly PlanStep[],
+  today: LocalDate,
+): InjectionStatus {
+  const sorted = [...history].sort((a, b) => toDayNumber(a.date) - toDayNumber(b.date));
+  const last = sorted.at(-1);
+  const plan = planPosition(steps, today);
+  const intervalDays = plan?.step.intervalDays ?? DEFAULT_INTERVAL_DAYS;
+  const withSite = sorted.flatMap((i) => (i.site === null ? [] : [{ date: i.date, site: i.site }]));
+  return {
+    lastDate: last?.date,
+    lastSite: last?.site ?? undefined,
+    lastDoseMcg: last?.doseMcg,
+    intervalDays,
+    nextDue: last ? nextDueDate(last.date, intervalDays) : undefined,
+    daysUntilDue: last ? daysUntilDue(last.date, intervalDays, today) : undefined,
+    plan,
+    expectedDoseMcg: plan?.step.doseMcg ?? last?.doseMcg,
+    suggestedSite: leastRecentSite(withSite),
+  };
+}

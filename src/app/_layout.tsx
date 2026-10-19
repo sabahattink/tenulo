@@ -53,6 +53,10 @@ export default function RootLayout() {
       >
         <Stack.Screen name="index" options={{ title: "Tenulo" }} />
         <Stack.Screen name="add-weight" options={{ title: "Log weight", presentation: "modal" }} />
+        <Stack.Screen name="setup-medication" options={{ title: "Your medication", presentation: "modal" }} />
+        <Stack.Screen name="log-injection" options={{ title: "Log injection", presentation: "modal" }} />
+        <Stack.Screen name="log-side-effect" options={{ title: "Log side effect", presentation: "modal" }} />
+        <Stack.Screen name="injections" options={{ title: "History & plan" }} />
         <Stack.Screen name="settings" options={{ title: "Settings" }} />
       </Stack>
     </>

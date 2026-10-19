@@ -1,6 +1,10 @@
+import type { SIDE_EFFECT_TYPES } from "../db/schema";
 import { type LocalDate, diffDays } from "../domain/date";
 import type { Forecast } from "../domain/forecast";
+import type { InjectionSite } from "../domain/injection";
 import { type WeightUnit, formatWeightChange } from "../domain/weight";
+
+type SideEffectKind = (typeof SIDE_EFFECT_TYPES)[number];
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
@@ -42,4 +46,37 @@ export function forecastText(f: Forecast, unit: WeightUnit, today: LocalDate): s
     case "on-track":
       return `At ${perWeek(f.rateGPerDay)}, your trend would reach your goal around ${shortDate(f.goalDate, today)}.`;
   }
+}
+
+export const SITE_LABELS: Record<InjectionSite, string> = {
+  "abdomen-left": "Belly, left",
+  "abdomen-right": "Belly, right",
+  "thigh-left": "Thigh, left",
+  "thigh-right": "Thigh, right",
+  "arm-left": "Arm, left",
+  "arm-right": "Arm, right",
+};
+
+export const SIDE_EFFECT_LABELS: Record<SideEffectKind, string> = {
+  nausea: "Nausea",
+  vomiting: "Vomiting",
+  constipation: "Constipation",
+  diarrhea: "Diarrhea",
+  heartburn: "Heartburn",
+  fatigue: "Tiredness",
+  headache: "Headache",
+  "injection-site": "Injection site",
+  other: "Other",
+};
+
+export const SEVERITY_LABELS = { 1: "Mild", 2: "Moderate", 3: "Strong" } as const;
+
+/** One line for the injection card: when the next shot is due, by the user's own schedule. */
+export function dueText(daysUntilDue: number | undefined, nextDue: LocalDate | undefined, today: LocalDate): string {
+  if (daysUntilDue === undefined || nextDue === undefined) return "Log your first injection to start tracking.";
+  if (daysUntilDue === 0) return "Next injection: today";
+  if (daysUntilDue === 1) return "Next injection: tomorrow";
+  if (daysUntilDue > 1) return `Next injection: ${shortDate(nextDue, today)} (in ${daysUntilDue} days)`;
+  const late = -daysUntilDue;
+  return `Next injection was due ${shortDate(nextDue, today)} (${late} ${late === 1 ? "day" : "days"} ago)`;
 }
