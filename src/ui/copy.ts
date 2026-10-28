@@ -1,10 +1,8 @@
-import type { SIDE_EFFECT_TYPES } from "../db/schema";
 import { type LocalDate, diffDays } from "../domain/date";
 import type { Forecast } from "../domain/forecast";
 import type { InjectionSite } from "../domain/injection";
+import type { SideEffectType as SideEffectKind } from "../domain/side-effect";
 import { type WeightUnit, formatWeightChange } from "../domain/weight";
-
-type SideEffectKind = (typeof SIDE_EFFECT_TYPES)[number];
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
@@ -79,4 +77,18 @@ export function dueText(daysUntilDue: number | undefined, nextDue: LocalDate | u
   if (daysUntilDue > 1) return `Next injection: ${shortDate(nextDue, today)} (in ${daysUntilDue} days)`;
   const late = -daysUntilDue;
   return `Next injection was due ${shortDate(nextDue, today)} (${late} ${late === 1 ? "day" : "days"} ago)`;
+}
+
+/** "29 Oct 2026": always with the year, for documents read outside the app. */
+export function longDate(date: LocalDate): string {
+  const [y, m, d] = date.split("-");
+  return `${Number(d)} ${MONTHS[Number(m) - 1] ?? ""} ${y}`;
+}
+
+/** "every week", "every 2 weeks", "every day", "every 10 days". */
+export function intervalText(days: number): string {
+  if (days === 1) return "every day";
+  if (days === 7) return "every week";
+  if (days % 7 === 0) return `every ${days / 7} weeks`;
+  return `every ${days} days`;
 }

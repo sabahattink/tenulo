@@ -4,7 +4,12 @@
  * edge, once.
  */
 
-export type WeightUnit = "kg" | "lb";
+export const WEIGHT_UNITS = ["kg", "lb"] as const;
+export type WeightUnit = (typeof WEIGHT_UNITS)[number];
+
+/** Where a reading came from. Health Connect readings keep their Health Connect record id. */
+export const WEIGHT_SOURCES = ["manual", "health_connect"] as const;
+export type WeightSource = (typeof WEIGHT_SOURCES)[number];
 
 /** Exact by definition (international avoirdupois pound, 1959). */
 export const GRAMS_PER_POUND = 453.59237;

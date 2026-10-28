@@ -11,6 +11,8 @@
 import { sql } from "drizzle-orm";
 import { check, index, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 import { INJECTION_SITES } from "../domain/injection";
+import { SIDE_EFFECT_TYPES } from "../domain/side-effect";
+import { WEIGHT_SOURCES, WEIGHT_UNITS } from "../domain/weight";
 
 const id = () => text("id").primaryKey();
 const createdAt = () => integer("created_at").notNull();
@@ -19,20 +21,6 @@ const localDate = (name: string) => text(name).notNull();
 
 /** Inlines constant enum values into a CHECK. Only ever called with literals defined in code. */
 const oneOf = (values: readonly string[]) => sql.raw(values.map((v) => `'${v.replaceAll("'", "''")}'`).join(", "));
-
-export const WEIGHT_UNITS = ["kg", "lb"] as const;
-export const WEIGHT_SOURCES = ["manual", "health_connect"] as const;
-export const SIDE_EFFECT_TYPES = [
-  "nausea",
-  "vomiting",
-  "constipation",
-  "diarrhea",
-  "heartburn",
-  "fatigue",
-  "headache",
-  "injection-site",
-  "other",
-] as const;
 
 /** Single row (id = 1). */
 export const settings = sqliteTable(

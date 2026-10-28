@@ -1,17 +1,18 @@
 import { and, asc, desc, eq } from "drizzle-orm";
 import { useLiveQuery } from "drizzle-orm/expo-sqlite";
 import { db } from "@/db/client";
-import { SIDE_EFFECT_TYPES, injections, medications, planSteps, sideEffects } from "@/db/schema";
+import { injections, medications, planSteps, sideEffects } from "@/db/schema";
 import type { LocalDate } from "@/domain/date";
 import { ulid } from "@/domain/id";
 import type { InjectionSite } from "@/domain/injection";
 import { MAX_DOSE_MCG, MIN_DOSE_MCG } from "@/domain/parse";
+import type { SideEffectType } from "@/domain/side-effect";
 
 export type Medication = typeof medications.$inferSelect;
 export type Injection = typeof injections.$inferSelect;
 export type PlanStepRow = typeof planSteps.$inferSelect;
 export type SideEffect = typeof sideEffects.$inferSelect;
-export type SideEffectType = (typeof SIDE_EFFECT_TYPES)[number];
+export type { SideEffectType };
 
 function assertDose(mcg: number): void {
   if (!Number.isInteger(mcg) || mcg < MIN_DOSE_MCG || mcg > MAX_DOSE_MCG) throw new RangeError(`Invalid dose: ${mcg}`);

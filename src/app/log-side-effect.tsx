@@ -3,13 +3,11 @@ import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { type SideEffectType, injectionBefore, logSideEffect, useActiveMedication } from "@/data/injections";
 import { today } from "@/data/repo";
-import { SIDE_EFFECT_TYPES } from "@/db/schema";
+import { SEVERITIES, SIDE_EFFECT_TYPES } from "@/domain/side-effect";
 import { DayPicker } from "@/ui/DayPicker";
 import { SEVERITY_LABELS, SIDE_EFFECT_LABELS } from "@/ui/copy";
 import { Button, Label } from "@/ui/kit";
 import { radius, space, useTheme } from "@/ui/theme";
-
-const SEVERITIES = [1, 2, 3] as const;
 
 export default function LogSideEffect() {
   const theme = useTheme();
