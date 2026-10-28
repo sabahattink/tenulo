@@ -1,13 +1,13 @@
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { logInjection, useActiveMedication, useInjections, usePlanSteps } from "@/data/injections";
 import { today } from "@/data/repo";
 import { parseLocalDate } from "@/domain/date";
-import { INJECTION_SITES, type InjectionSite, injectionStatus } from "@/domain/injection";
+import { type InjectionSite, injectionStatus } from "@/domain/injection";
 import { parseDoseInput } from "@/domain/parse";
 import { DayPicker } from "@/ui/DayPicker";
-import { SITE_LABELS } from "@/ui/copy";
+import { BodyMap } from "@/ui/BodyMap";
 import { Button, Label } from "@/ui/kit";
 import { radius, space, useTheme } from "@/ui/theme";
 
@@ -79,28 +79,13 @@ export default function LogInjection() {
       )}
 
       <Label theme={theme}>Site</Label>
-      <View style={styles.grid} accessibilityRole="radiogroup">
-        {INJECTION_SITES.map((s) => {
-          const selected = s === site;
-          const tag = s === status.lastSite ? "Last time" : s === status.suggestedSite ? "Used longest ago" : undefined;
-          return (
-            <Pressable
-              key={s}
-              accessibilityRole="radio"
-              accessibilityState={{ selected }}
-              accessibilityLabel={tag ? `${SITE_LABELS[s]}, ${tag}` : SITE_LABELS[s]}
-              onPress={() => setSite(selected ? null : s)}
-              style={[
-                styles.site,
-                { borderColor: selected ? theme.accent : theme.border, backgroundColor: selected ? theme.accent : theme.card },
-              ]}
-            >
-              <Text style={[styles.siteText, { color: selected ? theme.accentText : theme.text }]}>{SITE_LABELS[s]}</Text>
-              <Text style={[styles.siteTag, { color: selected ? theme.accentText : theme.muted }]}>{tag ?? " "}</Text>
-            </Pressable>
-          );
-        })}
-      </View>
+      <BodyMap
+        theme={theme}
+        selected={site}
+        lastSite={status.lastSite}
+        suggestedSite={status.suggestedSite}
+        onSelect={setSite}
+      />
 
       <Label theme={theme}>Day</Label>
       <DayPicker theme={theme} value={date} today={now} onChange={setDate} />
@@ -130,9 +115,5 @@ const styles = StyleSheet.create({
   input: { borderWidth: 1.5, borderRadius: radius.m, paddingHorizontal: space.m, minHeight: 52, fontSize: 20, fontWeight: "600" },
   note: { fontSize: 16, fontWeight: "400", marginBottom: space.s },
   hint: { fontSize: 13, marginBottom: space.m },
-  grid: { flexDirection: "row", flexWrap: "wrap", gap: space.s, marginBottom: space.l },
-  site: { width: "48.5%", minHeight: 64, borderWidth: 1.5, borderRadius: radius.m, padding: space.m, justifyContent: "center" },
-  siteText: { fontSize: 16, fontWeight: "600" },
-  siteTag: { fontSize: 12, marginTop: 2 },
   save: { marginTop: space.xl },
 });
