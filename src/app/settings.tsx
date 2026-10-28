@@ -1,5 +1,5 @@
 import Constants from "expo-constants";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Alert, Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { deleteAllData, setGoalWeight, setWeightUnit, useSettings } from "@/data/repo";
 import { parseWeightInput } from "@/domain/parse";
@@ -15,14 +15,15 @@ export default function SettingsScreen() {
   const unit: WeightUnit = settings?.weightUnit ?? "kg";
   const goalG = settings?.goalWeightG ?? null;
 
-  const [goalText, setGoalText] = useState("");
-  useEffect(() => setGoalText(goalG === null ? "" : weightNumber(goalG, unit)), [goalG, unit]);
+  // Undefined while not editing: the field shows the saved goal in the current unit.
+  const [goalDraft, setGoalText] = useState<string | undefined>();
+  const goalText = goalDraft ?? (goalG === null ? "" : weightNumber(goalG, unit));
   const goalParsed = parseWeightInput(goalText, unit);
   const goalChanged = goalText.trim() === "" ? goalG !== null : goalParsed.ok && goalParsed.grams !== goalG;
 
   const saveGoal = () => {
-    if (goalText.trim() === "") void setGoalWeight(null);
-    else if (goalParsed.ok) void setGoalWeight(goalParsed.grams);
+    const goal = goalText.trim() === "" ? null : goalParsed.ok ? goalParsed.grams : undefined;
+    if (goal !== undefined) void setGoalWeight(goal).then(() => setGoalText(undefined));
   };
 
   const confirmDeleteAll = () =>

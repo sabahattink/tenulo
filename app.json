@@ -39,7 +39,9 @@
             "cmakeVersion": "4.1.2"
           }
         }
-      ]
+      ],
+      "expo-sharing",
+      "react-native-health-connect"
     ],
     "experiments": {
       "typedRoutes": true

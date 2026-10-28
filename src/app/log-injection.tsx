@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { logInjection, useActiveMedication, useInjections, usePlanSteps } from "@/data/injections";
 import { today } from "@/data/repo";
@@ -24,18 +24,16 @@ export default function LogInjection() {
     now,
   );
 
-  const [doseText, setDoseText] = useState("");
+  // Undefined until the user types: the field shows the dose from their plan (or last shot) instead.
+  const [typedDose, setDoseText] = useState<string | undefined>();
   const [site, setSite] = useState<InjectionSite | null>(null);
   const [date, setDate] = useState(now);
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | undefined>();
 
-  // Prefill once the plan has loaded; never overwrite what the user typed.
   const expected = status.expectedDoseMcg;
-  useEffect(() => {
-    if (expected !== undefined) setDoseText((t) => (t === "" ? String(expected / 1000) : t));
-  }, [expected]);
+  const doseText = typedDose ?? (expected === undefined ? "" : String(expected / 1000));
 
   const dose = parseDoseInput(doseText);
 

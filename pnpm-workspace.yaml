@@ -3,8 +3,15 @@
 allowBuilds:
   # Native binary check for the bundler used by drizzle-kit and vitest. Dev-only, never shipped.
   esbuild: true
+  # Lint-only resolver (eslint-config-expo). Its postinstall merely re-checks the platform binary
+  # that pnpm already installs through optionalDependencies, and can fall back to a download.
+  # Denied: the optional dependency is enough, and nothing dev-only should fetch at install time.
+  unrs-resolver: false
 
 # React Native's native (CMake/ninja) builds break on Windows when packages are reached through
 # pnpm's isolated-store junctions: prefab paths resolve relative to the real path and ninja loops
 # with "build.ninja still dirty". A flat, npm-style node_modules avoids the junctions.
+minimumReleaseAgeExclude:
+  - expo-file-system@58.0.13
+
 nodeLinker: hoisted
