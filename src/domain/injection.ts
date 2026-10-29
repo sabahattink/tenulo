@@ -149,3 +149,13 @@ export function injectionStatus(
     suggestedSite: leastRecentSite(withSite),
   };
 }
+
+/**
+ * Where today sits in the current injection interval, for a "day 5 of 7" ring.
+ * `day` is 1-based; once the shot is due or overdue the ring is full.
+ */
+export function cycleProgress(daysUntil: number, intervalDays: number): { day: number; fraction: number } {
+  const day = Math.min(intervalDays, Math.max(1, intervalDays - daysUntil));
+  const fraction = daysUntil <= 0 ? 1 : (intervalDays - daysUntil) / intervalDays;
+  return { day, fraction: Math.min(1, Math.max(0, fraction)) };
+}

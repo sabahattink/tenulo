@@ -48,3 +48,13 @@ export function summarizeWeights(
     forecast: forecast(trend, goalG),
   };
 }
+
+/**
+ * How much of the way from the first trend value to the goal the trend has come, 0 to 1.
+ * Undefined without a goal, or when the goal is where the trend started.
+ */
+export function goalProgress(startG: number, currentG: number, goalG: number | null): number | undefined {
+  if (goalG === null || startG === goalG) return undefined;
+  const fraction = (startG - currentG) / (startG - goalG);
+  return Math.min(1, Math.max(0, fraction));
+}

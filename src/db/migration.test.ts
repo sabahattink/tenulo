@@ -13,15 +13,20 @@ const journal = JSON.parse(readFileSync(join(root, "meta", "_journal.json"), "ut
   entries: { idx: number; tag: string }[];
 };
 
-function migratedDb(): DatabaseSync {
-  const db = new DatabaseSync(":memory:");
-  db.exec("PRAGMA foreign_keys = ON");
-  for (const { tag } of [...journal.entries].sort((a, b) => a.idx - b.idx)) {
+function applyMigrations(db: DatabaseSync, fromIdx: number, toIdx: number): void {
+  for (const { idx, tag } of [...journal.entries].sort((a, b) => a.idx - b.idx)) {
+    if (idx < fromIdx || idx > toIdx) continue;
     const sql = readFileSync(join(root, `${tag}.sql`), "utf8");
     for (const statement of sql.split("--> statement-breakpoint")) {
       if (statement.trim()) db.exec(statement);
     }
   }
+}
+
+function migratedDb(): DatabaseSync {
+  const db = new DatabaseSync(":memory:");
+  db.exec("PRAGMA foreign_keys = ON");
+  applyMigrations(db, 0, Number.MAX_SAFE_INTEGER);
   return db;
 }
 
@@ -142,5 +147,29 @@ describe("delete all data", () => {
     for (const table of ALL_TABLES_DELETE_ORDER) {
       expect(db.prepare(`SELECT count(*) AS n FROM "${getTableName(table)}"`).get()).toEqual({ n: 0 });
     }
+  });
+});
+
+describe("upgrades", () => {
+  it("keeps a 0.1 user's settings and weights when adding Health Connect settings", () => {
+    const old = new DatabaseSync(":memory:");
+    old.exec("PRAGMA foreign_keys = ON");
+    applyMigrations(old, 0, 0);
+    old.prepare("INSERT INTO settings (id, weight_unit, goal_weight_g, updated_at) VALUES (1, 'lb', 75000, ?)").run(now);
+    old
+      .prepare(
+        "INSERT INTO weight_entry (id, measured_at, local_date, weight_g, source, created_at, updated_at) VALUES ('w', ?, '2026-10-18', 82400, 'manual', ?, ?)",
+      )
+      .run(now, now, now);
+
+    applyMigrations(old, 1, Number.MAX_SAFE_INTEGER);
+
+    expect(old.prepare("SELECT weight_unit, goal_weight_g, health_connect_enabled, health_connect_synced_at FROM settings").get()).toEqual({
+      weight_unit: "lb",
+      goal_weight_g: 75000,
+      health_connect_enabled: 0,
+      health_connect_synced_at: null,
+    });
+    expect(old.prepare("SELECT count(*) AS n FROM weight_entry").get()).toEqual({ n: 1 });
   });
 });

@@ -1,0 +1,575 @@
+{
+  "version": "6",
+  "dialect": "sqlite",
+  "id": "8a7021d1-a7f4-4263-a86f-4b3e9dda6a6c",
+  "prevId": "e2907b5c-8f6d-40ac-a58b-91e81fa4a6d0",
+  "tables": {
+    "injection": {
+      "name": "injection",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "medication_id": {
+          "name": "medication_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "taken_at": {
+          "name": "taken_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "local_date": {
+          "name": "local_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "dose_mcg": {
+          "name": "dose_mcg",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "site": {
+          "name": "site",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "note": {
+          "name": "note",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "injection_medication_date": {
+          "name": "injection_medication_date",
+          "columns": [
+            "medication_id",
+            "local_date"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "injection_medication_id_medication_id_fk": {
+          "name": "injection_medication_id_medication_id_fk",
+          "tableFrom": "injection",
+          "tableTo": "medication",
+          "columnsFrom": [
+            "medication_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "injection_dose": {
+          "name": "injection_dose",
+          "value": "\"injection\".\"dose_mcg\" > 0"
+        },
+        "injection_site": {
+          "name": "injection_site",
+          "value": "\"injection\".\"site\" IS NULL OR \"injection\".\"site\" IN ('abdomen-left', 'abdomen-right', 'thigh-left', 'thigh-right', 'arm-left', 'arm-right')"
+        }
+      }
+    },
+    "medication": {
+      "name": "medication",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "active": {
+          "name": "active",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "medication_name": {
+          "name": "medication_name",
+          "value": "length(trim(\"medication\".\"name\")) BETWEEN 1 AND 60"
+        }
+      }
+    },
+    "plan_step": {
+      "name": "plan_step",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "medication_id": {
+          "name": "medication_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "start_date": {
+          "name": "start_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "dose_mcg": {
+          "name": "dose_mcg",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "interval_days": {
+          "name": "interval_days",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 7
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "plan_step_medication_start": {
+          "name": "plan_step_medication_start",
+          "columns": [
+            "medication_id",
+            "start_date"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "plan_step_medication_id_medication_id_fk": {
+          "name": "plan_step_medication_id_medication_id_fk",
+          "tableFrom": "plan_step",
+          "tableTo": "medication",
+          "columnsFrom": [
+            "medication_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "plan_step_dose": {
+          "name": "plan_step_dose",
+          "value": "\"plan_step\".\"dose_mcg\" > 0"
+        },
+        "plan_step_interval": {
+          "name": "plan_step_interval",
+          "value": "\"plan_step\".\"interval_days\" BETWEEN 1 AND 90"
+        }
+      }
+    },
+    "settings": {
+      "name": "settings",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "weight_unit": {
+          "name": "weight_unit",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'kg'"
+        },
+        "goal_weight_g": {
+          "name": "goal_weight_g",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "injection_reminder_enabled": {
+          "name": "injection_reminder_enabled",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "injection_reminder_minute": {
+          "name": "injection_reminder_minute",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 540
+        },
+        "weigh_in_reminder_enabled": {
+          "name": "weigh_in_reminder_enabled",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "weigh_in_reminder_minute": {
+          "name": "weigh_in_reminder_minute",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 450
+        },
+        "health_connect_enabled": {
+          "name": "health_connect_enabled",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "health_connect_synced_at": {
+          "name": "health_connect_synced_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "settings_singleton": {
+          "name": "settings_singleton",
+          "value": "\"settings\".\"id\" = 1"
+        },
+        "settings_weight_unit": {
+          "name": "settings_weight_unit",
+          "value": "\"settings\".\"weight_unit\" IN ('kg', 'lb')"
+        },
+        "settings_goal_range": {
+          "name": "settings_goal_range",
+          "value": "\"settings\".\"goal_weight_g\" IS NULL OR \"settings\".\"goal_weight_g\" BETWEEN 20000 AND 400000"
+        },
+        "settings_injection_minute": {
+          "name": "settings_injection_minute",
+          "value": "\"settings\".\"injection_reminder_minute\" BETWEEN 0 AND 1439"
+        },
+        "settings_weigh_in_minute": {
+          "name": "settings_weigh_in_minute",
+          "value": "\"settings\".\"weigh_in_reminder_minute\" BETWEEN 0 AND 1439"
+        }
+      }
+    },
+    "side_effect": {
+      "name": "side_effect",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "local_date": {
+          "name": "local_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "type": {
+          "name": "type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "severity": {
+          "name": "severity",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "injection_id": {
+          "name": "injection_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "note": {
+          "name": "note",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "side_effect_local_date": {
+          "name": "side_effect_local_date",
+          "columns": [
+            "local_date"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "side_effect_injection_id_injection_id_fk": {
+          "name": "side_effect_injection_id_injection_id_fk",
+          "tableFrom": "side_effect",
+          "tableTo": "injection",
+          "columnsFrom": [
+            "injection_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "side_effect_severity": {
+          "name": "side_effect_severity",
+          "value": "\"side_effect\".\"severity\" BETWEEN 1 AND 3"
+        },
+        "side_effect_type": {
+          "name": "side_effect_type",
+          "value": "\"side_effect\".\"type\" IN ('nausea', 'vomiting', 'constipation', 'diarrhea', 'heartburn', 'fatigue', 'headache', 'injection-site', 'other')"
+        }
+      }
+    },
+    "weight_entry": {
+      "name": "weight_entry",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "measured_at": {
+          "name": "measured_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "local_date": {
+          "name": "local_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "weight_g": {
+          "name": "weight_g",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "source": {
+          "name": "source",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "health_connect_id": {
+          "name": "health_connect_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "note": {
+          "name": "note",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "weight_entry_local_date": {
+          "name": "weight_entry_local_date",
+          "columns": [
+            "local_date"
+          ],
+          "isUnique": false
+        },
+        "weight_entry_hc_id": {
+          "name": "weight_entry_hc_id",
+          "columns": [
+            "health_connect_id"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "weight_entry_range": {
+          "name": "weight_entry_range",
+          "value": "\"weight_entry\".\"weight_g\" BETWEEN 20000 AND 400000"
+        },
+        "weight_entry_source": {
+          "name": "weight_entry_source",
+          "value": "\"weight_entry\".\"source\" IN ('manual', 'health_connect')"
+        },
+        "weight_entry_local_date": {
+          "name": "weight_entry_local_date",
+          "value": "\"weight_entry\".\"local_date\" GLOB '[0-9][0-9][0-9][0-9]-[0-1][0-9]-[0-3][0-9]'"
+        },
+        "weight_entry_hc_source": {
+          "name": "weight_entry_hc_source",
+          "value": "(\"weight_entry\".\"source\" = 'health_connect') = (\"weight_entry\".\"health_connect_id\" IS NOT NULL)"
+        }
+      }
+    }
+  },
+  "views": {},
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "indexes": {}
+  }
+}

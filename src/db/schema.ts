@@ -34,6 +34,10 @@ export const settings = sqliteTable(
     injectionReminderMinute: integer("injection_reminder_minute").notNull().default(540),
     weighInReminderEnabled: integer("weigh_in_reminder_enabled", { mode: "boolean" }).notNull().default(false),
     weighInReminderMinute: integer("weigh_in_reminder_minute").notNull().default(450),
+    /** Read weight from Health Connect. Off until the user turns it on and grants access. */
+    healthConnectEnabled: integer("health_connect_enabled", { mode: "boolean" }).notNull().default(false),
+    /** End of the last successful Health Connect read (epoch ms); the next sync starts near it. */
+    healthConnectSyncedAt: integer("health_connect_synced_at"),
     updatedAt: updatedAt(),
   },
   (t) => [

@@ -5,7 +5,9 @@ import { settings, weightEntries } from "@/db/schema";
 import { ALL_TABLES_DELETE_ORDER } from "@/db/tables";
 import { type LocalDate, localDateOf } from "@/domain/date";
 import { ulid } from "@/domain/id";
+import { isMinuteOfDay } from "@/domain/reminder";
 import { type WeightUnit, isPlausibleWeight } from "@/domain/weight";
+import { cancelAllReminders } from "@/platform/reminders";
 
 export type Settings = typeof settings.$inferSelect;
 
@@ -29,6 +31,26 @@ export async function setWeightUnit(unit: WeightUnit): Promise<void> {
 export async function setGoalWeight(goalG: number | null): Promise<void> {
   if (goalG !== null && !isPlausibleWeight(goalG)) throw new RangeError(`Implausible goal: ${goalG}`);
   await db.update(settings).set({ goalWeightG: goalG, updatedAt: Date.now() }).where(eq(settings.id, 1));
+}
+
+export async function setInjectionReminder(enabled: boolean, minute: number): Promise<void> {
+  if (!isMinuteOfDay(minute)) throw new RangeError(`Not a minute of the day: ${minute}`);
+  await db
+    .update(settings)
+    .set({ injectionReminderEnabled: enabled, injectionReminderMinute: minute, updatedAt: Date.now() })
+    .where(eq(settings.id, 1));
+}
+
+export async function setWeighInReminder(enabled: boolean, minute: number): Promise<void> {
+  if (!isMinuteOfDay(minute)) throw new RangeError(`Not a minute of the day: ${minute}`);
+  await db
+    .update(settings)
+    .set({ weighInReminderEnabled: enabled, weighInReminderMinute: minute, updatedAt: Date.now() })
+    .where(eq(settings.id, 1));
+}
+
+export async function setHealthConnectEnabled(enabled: boolean): Promise<void> {
+  await db.update(settings).set({ healthConnectEnabled: enabled, updatedAt: Date.now() }).where(eq(settings.id, 1));
 }
 
 export type WeightEntry = typeof weightEntries.$inferSelect;
@@ -64,14 +86,16 @@ export async function deleteWeight(id: string): Promise<void> {
 }
 
 /**
- * Erases every record in every table and resets settings, in one transaction.
- * This is the "Delete all data" promised in the privacy policy.
+ * Erases every record in every table and resets settings, in one transaction, then cancels every
+ * scheduled reminder. This is the "Delete all data" promised in the privacy policy.
  */
 export async function deleteAllData(): Promise<void> {
   await db.transaction(async (tx) => {
     for (const table of ALL_TABLES_DELETE_ORDER) await tx.delete(table);
     await tx.insert(settings).values({ id: 1, updatedAt: Date.now() });
   });
+  // Scheduled reminders carry what they are about; they go with the data.
+  cancelAllReminders();
 }
 
 export function today(): LocalDate {
