@@ -17,6 +17,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
+      - run: pnpm lint
       - run: pnpm test
       - name: Bundle builds for Android
         run: npx expo export --platform android --output-dir /tmp/expo-export

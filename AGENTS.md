@@ -70,7 +70,11 @@ Tenulo is a local-first GLP-1 and weight log for Android (`com.sabahattinkalkan.
 - `src/domain/` is pure TypeScript with no React Native imports, and every function there has unit tests.
 - `src/db/` holds the Drizzle schema, client and migration tests (run against real SQLite via `node:sqlite`).
 - `src/app/` holds Expo Router screens only.
+- `src/platform/` wraps native code (reminders, billing, Health Connect) behind small typed adapters.
+- `modules/tenulo-native/` is Tenulo's own Kotlin module. Reminders live there on purpose:
+  `expo-notifications` ships Firebase Cloud Messaging (see `docs/adr/0001`). Do not add it.
+- Pro is checked with Play on every start (`src/platform/billing.ts`); never store it in the database.
 
 ### Before calling a task done
 
-`pnpm typecheck && pnpm test` must pass. For native or config changes also run `npx expo-doctor` and `npx expo export --platform android` to prove the bundle builds.
+`pnpm typecheck && pnpm lint && pnpm test` must pass. For native or config changes also run `npx expo-doctor` and `npx expo export --platform android` to prove the bundle builds.
