@@ -156,7 +156,7 @@ export function SwitchRow({
           onValueChange={onChange}
           disabled={disabled}
           accessibilityLabel={title}
-          trackColor={{ false: theme.surfaceAlt, true: theme.accent }}
+          trackColor={{ false: theme.muted, true: theme.accent }}
           thumbColor={theme.card}
         />
       }

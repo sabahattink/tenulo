@@ -57,7 +57,13 @@ export default function SettingsScreen() {
     };
   }, []);
 
-  if (settings === undefined) return null;
+  if (settings === undefined) {
+    return (
+      <View style={[styles.content, { paddingTop: insets.top + space.l, backgroundColor: theme.background, flex: 1 }]}>
+        <ScreenTitle theme={theme} title="Settings" />
+      </View>
+    );
+  }
   const unit = settings.weightUnit;
 
   /** Fire-and-forget writes still report failure instead of silently doing nothing. */
