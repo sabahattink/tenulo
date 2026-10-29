@@ -2,7 +2,7 @@ import { router } from "expo-router";
 import { useState } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { deletePlanStep, renameMedication, upsertPlanStep, useActiveMedication, usePlanSteps } from "@/data/injections";
-import { today } from "@/data/repo";
+import { useToday } from "@/data/use-today";
 import { parseLocalDate, toDayNumber } from "@/domain/date";
 import { planPosition } from "@/domain/injection";
 import { formatDose, parseDoseInput } from "@/domain/parse";
@@ -14,7 +14,7 @@ import { radius, space, type, useTheme } from "@/ui/theme";
 /** The user's own plan, shown back to them; and the medication's name. Tenulo never edits either. */
 export default function MedicationScreen() {
   const theme = useTheme();
-  const now = today();
+  const now = useToday();
   const medication = useActiveMedication();
   const steps = usePlanSteps(medication?.id);
 
@@ -55,20 +55,23 @@ export default function MedicationScreen() {
         </Text>
         <View style={styles.timeline}>
           {sorted.map((s, i) => {
+            const remove = () =>
+              Alert.alert("Remove this step?", `${formatDose(s.doseMcg)} from ${longDate(parseLocalDate(s.startDate))}`, [
+                { text: "Cancel", style: "cancel" },
+                { text: "Remove", style: "destructive", onPress: () => void deletePlanStep(s.id) },
+              ]);
             const isCurrent = current?.step.startDate === s.startDate;
             const isFuture = toDayNumber(parseLocalDate(s.startDate)) > toDayNumber(now);
             const dotColor = isCurrent ? theme.accent : isFuture ? theme.card : theme.reading;
             return (
               <Pressable
                 key={s.id}
-                onLongPress={() =>
-                  steps.length > 1 &&
-                  Alert.alert("Remove this step?", `${formatDose(s.doseMcg)} from ${longDate(parseLocalDate(s.startDate))}`, [
-                    { text: "Cancel", style: "cancel" },
-                    { text: "Remove", style: "destructive", onPress: () => void deletePlanStep(s.id) },
-                  ])
-                }
+                onLongPress={steps.length > 1 ? remove : undefined}
                 accessibilityHint={steps.length > 1 ? "Long press to remove this step" : undefined}
+                accessibilityActions={steps.length > 1 ? [{ name: "delete", label: "Remove step" }] : undefined}
+                onAccessibilityAction={(e) => {
+                  if (e.nativeEvent.actionName === "delete") remove();
+                }}
                 style={styles.step}
               >
                 <View style={styles.rail}>
@@ -121,7 +124,11 @@ export default function MedicationScreen() {
           kind="quiet"
           label="Save name"
           disabled={name === undefined || name.trim() === "" || name.trim() === medication.name}
-          onPress={() => void renameMedication(medication.id, name ?? medication.name).then(() => setName(undefined))}
+          onPress={() =>
+            renameMedication(medication.id, name ?? medication.name)
+              .then(() => setName(undefined))
+              .catch((e: unknown) => Alert.alert("Could not rename", e instanceof Error ? e.message : ""))
+          }
         />
       </Card>
     </ScrollView>

@@ -63,11 +63,17 @@ class BillingModule : Module() {
         promise.reject("E_IN_PROGRESS", "A purchase is already in progress", null)
         return@AsyncFunction
       }
-      withProduct(productId, promise) { details ->
+      // Claim the slot before the asynchronous product lookup, so a second call made meanwhile is
+      // refused instead of replacing (and orphaning) this promise. Every path below settles it
+      // through the slot, which frees it again.
+      purchasePromise = promise
+      purchaseProductId = productId
+      val slot = SlotPromise()
+      withProduct(productId, slot) { details ->
         val activity = appContext.currentActivity
         val c = client
         if (details == null || activity == null || c == null) {
-          promise.reject("E_NO_PRODUCT", "This product is not available right now", null)
+          slot.reject("E_NO_PRODUCT", "This product is not available right now", null)
           return@withProduct
         }
         val params = BillingFlowParams.newBuilder()
@@ -75,8 +81,6 @@ class BillingModule : Module() {
             listOf(BillingFlowParams.ProductDetailsParams.newBuilder().setProductDetails(details).build()),
           )
           .build()
-        purchasePromise = promise
-        purchaseProductId = productId
         val launched = c.launchBillingFlow(activity, params)
         if (launched.responseCode != BillingResponseCode.OK) {
           // The flow never opened, so no PurchasesUpdatedListener call will settle the promise.
@@ -109,6 +113,34 @@ class BillingModule : Module() {
     OnDestroy {
       client?.endConnection()
       client = null
+      connecting = false
+      settleWaiting(
+        BillingResult.newBuilder()
+          .setResponseCode(BillingResponseCode.SERVICE_DISCONNECTED)
+          .setDebugMessage("Billing stopped")
+          .build(),
+      )
+      purchasePromise?.reject("E_BILLING_STOPPED", "Billing stopped", null)
+      purchasePromise = null
+      purchaseProductId = null
+    }
+  }
+
+  /**
+   * Stands in for the purchase promise during the product lookup: a failure there settles the
+   * real promise and frees the purchase slot in one step.
+   */
+  private inner class SlotPromise : Promise {
+    override fun resolve(value: Any?) {
+      purchasePromise?.resolve(value)
+      purchasePromise = null
+      purchaseProductId = null
+    }
+
+    override fun reject(code: String?, message: String?, cause: Throwable?) {
+      purchasePromise?.reject(code, message, cause)
+      purchasePromise = null
+      purchaseProductId = null
     }
   }
 

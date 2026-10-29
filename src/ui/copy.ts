@@ -176,3 +176,9 @@ export function syncedText(enabled: boolean, syncedAt: number | null, now: Date 
   const minute = at.getHours() * 60 + at.getMinutes();
   return `Last read ${relativeDayInline(localDateOf(at), localDateOf(now))} at ${formatMinuteOfDay(minute)}`;
 }
+
+/** After a Health Connect read: what was added, and whether more is still to come. */
+export function healthSyncText(r: { added: number; complete: boolean }): string {
+  const added = r.added === 0 ? "No new readings." : restoreSummaryText({ weights: r.added });
+  return r.complete ? added : `${added} There is more to read; Tenulo continues next time it opens.`;
+}

@@ -2,7 +2,7 @@ import { router } from "expo-router";
 import { useState } from "react";
 import { ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { logInjection, useActiveMedication, useInjections, usePlanSteps } from "@/data/injections";
-import { today } from "@/data/repo";
+import { useToday } from "@/data/use-today";
 import { parseLocalDate } from "@/domain/date";
 import { type InjectionSite, injectionStatus } from "@/domain/injection";
 import { parseDoseInput } from "@/domain/parse";
@@ -13,7 +13,7 @@ import { radius, space, useTheme } from "@/ui/theme";
 
 export default function LogInjection() {
   const theme = useTheme();
-  const now = today();
+  const now = useToday();
   const medication = useActiveMedication();
   const history = useInjections(medication?.id);
   const steps = usePlanSteps(medication?.id);

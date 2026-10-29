@@ -12,9 +12,10 @@ const DAYS = 63;
 /**
  * Development builds only: fills an empty log with realistic, deterministic sample data for trying
  * the app and taking store screenshots. Never reachable in a release build (the caller checks
- * __DEV__), and the medication name is generic: no brand names, even in sample data.
+ * __DEV__), and the medication name is generic: no brand names, even in sample data. One
+ * synchronous transaction: see src/db/ops.ts for why.
  */
-export async function seedSampleData(today: LocalDate): Promise<void> {
+export function seedSampleData(today: LocalDate): void {
   if (!__DEV__) throw new Error("Sample data is for development builds only");
   const now = Date.now();
   const start = addDays(today, -(DAYS - 1));
@@ -38,8 +39,8 @@ export async function seedSampleData(today: LocalDate): Promise<void> {
     { day: 44, type: "constipation", severity: 1, note: null },
   ];
 
-  await db.transaction(async (tx) => {
-    await tx.insert(weightEntries).values(
+  db.transaction((tx) => {
+    tx.insert(weightEntries).values(
       weights.map((w, i) => ({
         id: ulid(now - 100_000 + i),
         measuredAt: now,
@@ -51,9 +52,9 @@ export async function seedSampleData(today: LocalDate): Promise<void> {
         createdAt: now,
         updatedAt: now,
       })),
-    );
-    await tx.insert(medications).values({ id: medicationId, name: "My weekly pen", active: true, createdAt: now, updatedAt: now });
-    await tx.insert(planSteps).values([
+    ).run();
+    tx.insert(medications).values({ id: medicationId, name: "My weekly pen", active: true, createdAt: now, updatedAt: now }).run();
+    tx.insert(planSteps).values([
       { id: ulid(now - 900), medicationId, startDate: start, doseMcg: 2_500, intervalDays: 7, createdAt: now, updatedAt: now },
       {
         id: ulid(now - 800),
@@ -64,8 +65,8 @@ export async function seedSampleData(today: LocalDate): Promise<void> {
         createdAt: now,
         updatedAt: now,
       },
-    ]);
-    await tx.insert(injections).values(
+    ]).run();
+    tx.insert(injections).values(
       shots.map((date, i) => ({
         id: ulid(now - 50_000 + i),
         medicationId,
@@ -77,8 +78,8 @@ export async function seedSampleData(today: LocalDate): Promise<void> {
         createdAt: now,
         updatedAt: now,
       })),
-    );
-    await tx.insert(sideEffects).values(
+    ).run();
+    tx.insert(sideEffects).values(
       effects.map((e, i) => ({
         id: ulid(now - 20_000 + i),
         localDate: addDays(start, e.day),
@@ -89,7 +90,7 @@ export async function seedSampleData(today: LocalDate): Promise<void> {
         createdAt: now,
         updatedAt: now,
       })),
-    );
-    await tx.update(settings).set({ goalWeightG: 85_000, updatedAt: now }).where(eq(settings.id, 1));
+    ).run();
+    tx.update(settings).set({ goalWeightG: 85_000, updatedAt: now }).where(eq(settings.id, 1)).run();
   });
 }

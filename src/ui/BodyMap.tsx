@@ -26,8 +26,9 @@ export function BodyMap({
 
   const fillFor = (s: InjectionSite) =>
     s === selected ? theme.accent : s === lastSite ? theme.reading : "transparent";
-  const strokeFor = (s: InjectionSite) =>
-    s === selected ? theme.accent : s === suggestedSite ? theme.accent : theme.muted;
+  // "Used longest ago" is a fact from the user's own log, not advice: it gets a quiet solid outline,
+  // never the accent color a selection uses.
+  const strokeFor = (s: InjectionSite) => (s === selected ? theme.accent : s === suggestedSite ? theme.text : theme.muted);
 
   return (
     <View style={styles.wrap}>
@@ -58,7 +59,7 @@ export function BodyMap({
                   fill={fillFor(s)}
                   fillOpacity={s === selected ? 0.9 : 0.6}
                   stroke={strokeFor(s)}
-                  strokeWidth={s === selected || s === suggestedSite ? 2.5 : 1.5}
+                  strokeWidth={s === selected ? 2.5 : s === suggestedSite ? 1.8 : 1.5}
                   strokeDasharray={s === selected || s === suggestedSite ? undefined : "4 3"}
                 />
               );
@@ -93,7 +94,7 @@ export function BodyMap({
       <View style={styles.side}>
         <Text style={[styles.selected, { color: theme.text }]}>{selected ? SITE_LABELS[selected] : "Tap where you injected"}</Text>
         <Legend theme={theme} swatch={{ backgroundColor: theme.accent }} label="Selected" />
-        <Legend theme={theme} swatch={{ borderColor: theme.accent, borderWidth: 2 }} label="Used longest ago" />
+        <Legend theme={theme} swatch={{ borderColor: theme.text, borderWidth: 1.5 }} label="Used longest ago" />
         <Legend theme={theme} swatch={{ backgroundColor: theme.reading }} label="Last time" />
         <Text style={[styles.note, { color: theme.muted }]}>
           Front view: your left side is on the right of the picture.

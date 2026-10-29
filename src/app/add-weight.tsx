@@ -1,7 +1,8 @@
 import { router } from "expo-router";
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, View } from "react-native";
-import { addWeight, today, useSettings, useWeightEntries } from "@/data/repo";
+import { addWeight, useSettings, useWeightEntries } from "@/data/repo";
+import { useToday } from "@/data/use-today";
 import { type ParseWeightResult, parseWeightInput } from "@/domain/parse";
 import { weightNumber } from "@/domain/weight";
 import { DayPicker } from "@/ui/DayPicker";
@@ -21,7 +22,7 @@ export default function AddWeight() {
   const settings = useSettings();
   const entries = useWeightEntries();
   const unit = settings?.weightUnit ?? "kg";
-  const now = today();
+  const now = useToday();
 
   const last = entries[0];
   const [text, setText] = useState("");

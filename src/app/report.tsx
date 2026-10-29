@@ -2,7 +2,8 @@ import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View } from "react-native";
 import { loadReport, shareReportPdf } from "@/data/report";
-import { today, useSettings } from "@/data/repo";
+import { useSettings } from "@/data/repo";
+import { useToday } from "@/data/use-today";
 import { REPORT_PERIODS, type Report, type ReportPeriod } from "@/domain/report";
 import { formatWeight, formatWeightChange } from "@/domain/weight";
 import { useIsPro } from "@/platform/billing";
@@ -17,18 +18,26 @@ export default function ReportScreen() {
   const theme = useTheme();
   const isPro = useIsPro();
   const unit = useSettings()?.weightUnit ?? "kg";
-  const now = today();
+  const now = useToday();
   const [period, setPeriod] = useState<ReportPeriod>(90);
   const [report, setReport] = useState<Report | undefined>();
+  const [loadError, setLoadError] = useState<string | undefined>();
   const [sharing, setSharing] = useState(false);
 
   useEffect(() => {
+    if (!isPro) return;
     let alive = true;
-    void loadReport(period, now).then((r) => alive && setReport(r));
+    loadReport(period, now)
+      .then((r) => {
+        if (!alive) return;
+        setReport(r);
+        setLoadError(undefined);
+      })
+      .catch((e: unknown) => alive && setLoadError(e instanceof Error ? e.message : "Could not read your log"));
     return () => {
       alive = false;
     };
-  }, [period, now]);
+  }, [period, now, isPro]);
 
   if (!isPro) {
     return (
@@ -60,7 +69,9 @@ export default function ReportScreen() {
       </Text>
       <Segmented theme={theme} label="Report period" options={OPTIONS} value={period} onChange={setPeriod} />
 
-      {report === undefined ? (
+      {loadError !== undefined ? (
+        <Text style={[type.body, { color: theme.danger }]}>{loadError}</Text>
+      ) : report === undefined ? (
         <ActivityIndicator color={theme.accent} style={styles.loading} />
       ) : (
         <Card theme={theme} style={styles.preview}>

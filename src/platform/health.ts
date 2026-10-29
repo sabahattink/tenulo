@@ -53,9 +53,16 @@ export async function requestWeightAccess(): Promise<boolean> {
   return granted.some((p) => p.accessType === "read" && "recordType" in p && p.recordType === "Weight");
 }
 
-/** Every weight reading between the two instants, oldest first. */
-export async function readWeights(startMs: number, endMs: number): Promise<HealthWeight[]> {
-  if (!(await ready())) return [];
+export interface WeightPage {
+  /** Oldest first. */
+  readonly records: HealthWeight[];
+  /** False when the page cap stopped the read before the end of the window. */
+  readonly complete: boolean;
+}
+
+/** Weight readings between the two instants, oldest first, up to MAX_PAGES pages. */
+export async function readWeights(startMs: number, endMs: number): Promise<WeightPage> {
+  if (!(await ready())) throw new Error("Health Connect is not available");
   const out: HealthWeight[] = [];
   let pageToken: string | undefined;
   for (let page = 0; page < MAX_PAGES; page++) {
@@ -71,9 +78,9 @@ export async function readWeights(startMs: number, endMs: number): Promise<Healt
     });
     for (const r of result.records) out.push({ id: r.metadata?.id, time: r.time, grams: r.weight.inGrams });
     pageToken = result.pageToken;
-    if (pageToken === undefined || pageToken === "") break;
+    if (pageToken === undefined || pageToken === "") return { records: out, complete: true };
   }
-  return out;
+  return { records: out, complete: false };
 }
 
 export function openHealthConnect(): void {

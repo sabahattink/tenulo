@@ -3,7 +3,8 @@ import { useMemo } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Circle, Path } from "react-native-svg";
-import { today, useSettings, useWeightEntries } from "@/data/repo";
+import { useSettings, useWeightEntries } from "@/data/repo";
+import { useToday } from "@/data/use-today";
 import { type LocalDate, parseLocalDate } from "@/domain/date";
 import { type WeightSummary, goalProgress, summarizeWeights } from "@/domain/summary";
 import { type WeightUnit, formatWeight, formatWeightChange, weightNumber } from "@/domain/weight";
@@ -20,7 +21,7 @@ export default function Today() {
   const entries = useWeightEntries();
   const unit = settings?.weightUnit ?? "kg";
   const goalG = settings?.goalWeightG ?? null;
-  const now = today();
+  const now = useToday();
 
   const summary = useMemo(
     () =>
@@ -86,7 +87,11 @@ function WeightHero({
       </View>
       <View style={styles.chips}>
         <Stat theme={theme} label="7 days" value={summary.weekChangeG === undefined ? "–" : formatWeightChange(summary.weekChangeG, unit)} />
-        <Stat theme={theme} label="Since start" value={formatWeightChange(summary.totalChangeG, unit)} />
+        <Stat
+          theme={theme}
+          label="Since start"
+          value={summary.trend.length < 2 ? "–" : formatWeightChange(summary.totalChangeG, unit)}
+        />
         <Stat theme={theme} label="Last reading" value={formatWeight(summary.latestG, unit)} />
       </View>
       {progress !== undefined && toGoal !== undefined && goalG !== null && (

@@ -2,7 +2,7 @@ import { router } from "expo-router";
 import { useState } from "react";
 import { ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { type SideEffectType, injectionBefore, logSideEffect, useActiveMedication } from "@/data/injections";
-import { today } from "@/data/repo";
+import { useToday } from "@/data/use-today";
 import { SEVERITIES, SIDE_EFFECT_TYPES } from "@/domain/side-effect";
 import { DayPicker } from "@/ui/DayPicker";
 import { SEVERITY_LABELS, SIDE_EFFECT_LABELS } from "@/ui/copy";
@@ -11,7 +11,7 @@ import { radius, space, useTheme } from "@/ui/theme";
 
 export default function LogSideEffect() {
   const theme = useTheme();
-  const now = today();
+  const now = useToday();
   const medication = useActiveMedication();
   const [type, setType] = useState<SideEffectType | undefined>();
   const [severity, setSeverity] = useState<1 | 2 | 3>(1);

@@ -2,7 +2,7 @@ import { router } from "expo-router";
 import { useState } from "react";
 import { ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { createMedication } from "@/data/injections";
-import { today } from "@/data/repo";
+import { useToday } from "@/data/use-today";
 import { parseDoseInput } from "@/domain/parse";
 import { DayPicker } from "@/ui/DayPicker";
 import { Button, Label, Segmented } from "@/ui/kit";
@@ -13,7 +13,7 @@ const INTERVAL_LABELS: Record<(typeof INTERVALS)[number], string> = { 7: "Weekly
 
 export default function SetupMedication() {
   const theme = useTheme();
-  const now = today();
+  const now = useToday();
   const [name, setName] = useState("");
   const [doseText, setDoseText] = useState("");
   const [interval, setIntervalDays] = useState<(typeof INTERVALS)[number]>(7);

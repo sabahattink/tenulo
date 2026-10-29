@@ -2,12 +2,13 @@ import { desc, eq } from "drizzle-orm";
 import { useLiveQuery } from "drizzle-orm/expo-sqlite";
 import { type Db, db } from "@/db/client";
 import { settings, weightEntries } from "@/db/schema";
-import { ALL_TABLES_DELETE_ORDER } from "@/db/tables";
+import { wipeAll } from "@/db/ops";
 import { type LocalDate, localDateOf } from "@/domain/date";
 import { ulid } from "@/domain/id";
 import { isMinuteOfDay } from "@/domain/reminder";
 import { type WeightUnit, isPlausibleWeight } from "@/domain/weight";
 import { cancelAllReminders } from "@/platform/reminders";
+import { sweepExports } from "./files";
 
 export type Settings = typeof settings.$inferSelect;
 
@@ -86,16 +87,15 @@ export async function deleteWeight(id: string): Promise<void> {
 }
 
 /**
- * Erases every record in every table and resets settings, in one transaction, then cancels every
- * scheduled reminder. This is the "Delete all data" promised in the privacy policy.
+ * Erases every record in every table and resets settings in one transaction, then cancels every
+ * scheduled reminder and deletes exported files left in the cache. This is the "Delete all data"
+ * promised in the privacy policy.
  */
 export async function deleteAllData(): Promise<void> {
-  await db.transaction(async (tx) => {
-    for (const table of ALL_TABLES_DELETE_ORDER) await tx.delete(table);
-    await tx.insert(settings).values({ id: 1, updatedAt: Date.now() });
-  });
-  // Scheduled reminders carry what they are about; they go with the data.
+  wipeAll(db, Date.now());
+  // Scheduled reminders and exported files carry the same data; they go with it.
   cancelAllReminders();
+  sweepExports(0);
 }
 
 export function today(): LocalDate {

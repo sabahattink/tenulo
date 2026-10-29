@@ -8,13 +8,21 @@ import { startBilling, useIsPro } from "@/platform/billing";
 import { INJECTION_REMINDER_ID, WEIGH_IN_REMINDER_ID, applyReminders } from "@/platform/reminders";
 import { syncHealthConnect } from "./health-sync";
 import { useActiveMedication, useInjections, usePlanSteps } from "./injections";
-import { today, useSettings } from "./repo";
+import { sweepExports } from "./files";
+import { useSettings } from "./repo";
+import { useToday } from "./use-today";
 
 /** Health Connect opens Tenulo with one of these to show why it asks for access. */
 const HEALTH_RATIONALE_ACTIONS = new Set([
   "androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE",
   "android.intent.action.VIEW_PERMISSION_USAGE",
 ]);
+
+/** Exported files older than this are swept on start: long enough for a share to finish. */
+const EXPORT_TTL_MS = 10 * 60_000;
+
+/** The launch intent is read once per process; a remount must not navigate again. */
+let initialLaunchHandled = false;
 
 function route(info: LaunchInfo): void {
   if (info.action !== null && HEALTH_RATIONALE_ACTIONS.has(info.action)) router.push("/privacy");
@@ -33,11 +41,12 @@ export function useAppSync(): void {
   const history = useInjections(medication?.id);
   const steps = usePlanSteps(medication?.id);
   const isPro = useIsPro();
+  const now = useToday();
 
   const nextDue = injectionStatus(
     history.map((i) => ({ date: parseLocalDate(i.localDate), site: i.site, doseMcg: i.doseMcg })),
     steps.map((s) => ({ startDate: parseLocalDate(s.startDate), doseMcg: s.doseMcg, intervalDays: s.intervalDays })),
-    today(),
+    now,
   ).nextDue;
 
   const injectionEnabled = settings?.injectionReminderEnabled ?? false;
@@ -77,11 +86,14 @@ export function useAppSync(): void {
   }, []);
 
   useEffect(() => {
+    sweepExports(EXPORT_TTL_MS);
     if (Launch === null) return;
+    const sub = Launch.addListener("onLaunch", route);
+    if (initialLaunchHandled) return () => sub.remove();
+    initialLaunchHandled = true;
     // Let the navigator mount before pushing a screen on top of it.
     const initial = Launch.initial();
     const timer = setTimeout(() => route(initial), 0);
-    const sub = Launch.addListener("onLaunch", route);
     return () => {
       clearTimeout(timer);
       sub.remove();

@@ -14,7 +14,8 @@
   later: from 3 days before the last sync, for scales that upload late), maps them in
   `src/domain/health-connect.ts` (integer grams, local date, plausibility), and inserts only ids
   not already stored. `weight_entry.health_connect_id` is UNIQUE and tied to
-  `source = 'health_connect'` by a CHECK.
+  `source = 'health_connect'` by a CHECK. Rows and the sync cursor are written in one
+  transaction; when the read hits the page cap, the cursor moves only to the last reading read.
 - Runs on start and on every return to the foreground while enabled and Pro.
 - The rationale screen Health Connect opens is the in-app Privacy screen (`/privacy`), routed by
   `LaunchModule`.

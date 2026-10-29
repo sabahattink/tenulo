@@ -13,6 +13,12 @@
   and references that resolve inside the backup. Newer versions are refused with a clear message.
 - Restore merges in one transaction, parents before children, `ON CONFLICT DO NOTHING`, in chunks
   of 200 rows (SQLite bound-variable limit). Nothing already on the phone is changed or removed.
+  If the phone already has an active medication, the backup's other medications are added as
+  inactive (the app tracks one current medication); their injections still appear in History.
+- All multi-statement writes live in `src/db/ops.ts` and use Drizzle's synchronous API inside a
+  synchronous `transaction()`. The expo-sqlite driver commits when the callback returns, so an
+  `async` callback would commit at its first `await` and never roll back. `ops.test.ts` runs the
+  real driver on `node:sqlite`, including forced mid-way failures, and pins this driver behavior.
   Unit and goal are taken from the backup only on a phone with no records yet. Reminders and
   Health Connect are not restored: both need fresh permission on the new phone.
 

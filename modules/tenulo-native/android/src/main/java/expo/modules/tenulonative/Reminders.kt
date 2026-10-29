@@ -118,6 +118,8 @@ object ReminderScheduler {
   private fun arm(context: Context, reminder: Reminder) {
     val trigger = reminder.nextTrigger(System.currentTimeMillis())
     if (trigger == null) {
+      // Never firing again: drop it, including any alarm left from an earlier schedule.
+      alarms(context).cancel(alarmIntent(context, reminder.id))
       prefs(context).edit().remove(reminder.id).apply()
       return
     }

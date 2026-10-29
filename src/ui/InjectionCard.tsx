@@ -7,7 +7,7 @@ import { formatDose } from "@/domain/parse";
 import { ProgressRing } from "./ProgressRing";
 import { SITE_LABELS, dueText, intervalText, relativeDay } from "./copy";
 import { Icon } from "./icons";
-import { Button, Card, Label } from "./kit";
+import { Button, Card } from "./kit";
 import { type Theme, space, type } from "./theme";
 
 export function InjectionCard({ theme, today }: { theme: Theme; today: LocalDate }) {
@@ -47,7 +47,9 @@ export function InjectionCard({ theme, today }: { theme: Theme; today: LocalDate
     <Card theme={theme}>
       <View style={styles.top}>
         <View style={styles.flex}>
-          <Label theme={theme}>{medication.name}</Label>
+          <Text style={[type.small, styles.name, { color: theme.muted }]} numberOfLines={1}>
+            {medication.name}
+          </Text>
           <Text style={[type.heading, { color: overdue ? theme.warn : theme.text }]}>
             {dueText(status.daysUntilDue, status.nextDue, today)}
           </Text>
@@ -93,6 +95,7 @@ const styles = StyleSheet.create({
   top: { flexDirection: "row", gap: space.l, alignItems: "center" },
   emptyHead: { flexDirection: "row", gap: space.m, alignItems: "flex-start", marginBottom: space.s },
   emptyIcon: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center" },
+  name: { fontWeight: "600" },
   ringDay: { fontSize: 24, fontWeight: "700", fontVariant: ["tabular-nums"], lineHeight: 26 },
   ringOf: { fontSize: 11, fontWeight: "600" },
   actions: { flexDirection: "row", gap: space.s, marginTop: space.m },

@@ -1,6 +1,7 @@
 import { and, asc, desc, eq } from "drizzle-orm";
 import { useLiveQuery } from "drizzle-orm/expo-sqlite";
 import { db } from "@/db/client";
+import { createMedicationWithPlan } from "@/db/ops";
 import { injections, medications, planSteps, sideEffects } from "@/db/schema";
 import type { LocalDate } from "@/domain/date";
 import { ulid } from "@/domain/id";
@@ -38,21 +39,7 @@ export async function createMedication(input: {
   const name = input.name.trim();
   if (name.length < 1 || name.length > 60) throw new RangeError("Name must be 1-60 characters");
   assertDose(input.doseMcg);
-  const now = Date.now();
-  const id = ulid(now);
-  await db.transaction(async (tx) => {
-    await tx.insert(medications).values({ id, name, active: true, createdAt: now, updatedAt: now });
-    await tx.insert(planSteps).values({
-      id: ulid(now),
-      medicationId: id,
-      startDate: input.startDate,
-      doseMcg: input.doseMcg,
-      intervalDays: input.intervalDays,
-      createdAt: now,
-      updatedAt: now,
-    });
-  });
-  return id;
+  return createMedicationWithPlan(db, { ...input, name }, Date.now());
 }
 
 export async function renameMedication(id: string, name: string): Promise<void> {
@@ -93,6 +80,14 @@ export async function upsertPlanStep(input: {
 
 export async function deletePlanStep(id: string): Promise<void> {
   await db.delete(planSteps).where(eq(planSteps.id, id));
+}
+
+/** Every injection of every medication, newest first: the History log. */
+export function useAllInjections(): readonly Injection[] {
+  const { data } = useLiveQuery(
+    db.select().from(injections).orderBy(desc(injections.localDate), desc(injections.takenAt)),
+  );
+  return data;
 }
 
 export function useInjections(medicationId: string | undefined): readonly Injection[] {

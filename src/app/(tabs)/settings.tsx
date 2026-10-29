@@ -28,7 +28,7 @@ import {
 } from "@/platform/health";
 import { canNotify, remindersAvailable, requestNotificationPermission } from "@/platform/reminders";
 import { TimeStepper } from "@/ui/TimeStepper";
-import { backupProblem, restoreSummaryText, syncedText } from "@/ui/copy";
+import { backupProblem, healthSyncText, restoreSummaryText, syncedText } from "@/ui/copy";
 import { Button, ListRow, ProBadge, ScreenTitle, Section, Segmented, SwitchRow } from "@/ui/kit";
 import { type Theme, radius, space, type, useTheme } from "@/ui/theme";
 
@@ -59,6 +59,11 @@ export default function SettingsScreen() {
 
   if (settings === undefined) return null;
   const unit = settings.weightUnit;
+
+  /** Fire-and-forget writes still report failure instead of silently doing nothing. */
+  const save = (task: Promise<unknown>) => {
+    task.catch((e: unknown) => Alert.alert("That did not work", errorText(e)));
+  };
 
   /** Turns a reminder on only once Android lets Tenulo show notifications. */
   const enableReminder = async (save: () => Promise<void>) => {
@@ -106,7 +111,7 @@ export default function SettingsScreen() {
       }
       await setHealthConnectEnabled(true);
       const result = await syncHealthConnect();
-      if (result.kind === "synced") Alert.alert("Health Connect", restoreSummaryText({ weights: result.added }));
+      if (result.kind === "synced") Alert.alert("Health Connect", healthSyncText(result));
     });
 
   const restore = () =>
@@ -125,10 +130,18 @@ export default function SettingsScreen() {
           { text: "Cancel", style: "cancel" },
           {
             text: "Restore",
-            onPress: () =>
-              void restoreBackup(backup)
-                .then((summary) => Alert.alert("Backup restored", restoreSummaryText(summary)))
-                .catch((e: unknown) => Alert.alert("Restore failed", errorText(e))),
+            onPress: () => {
+              try {
+                const summary = restoreBackup(backup);
+                const inactive =
+                  summary.inactiveMedications > 0
+                    ? " The medication from the backup was added as inactive; this phone keeps its current one."
+                    : "";
+                Alert.alert("Backup restored", `${restoreSummaryText(summary)}${inactive}`);
+              } catch (e) {
+                Alert.alert("Restore failed", `Nothing was changed. ${errorText(e)}`);
+              }
+            },
           },
         ],
       );
@@ -146,7 +159,15 @@ export default function SettingsScreen() {
           onPress: () =>
             Alert.alert("Are you sure?", "There is no copy anywhere else unless you made a backup.", [
               { text: "Keep my data", style: "cancel" },
-              { text: "Erase", style: "destructive", onPress: () => void deleteAllData() },
+              {
+                text: "Erase",
+                style: "destructive",
+                onPress: () =>
+                  void run("delete", async () => {
+                    await deleteAllData();
+                    Alert.alert("All data deleted", "Tenulo is empty again. Reminders were cancelled too.");
+                  }),
+              },
             ]),
         },
       ],
@@ -166,7 +187,7 @@ export default function SettingsScreen() {
 
       <Section theme={theme} title="Weight">
         <View style={styles.block}>
-          <Segmented theme={theme} label="Weight unit" options={UNITS} value={unit} onChange={(u) => void setWeightUnit(u)} />
+          <Segmented theme={theme} label="Weight unit" options={UNITS} value={unit} onChange={(u) => save(setWeightUnit(u))} />
         </View>
         <GoalEditor theme={theme} unit={unit} goalG={settings.goalWeightG} />
       </Section>
@@ -188,9 +209,11 @@ export default function SettingsScreen() {
           value={settings.injectionReminderEnabled}
           disabled={!reminders || medication === undefined}
           onChange={(on) =>
-            void (on
-              ? enableReminder(() => setInjectionReminder(true, settings.injectionReminderMinute))
-              : setInjectionReminder(false, settings.injectionReminderMinute))
+            save(
+              on
+                ? enableReminder(() => setInjectionReminder(true, settings.injectionReminderMinute))
+                : setInjectionReminder(false, settings.injectionReminderMinute),
+            )
           }
         />
         {settings.injectionReminderEnabled && (
@@ -198,7 +221,7 @@ export default function SettingsScreen() {
             theme={theme}
             label="Injection reminder time"
             minute={settings.injectionReminderMinute}
-            onChange={(m) => void setInjectionReminder(true, m)}
+            onChange={(m) => save(setInjectionReminder(true, m))}
           />
         )}
         <SwitchRow
@@ -210,9 +233,11 @@ export default function SettingsScreen() {
           disabled={!reminders}
           last={!settings.weighInReminderEnabled}
           onChange={(on) =>
-            void (on
-              ? enableReminder(() => setWeighInReminder(true, settings.weighInReminderMinute))
-              : setWeighInReminder(false, settings.weighInReminderMinute))
+            save(
+              on
+                ? enableReminder(() => setWeighInReminder(true, settings.weighInReminderMinute))
+                : setWeighInReminder(false, settings.weighInReminderMinute),
+            )
           }
         />
         {settings.weighInReminderEnabled && (
@@ -220,7 +245,7 @@ export default function SettingsScreen() {
             theme={theme}
             label="Weigh-in reminder time"
             minute={settings.weighInReminderMinute}
-            onChange={(m) => void setWeighInReminder(true, m)}
+            onChange={(m) => save(setWeighInReminder(true, m))}
           />
         )}
       </Section>
@@ -258,7 +283,7 @@ export default function SettingsScreen() {
                 void run("hc-sync", async () => {
                   const r = await syncHealthConnect();
                   if (r.kind === "no-access") Alert.alert("No access", "Tenulo can no longer read Weight in Health Connect.");
-                  else if (r.kind === "synced") Alert.alert("Health Connect", restoreSummaryText({ weights: r.added }));
+                  else if (r.kind === "synced") Alert.alert("Health Connect", healthSyncText(r));
                 })
               }
             />
@@ -322,7 +347,7 @@ export default function SettingsScreen() {
               theme={theme}
               title="Load sample data (development build)"
               detail="Nine weeks of made-up entries, for trying the app"
-              onPress={() => void run("sample", () => seedSampleData(today()))}
+              onPress={() => void run("sample", async () => seedSampleData(today()))}
             />
           </>
         )}
@@ -364,7 +389,10 @@ function GoalEditor({ theme, unit, goalG }: { theme: Theme; unit: WeightUnit; go
   const changed = text.trim() === "" ? goalG !== null : parsed.ok && parsed.grams !== goalG;
   const save = () => {
     const goal = text.trim() === "" ? null : parsed.ok ? parsed.grams : undefined;
-    if (goal !== undefined) void setGoalWeight(goal).then(() => setDraft(undefined));
+    if (goal === undefined) return;
+    setGoalWeight(goal)
+      .then(() => setDraft(undefined))
+      .catch((e: unknown) => Alert.alert("Could not save the goal", errorText(e)));
   };
   return (
     <View style={styles.block}>

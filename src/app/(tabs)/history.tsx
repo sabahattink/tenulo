@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { deleteInjection, deleteSideEffect, useActiveMedication, useInjections, useSideEffects } from "@/data/injections";
-import { deleteWeight, today, useSettings, useWeightEntries } from "@/data/repo";
+import { deleteInjection, deleteSideEffect, useAllInjections, useSideEffects } from "@/data/injections";
+import { deleteWeight, useSettings, useWeightEntries } from "@/data/repo";
+import { useToday } from "@/data/use-today";
 import { type LocalDate, parseLocalDate } from "@/domain/date";
 import { formatDose } from "@/domain/parse";
 import { isSeverity } from "@/domain/side-effect";
@@ -29,11 +30,10 @@ const FILTERS: readonly { value: TimelineFilter; label: string }[] = [
 export default function History() {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
-  const now = today();
+  const now = useToday();
   const unit = useSettings()?.weightUnit ?? "kg";
   const weights = useWeightEntries();
-  const medication = useActiveMedication();
-  const shots = useInjections(medication?.id);
+  const shots = useAllInjections();
   const effects = useSideEffects();
   const [filter, setFilter] = useState<TimelineFilter>("all");
 
@@ -152,6 +152,10 @@ function TimelineRow({
     <Pressable
       onLongPress={onLongPress}
       accessibilityHint="Long press to delete"
+      accessibilityActions={[{ name: "delete", label: "Delete" }]}
+      onAccessibilityAction={(e) => {
+        if (e.nativeEvent.actionName === "delete") onLongPress();
+      }}
       accessibilityLabel={`${row.title}, ${row.detail}, ${relativeDay(row.date, now)}`}
       style={({ pressed }) => [
         styles.row,
