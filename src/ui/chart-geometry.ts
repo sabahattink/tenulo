@@ -13,6 +13,8 @@ export interface ChartBox {
 export interface ChartGeometry {
   /** SVG path for the smoothed trend line, or "" with fewer than two points. */
   readonly trendPath: string;
+  /** The trend line's vertices, oldest first. */
+  readonly trendPoints: readonly { x: number; y: number }[];
   readonly readings: readonly { x: number; y: number; date: LocalDate }[];
   readonly ticks: readonly { y: number; valueG: number }[];
   /** Y of the goal line, only when the goal lies within the plotted range. */
@@ -66,18 +68,16 @@ export function chartGeometry(
   const y = (g: number) => box.padTop + (1 - (g - lo) / (hi - lo)) * innerH;
   const r = (n: number) => Math.round(n * 10) / 10;
 
+  const trendPoints = visible.map((p) => ({ x: r(x(toDayNumber(p.date))), y: r(y(p.trendG)) }));
   const trendPath =
-    visible.length < 2
-      ? ""
-      : visible
-          .map((p, i) => `${i === 0 ? "M" : "L"}${r(x(toDayNumber(p.date)))},${r(y(p.trendG))}`)
-          .join(" ");
+    trendPoints.length < 2 ? "" : trendPoints.map((p, i) => `${i === 0 ? "M" : "L"}${p.x},${p.y}`).join(" ");
 
   const ticks: { y: number; valueG: number }[] = [];
   for (let v = lo; v <= hi + step / 2; v += step) ticks.push({ y: r(y(v)), valueG: v });
 
   return {
     trendPath,
+    trendPoints,
     readings: visible.map((p) => ({ x: r(x(toDayNumber(p.date))), y: r(y(p.valueG)), date: p.date })),
     ticks,
     goalY: goalG !== null && goalG >= lo && goalG <= hi ? r(y(goalG)) : undefined,

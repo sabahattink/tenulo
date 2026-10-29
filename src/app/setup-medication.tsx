@@ -1,11 +1,11 @@
 import { router } from "expo-router";
 import { useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { createMedication } from "@/data/injections";
 import { today } from "@/data/repo";
 import { parseDoseInput } from "@/domain/parse";
 import { DayPicker } from "@/ui/DayPicker";
-import { Button, Label } from "@/ui/kit";
+import { Button, Label, Segmented } from "@/ui/kit";
 import { radius, space, useTheme } from "@/ui/theme";
 
 const INTERVALS = [7, 14, 1] as const;
@@ -40,7 +40,7 @@ export default function SetupMedication() {
     }
   };
 
-  const input = [styles.input, { color: theme.text, borderColor: theme.border, backgroundColor: theme.card }];
+  const input = [styles.input, { color: theme.text, backgroundColor: theme.card, borderColor: theme.border }];
 
   return (
     <ScrollView style={{ backgroundColor: theme.background }} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
@@ -74,23 +74,14 @@ export default function SetupMedication() {
       <Text style={[styles.message, { color: theme.danger }]}>{doseMessage ?? error ?? " "}</Text>
 
       <Label theme={theme}>How often</Label>
-      <View style={[styles.segment, { borderColor: theme.border }]} accessibilityRole="radiogroup">
-        {INTERVALS.map((i) => {
-          const selected = i === interval;
-          return (
-            <Pressable
-              key={i}
-              accessibilityRole="radio"
-              accessibilityState={{ selected }}
-              onPress={() => setIntervalDays(i)}
-              style={[styles.segmentItem, selected && { backgroundColor: theme.accent }]}
-            >
-              <Text style={[styles.segmentText, { color: selected ? theme.accentText : theme.text }]}>
-                {INTERVAL_LABELS[i]}
-              </Text>
-            </Pressable>
-          );
-        })}
+      <View style={styles.segment}>
+        <Segmented
+          theme={theme}
+          label="How often"
+          options={INTERVALS.map((i) => ({ value: i, label: INTERVAL_LABELS[i] }))}
+          value={interval}
+          onChange={setIntervalDays}
+        />
       </View>
 
       <Label theme={theme}>On this dose since</Label>
@@ -108,8 +99,6 @@ const styles = StyleSheet.create({
   intro: { fontSize: 15, lineHeight: 21, marginBottom: space.m },
   input: { borderWidth: 1.5, borderRadius: radius.m, paddingHorizontal: space.m, minHeight: 52, fontSize: 18, marginBottom: space.m },
   message: { fontSize: 14, minHeight: 20 },
-  segment: { flexDirection: "row", borderWidth: 1.5, borderRadius: radius.m, overflow: "hidden", marginBottom: space.l },
-  segmentItem: { flex: 1, minHeight: 48, alignItems: "center", justifyContent: "center", paddingHorizontal: space.xs },
-  segmentText: { fontSize: 14, fontWeight: "600", textAlign: "center" },
+  segment: { marginBottom: space.l },
   save: { marginTop: space.xl },
 });

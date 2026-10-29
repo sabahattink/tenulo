@@ -1,12 +1,12 @@
 import { router } from "expo-router";
 import { useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { type SideEffectType, injectionBefore, logSideEffect, useActiveMedication } from "@/data/injections";
 import { today } from "@/data/repo";
 import { SEVERITIES, SIDE_EFFECT_TYPES } from "@/domain/side-effect";
 import { DayPicker } from "@/ui/DayPicker";
 import { SEVERITY_LABELS, SIDE_EFFECT_LABELS } from "@/ui/copy";
-import { Button, Label } from "@/ui/kit";
+import { Button, Chip, Label, Segmented } from "@/ui/kit";
 import { radius, space, useTheme } from "@/ui/theme";
 
 export default function LogSideEffect() {
@@ -37,38 +37,20 @@ export default function LogSideEffect() {
     <ScrollView style={{ backgroundColor: theme.background }} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       <Label theme={theme}>What did you notice?</Label>
       <View style={styles.chips} accessibilityRole="radiogroup">
-        {SIDE_EFFECT_TYPES.map((t) => {
-          const selected = t === type;
-          return (
-            <Pressable
-              key={t}
-              accessibilityRole="radio"
-              accessibilityState={{ selected }}
-              onPress={() => setType(t)}
-              style={[styles.chip, { borderColor: selected ? theme.accent : theme.border, backgroundColor: selected ? theme.accent : theme.card }]}
-            >
-              <Text style={[styles.chipText, { color: selected ? theme.accentText : theme.text }]}>{SIDE_EFFECT_LABELS[t]}</Text>
-            </Pressable>
-          );
-        })}
+        {SIDE_EFFECT_TYPES.map((t) => (
+          <Chip key={t} theme={theme} label={SIDE_EFFECT_LABELS[t]} selected={t === type} onPress={() => setType(t)} />
+        ))}
       </View>
 
       <Label theme={theme}>How strong, for you?</Label>
-      <View style={[styles.segment, { borderColor: theme.border }]} accessibilityRole="radiogroup">
-        {SEVERITIES.map((s) => {
-          const selected = s === severity;
-          return (
-            <Pressable
-              key={s}
-              accessibilityRole="radio"
-              accessibilityState={{ selected }}
-              onPress={() => setSeverity(s)}
-              style={[styles.segmentItem, selected && { backgroundColor: theme.accent }]}
-            >
-              <Text style={[styles.segmentText, { color: selected ? theme.accentText : theme.text }]}>{SEVERITY_LABELS[s]}</Text>
-            </Pressable>
-          );
-        })}
+      <View style={styles.segment}>
+        <Segmented
+          theme={theme}
+          label="How strong"
+          options={SEVERITIES.map((s) => ({ value: s, label: SEVERITY_LABELS[s] }))}
+          value={severity}
+          onChange={setSeverity}
+        />
       </View>
 
       <Label theme={theme}>Day</Label>
@@ -97,11 +79,7 @@ export default function LogSideEffect() {
 const styles = StyleSheet.create({
   content: { padding: space.xl, gap: space.s, paddingBottom: space.xxl },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: space.s, marginBottom: space.l },
-  chip: { borderWidth: 1.5, borderRadius: 999, paddingHorizontal: space.l, minHeight: 44, justifyContent: "center" },
-  chipText: { fontSize: 15, fontWeight: "600" },
-  segment: { flexDirection: "row", borderWidth: 1.5, borderRadius: radius.m, overflow: "hidden", marginBottom: space.l },
-  segmentItem: { flex: 1, minHeight: 48, alignItems: "center", justifyContent: "center" },
-  segmentText: { fontSize: 15, fontWeight: "600" },
+  segment: { marginBottom: space.l },
   input: { borderWidth: 1.5, borderRadius: radius.m, paddingHorizontal: space.m, minHeight: 52, fontSize: 16 },
   safety: { fontSize: 13, lineHeight: 18, marginVertical: space.l },
 });

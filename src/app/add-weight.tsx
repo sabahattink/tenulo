@@ -1,13 +1,12 @@
 import { router } from "expo-router";
 import { useState } from "react";
-import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, View } from "react-native";
 import { addWeight, today, useSettings, useWeightEntries } from "@/data/repo";
-import { addDays, diffDays } from "@/domain/date";
 import { type ParseWeightResult, parseWeightInput } from "@/domain/parse";
 import { weightNumber } from "@/domain/weight";
-import { relativeDay } from "@/ui/copy";
+import { DayPicker } from "@/ui/DayPicker";
 import { Button, Label } from "@/ui/kit";
-import { radius, space, useTheme } from "@/ui/theme";
+import { radius, space, type, useTheme } from "@/ui/theme";
 
 const MAX_DAYS_BACK = 60;
 
@@ -32,7 +31,6 @@ export default function AddWeight() {
 
   const parsed = parseWeightInput(text, unit);
   const message = errorText(parsed, unit);
-  const back = diffDays(date, now);
 
   const save = async () => {
     if (!parsed.ok || saving) return;
@@ -53,7 +51,12 @@ export default function AddWeight() {
     >
       <View style={styles.body}>
         <Label theme={theme}>Weight</Label>
-        <View style={[styles.inputRow, { borderColor: message ? theme.danger : theme.border, backgroundColor: theme.card }]}>
+        <View
+          style={[
+            styles.inputRow,
+            { borderColor: message ? theme.danger : theme.accent, backgroundColor: theme.card },
+          ]}
+        >
           <TextInput
             value={text}
             onChangeText={setText}
@@ -62,66 +65,27 @@ export default function AddWeight() {
             autoFocus
             maxLength={6}
             placeholder={last ? weightNumber(last.weightG, unit) : unit === "kg" ? "82.4" : "181.6"}
-            placeholderTextColor={theme.muted}
+            placeholderTextColor={theme.reading}
             accessibilityLabel={`Weight in ${unit}`}
             style={[styles.input, { color: theme.text }]}
           />
           <Text style={[styles.unit, { color: theme.muted }]}>{unit}</Text>
         </View>
-        <Text style={[styles.message, { color: theme.danger }]} accessibilityLiveRegion="polite">
+        <Text style={[type.small, styles.message, { color: theme.danger }]} accessibilityLiveRegion="polite">
           {message ?? saveError ?? " "}
         </Text>
 
         <Label theme={theme}>Day</Label>
-        <View style={styles.dateRow}>
-          <Stepper
-            label="‹"
-            accessibilityLabel="Previous day"
-            disabled={back >= MAX_DAYS_BACK}
-            onPress={() => setDate(addDays(date, -1))}
-            theme={theme}
-          />
-          <Text style={[styles.dateText, { color: theme.text }]}>{relativeDay(date, now)}</Text>
-          <Stepper
-            label="›"
-            accessibilityLabel="Next day"
-            disabled={back <= 0}
-            onPress={() => setDate(addDays(date, 1))}
-            theme={theme}
-          />
-        </View>
+        <DayPicker theme={theme} value={date} today={now} onChange={setDate} maxDaysBack={MAX_DAYS_BACK} />
 
         <View style={styles.save}>
-          <Button
-            theme={theme}
-            label={saving ? "Saving…" : "Save"}
-            onPress={() => void save()}
-            disabled={!parsed.ok || saving}
-          />
+          <Button theme={theme} label={saving ? "Saving…" : "Save"} onPress={() => void save()} disabled={!parsed.ok || saving} />
         </View>
+        <Text style={[type.small, styles.hint, { color: theme.muted }]}>
+          Weigh at the same time each day, ideally after waking. One reading a day is plenty.
+        </Text>
       </View>
     </KeyboardAvoidingView>
-  );
-}
-
-function Stepper(props: {
-  label: string;
-  accessibilityLabel: string;
-  disabled: boolean;
-  onPress: () => void;
-  theme: ReturnType<typeof useTheme>;
-}) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={props.accessibilityLabel}
-      accessibilityState={{ disabled: props.disabled }}
-      disabled={props.disabled}
-      onPress={props.onPress}
-      style={[styles.stepper, { borderColor: props.theme.border, opacity: props.disabled ? 0.3 : 1 }]}
-    >
-      <Text style={[styles.stepperText, { color: props.theme.text }]}>{props.label}</Text>
-    </Pressable>
   );
 }
 
@@ -131,17 +95,14 @@ const styles = StyleSheet.create({
   inputRow: {
     flexDirection: "row",
     alignItems: "baseline",
-    borderWidth: 1.5,
-    borderRadius: radius.m,
-    paddingHorizontal: space.l,
-    paddingVertical: space.s,
+    borderWidth: 2,
+    borderRadius: radius.l,
+    paddingHorizontal: space.xl,
+    paddingVertical: space.m,
   },
-  input: { flex: 1, fontSize: 44, fontWeight: "700", fontVariant: ["tabular-nums"] },
-  unit: { fontSize: 20 },
-  message: { fontSize: 14, minHeight: 20, marginBottom: space.l },
-  dateRow: { flexDirection: "row", alignItems: "center", gap: space.l },
-  dateText: { flex: 1, textAlign: "center", fontSize: 18, fontWeight: "600" },
-  stepper: { width: 48, height: 48, borderRadius: 24, borderWidth: 1.5, alignItems: "center", justifyContent: "center" },
-  stepperText: { fontSize: 24, lineHeight: 28 },
+  input: { flex: 1, fontSize: 52, fontWeight: "700", fontVariant: ["tabular-nums"], letterSpacing: -1 },
+  unit: { fontSize: 22, fontWeight: "600" },
+  message: { minHeight: 20, marginBottom: space.m },
   save: { marginTop: space.xl },
+  hint: { textAlign: "center", marginTop: space.s },
 });

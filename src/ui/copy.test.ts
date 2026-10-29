@@ -1,6 +1,17 @@
 import { describe, expect, it } from "vitest";
 import { parseLocalDate as d } from "../domain/date";
-import { forecastText, relativeDay, shortDate } from "./copy";
+import {
+  backupProblem,
+  forecastText,
+  intervalText,
+  longDate,
+  longWeekday,
+  monthTitle,
+  relativeDay,
+  restoreSummaryText,
+  shortDate,
+  syncedText,
+} from "./copy";
 
 const today = d("2026-10-19");
 
@@ -30,5 +41,44 @@ describe("forecastText", () => {
     expect(
       forecastText({ kind: "on-track", rateGPerDay: -100, goalDate: d("2027-01-07") }, "kg", today),
     ).toBe("At \u22120.7 kg per week, your trend would reach your goal around 7 Jan 2027.");
+  });
+});
+
+describe("long dates", () => {
+  it("names the weekday and month", () => {
+    expect(longWeekday(d("2026-10-29"))).toBe("Thursday, 29 October");
+    expect(longWeekday(d("2026-11-02"))).toBe("Monday, 2 November");
+    expect(longWeekday(d("1969-12-31"))).toBe("Wednesday, 31 December");
+    expect(longDate(d("2026-03-05"))).toBe("5 Mar 2026");
+    expect(monthTitle(d("2026-10-29"))).toBe("October 2026");
+  });
+
+  it("describes intervals in words", () => {
+    expect(intervalText(1)).toBe("every day");
+    expect(intervalText(7)).toBe("every week");
+    expect(intervalText(14)).toBe("every 2 weeks");
+    expect(intervalText(10)).toBe("every 10 days");
+  });
+});
+
+describe("data copy", () => {
+  it("summarizes a restore in a sentence", () => {
+    expect(restoreSummaryText({ weights: 12, injections: 1, sideEffects: 2 })).toBe("Added 12 weigh-ins, 1 injection and 2 side effects.");
+    expect(restoreSummaryText({ weights: 1 })).toBe("Added 1 weigh-in.");
+    expect(restoreSummaryText({ weights: 0, injections: 0 })).toBe("Nothing new: everything was already on this phone.");
+  });
+
+  it("explains refused backups", () => {
+    expect(backupProblem({ ok: false, reason: "not-json" })).toContain("not a Tenulo backup");
+    expect(backupProblem({ ok: false, reason: "newer-version" })).toContain("newer version");
+    expect(backupProblem({ ok: false, reason: "invalid", detail: "data.weights.0.weightG: too small" })).toContain("weightG");
+  });
+
+  it("describes the last Health Connect read", () => {
+    const now = new Date(2026, 9, 29, 12, 0);
+    expect(syncedText(false, null, now)).toBe("Off");
+    expect(syncedText(true, null, now)).toBe("Not read yet");
+    expect(syncedText(true, new Date(2026, 9, 29, 8, 5).getTime(), now)).toBe("Last read today at 08:05");
+    expect(syncedText(true, new Date(2026, 9, 20, 21, 30).getTime(), now)).toBe("Last read 20 Oct at 21:30");
   });
 });

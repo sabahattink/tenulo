@@ -1,4 +1,6 @@
-import { type LocalDate, diffDays } from "../domain/date";
+import type { ParseBackupResult } from "../domain/backup";
+import { type LocalDate, diffDays, localDateOf, toDayNumber } from "../domain/date";
+import { formatMinuteOfDay } from "../domain/reminder";
 import type { Forecast } from "../domain/forecast";
 import type { InjectionSite } from "../domain/injection";
 import type { SideEffectType as SideEffectKind } from "../domain/side-effect";
@@ -11,6 +13,12 @@ export function shortDate(date: LocalDate, today: LocalDate): string {
   const [y, m, d] = date.split("-");
   const label = `${Number(d)} ${MONTHS[Number(m) - 1] ?? ""}`;
   return y === today.slice(0, 4) ? label : `${label} ${y}`;
+}
+
+/** For use inside a sentence: "today", "yesterday", "3 days ago", "20 Oct". */
+export function relativeDayInline(date: LocalDate, today: LocalDate): string {
+  const text = relativeDay(date, today);
+  return text === "Today" || text === "Yesterday" ? text.toLowerCase() : text;
 }
 
 /** "Today", "Yesterday", "3 days ago", or a date further back. */
@@ -91,4 +99,80 @@ export function intervalText(days: number): string {
   if (days === 7) return "every week";
   if (days % 7 === 0) return `every ${days / 7} weeks`;
   return `every ${days} days`;
+}
+
+const WEEKDAYS = ["Thursday", "Friday", "Saturday", "Sunday", "Monday", "Tuesday", "Wednesday"];
+const MONTHS_LONG = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
+/** "Thursday, 29 October". Weekday from the day number: 1970-01-01 was a Thursday. */
+export function longWeekday(date: LocalDate): string {
+  const [, m, d] = date.split("-");
+  const weekday = WEEKDAYS[((toDayNumber(date) % 7) + 7) % 7] ?? "";
+  return `${weekday}, ${Number(d)} ${MONTHS_LONG[Number(m) - 1] ?? ""}`;
+}
+
+/** "October 2026", for grouping history by month. */
+export function monthTitle(date: LocalDate): string {
+  const [y, m] = date.split("-");
+  return `${MONTHS_LONG[Number(m) - 1] ?? ""} ${y}`;
+}
+
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+
+function listJoin(parts: readonly string[]): string {
+  if (parts.length <= 1) return parts.join("");
+  return `${parts.slice(0, -1).join(", ")} and ${parts.at(-1) ?? ""}`;
+}
+
+/** "Added 12 weigh-ins, 4 injections and 2 side effects." */
+export function restoreSummaryText(added: {
+  weights?: number;
+  injections?: number;
+  sideEffects?: number;
+  planSteps?: number;
+  medications?: number;
+}): string {
+  const parts = [
+    added.weights ? plural(added.weights, "weigh-in", "weigh-ins") : "",
+    added.injections ? plural(added.injections, "injection", "injections") : "",
+    added.sideEffects ? plural(added.sideEffects, "side effect", "side effects") : "",
+    added.planSteps ? plural(added.planSteps, "plan step", "plan steps") : "",
+    added.medications ? plural(added.medications, "medication", "medications") : "",
+  ].filter((p) => p !== "");
+  return parts.length === 0 ? "Nothing new: everything was already on this phone." : `Added ${listJoin(parts)}.`;
+}
+
+/** Why a backup file was refused, in words a person can act on. */
+export function backupProblem(r: Extract<ParseBackupResult, { ok: false }>): string {
+  switch (r.reason) {
+    case "not-json":
+    case "not-a-backup":
+      return "This file is not a Tenulo backup.";
+    case "newer-version":
+      return "This backup was made by a newer version of Tenulo. Update Tenulo, then try again.";
+    case "invalid":
+      return `The backup is damaged or was edited, so nothing was restored. (${r.detail})`;
+  }
+}
+
+/** "Last read 29 Oct at 08:15", relative to `now`. */
+export function syncedText(enabled: boolean, syncedAt: number | null, now: Date = new Date()): string {
+  if (!enabled) return "Off";
+  if (syncedAt === null) return "Not read yet";
+  const at = new Date(syncedAt);
+  const minute = at.getHours() * 60 + at.getMinutes();
+  return `Last read ${relativeDayInline(localDateOf(at), localDateOf(now))} at ${formatMinuteOfDay(minute)}`;
 }

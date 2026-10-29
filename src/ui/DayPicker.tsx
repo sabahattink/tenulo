@@ -39,7 +39,7 @@ function Step(p: { theme: Theme; label: string; a11y: string; disabled: boolean;
       accessibilityState={{ disabled: p.disabled }}
       disabled={p.disabled}
       onPress={p.onPress}
-      style={[styles.step, { borderColor: p.theme.border, opacity: p.disabled ? 0.3 : 1 }]}
+      style={({ pressed }) => [styles.step, { backgroundColor: p.theme.surfaceAlt, opacity: p.disabled ? 0.3 : pressed ? 0.7 : 1 }]}
     >
       <Text style={[styles.stepText, { color: p.theme.text }]}>{p.label}</Text>
     </Pressable>
@@ -49,6 +49,6 @@ function Step(p: { theme: Theme; label: string; a11y: string; disabled: boolean;
 const styles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", gap: space.l },
   text: { flex: 1, textAlign: "center", fontSize: 18, fontWeight: "600" },
-  step: { width: 48, height: 48, borderRadius: 24, borderWidth: 1.5, alignItems: "center", justifyContent: "center" },
+  step: { width: 48, height: 48, borderRadius: 24, alignItems: "center", justifyContent: "center" },
   stepText: { fontSize: 24, lineHeight: 28 },
 });

@@ -1,18 +1,21 @@
-import { Link, Stack, router } from "expo-router";
+import { router } from "expo-router";
 import { useMemo } from "react";
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { deleteWeight, today, useSettings, useWeightEntries } from "@/data/repo";
-import { parseLocalDate } from "@/domain/date";
-import { summarizeWeights } from "@/domain/summary";
-import { formatWeight, formatWeightChange, weightNumber } from "@/domain/weight";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Svg, { Circle, Path } from "react-native-svg";
+import { today, useSettings, useWeightEntries } from "@/data/repo";
+import { type LocalDate, parseLocalDate } from "@/domain/date";
+import { type WeightSummary, goalProgress, summarizeWeights } from "@/domain/summary";
+import { type WeightUnit, formatWeight, formatWeightChange, weightNumber } from "@/domain/weight";
 import { InjectionCard } from "@/ui/InjectionCard";
 import { TrendChart } from "@/ui/TrendChart";
-import { forecastText, relativeDay } from "@/ui/copy";
-import { Button, Card, Label } from "@/ui/kit";
-import { space, useTheme } from "@/ui/theme";
+import { forecastText, longWeekday, relativeDayInline } from "@/ui/copy";
+import { Button, Card, Label, ScreenTitle } from "@/ui/kit";
+import { type Theme, radius, space, type, useTheme } from "@/ui/theme";
 
-export default function Home() {
+export default function Today() {
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
   const settings = useSettings();
   const entries = useWeightEntries();
   const unit = settings?.weightUnit ?? "kg";
@@ -29,122 +32,124 @@ export default function Home() {
     [entries, goalG, now],
   );
 
-  const settingsLink = (
-    <Link href="/settings" asChild>
-      <Pressable accessibilityRole="button" accessibilityLabel="Settings" hitSlop={12}>
-        <Text style={{ color: theme.accent, fontSize: 16, fontWeight: "600" }}>Settings</Text>
-      </Pressable>
-    </Link>
-  );
-
-  if (summary === undefined) {
-    return (
-      <ScrollView style={{ backgroundColor: theme.background }} contentContainerStyle={styles.content}>
-        <Stack.Screen options={{ headerRight: () => settingsLink }} />
-        <InjectionCard theme={theme} today={now} />
-        <Card theme={theme}>
-          <Label theme={theme}>Weight</Label>
-          <Text style={[styles.emptyTitle, { color: theme.text }]}>Your trend starts with one weigh-in</Text>
-          <Text style={[styles.emptyBody, { color: theme.muted }]}>
-            Daily weight jumps around with water and salt. Tenulo smooths it into a trend line, so you can see the
-            direction you are really heading. Everything stays on this phone.
-          </Text>
-          <Button theme={theme} label="Log your weight" onPress={() => router.push("/add-weight")} />
-        </Card>
-      </ScrollView>
-    );
-  }
-
-  const confirmDelete = (id: string, label: string) =>
-    Alert.alert("Delete this entry?", label, [
-      { text: "Cancel", style: "cancel" },
-      { text: "Delete", style: "destructive", onPress: () => void deleteWeight(id) },
-    ]);
-
   return (
-    <ScrollView style={{ backgroundColor: theme.background }} contentContainerStyle={styles.content}>
-      <Stack.Screen options={{ headerRight: () => settingsLink }} />
+    <ScrollView
+      style={{ backgroundColor: theme.background }}
+      contentContainerStyle={[styles.content, { paddingTop: insets.top + space.l }]}
+    >
+      <ScreenTitle theme={theme} eyebrow={longWeekday(now)} title="Today" />
+      {summary === undefined ? (
+        <EmptyWeight theme={theme} />
+      ) : (
+        <WeightHero theme={theme} summary={summary} unit={unit} goalG={goalG} now={now} />
+      )}
       <InjectionCard theme={theme} today={now} />
-
-      <Card theme={theme}>
-        <Label theme={theme}>Trend</Label>
-        <View style={styles.headlineRow}>
-          <Text style={[styles.headline, { color: theme.text }]} accessibilityLabel={formatWeight(summary.currentTrendG, unit)}>
-            {weightNumber(summary.currentTrendG, unit)}
-          </Text>
-          <Text style={[styles.unit, { color: theme.muted }]}>{unit}</Text>
-        </View>
-        <View style={styles.statsRow}>
-          <Stat theme={theme} label="This week" value={summary.weekChangeG === undefined ? "—" : formatWeightChange(summary.weekChangeG, unit)} />
-          <Stat theme={theme} label="Since start" value={formatWeightChange(summary.totalChangeG, unit)} />
-          <Stat theme={theme} label="Last weigh-in" value={relativeDay(summary.latestDate, now)} />
-        </View>
-        <Text style={[styles.forecast, { color: theme.text }]}>{forecastText(summary.forecast, unit, now)}</Text>
-      </Card>
-
-      <Card theme={theme}>
-        <TrendChart trend={summary.trend} goalG={goalG} unit={unit} theme={theme} />
-      </Card>
-
-      <Button
-        theme={theme}
-        label={summary.daysSinceLatest === 0 ? "Log another weigh-in" : "Log today's weight"}
-        onPress={() => router.push("/add-weight")}
-      />
-
-      <Card theme={theme}>
-        <Label theme={theme}>Recent</Label>
-        {entries.slice(0, 14).map((e) => {
-          const date = parseLocalDate(e.localDate);
-          return (
-            <Pressable
-              key={e.id}
-              onLongPress={() => confirmDelete(e.id, `${formatWeight(e.weightG, unit)} · ${relativeDay(date, now)}`)}
-              accessibilityHint="Long press to delete"
-              style={[styles.row, { borderBottomColor: theme.border }]}
-            >
-              <Text style={[styles.rowDate, { color: theme.muted }]}>{relativeDay(date, now)}</Text>
-              <Text style={[styles.rowValue, { color: theme.text }]}>{formatWeight(e.weightG, unit)}</Text>
-            </Pressable>
-          );
-        })}
-        <Text style={[styles.hint, { color: theme.muted }]}>Long press an entry to delete it.</Text>
-      </Card>
+      {summary !== undefined && summary.trend.length > 1 && (
+        <Card theme={theme}>
+          <TrendChart trend={summary.trend} goalG={goalG} unit={unit} theme={theme} today={now} />
+        </Card>
+      )}
+      <Text style={[type.small, styles.footnote, { color: theme.muted }]}>
+        Tenulo is a personal log. It does not give medical advice. Everything stays on this phone.
+      </Text>
     </ScrollView>
   );
 }
 
-function Stat({ theme, label, value }: { theme: ReturnType<typeof useTheme>; label: string; value: string }) {
+function WeightHero({
+  theme,
+  summary,
+  unit,
+  goalG,
+  now,
+}: {
+  theme: Theme;
+  summary: WeightSummary;
+  unit: WeightUnit;
+  goalG: number | null;
+  now: LocalDate;
+}) {
+  const first = summary.trend[0];
+  const progress = first === undefined ? undefined : goalProgress(Math.round(first.trendG), summary.currentTrendG, goalG);
+  const toGoal = goalG === null ? undefined : Math.abs(summary.currentTrendG - goalG);
   return (
-    <View style={styles.stat}>
+    <Card theme={theme} style={styles.hero}>
+      <View style={styles.heroHead}>
+        <Label theme={theme}>Your trend</Label>
+        <Text style={[type.small, { color: theme.muted }]}>Weighed {relativeDayInline(summary.latestDate, now)}</Text>
+      </View>
+      <View style={styles.headlineRow}>
+        <Text style={[type.display, { color: theme.text }]} accessibilityLabel={formatWeight(summary.currentTrendG, unit)}>
+          {weightNumber(summary.currentTrendG, unit)}
+        </Text>
+        <Text style={[styles.unit, { color: theme.muted }]}>{unit}</Text>
+      </View>
+      <View style={styles.chips}>
+        <Stat theme={theme} label="7 days" value={summary.weekChangeG === undefined ? "–" : formatWeightChange(summary.weekChangeG, unit)} />
+        <Stat theme={theme} label="Since start" value={formatWeightChange(summary.totalChangeG, unit)} />
+        <Stat theme={theme} label="Last reading" value={formatWeight(summary.latestG, unit)} />
+      </View>
+      {progress !== undefined && toGoal !== undefined && goalG !== null && (
+        <View style={styles.goal}>
+          <View style={[styles.track, { backgroundColor: theme.surfaceAlt }]}>
+            <View style={[styles.fill, { backgroundColor: theme.accent, width: `${Math.round(progress * 100)}%` }]} />
+          </View>
+          <Text style={[type.small, { color: theme.muted }]}>
+            {toGoal < 100 ? "At your goal" : `${formatWeight(toGoal, unit)} to your goal of ${formatWeight(goalG, unit)}`}
+          </Text>
+        </View>
+      )}
+      <Text style={[type.body, { color: theme.text }]}>{forecastText(summary.forecast, unit, now)}</Text>
+      <Button
+        theme={theme}
+        icon="plus"
+        label={summary.daysSinceLatest === 0 ? "Log another weigh-in" : "Log today's weight"}
+        onPress={() => router.push("/add-weight")}
+      />
+    </Card>
+  );
+}
+
+function Stat({ theme, label, value }: { theme: Theme; label: string; value: string }) {
+  return (
+    <View style={[styles.stat, { backgroundColor: theme.surfaceAlt }]}>
       <Text style={[styles.statLabel, { color: theme.muted }]}>{label}</Text>
-      <Text style={[styles.statValue, { color: theme.text }]}>{value}</Text>
+      <Text style={[type.number, { color: theme.text }]}>{value}</Text>
     </View>
   );
 }
 
+/** First run: what the trend is, drawn rather than explained. */
+function EmptyWeight({ theme }: { theme: Theme }) {
+  return (
+    <Card theme={theme} style={styles.hero}>
+      <Svg width="100%" height={96} viewBox="0 0 320 96" accessibilityElementsHidden importantForAccessibility="no">
+        {[18, 34, 30, 46, 40, 52, 62, 56, 70, 66, 78].map((y, i) => (
+          <Circle key={i} cx={20 + i * 28} cy={y} r={4} fill={theme.reading} />
+        ))}
+        <Path d="M20 26 C 90 34, 150 44, 200 56 S 280 70, 300 74" stroke={theme.trend} strokeWidth={4} fill="none" strokeLinecap="round" />
+      </Svg>
+      <Text style={[type.heading, { color: theme.text }]}>Your trend starts with one weigh-in</Text>
+      <Text style={[type.body, { color: theme.muted }]}>
+        Daily weight jumps around with water and salt. Tenulo smooths it into a trend line, so you can see the direction
+        you are really heading.
+      </Text>
+      <Button theme={theme} icon="plus" label="Log your weight" onPress={() => router.push("/add-weight")} />
+    </Card>
+  );
+}
+
 const styles = StyleSheet.create({
-  content: { padding: space.l, gap: space.l, paddingBottom: space.xxl },
-  empty: { flex: 1, justifyContent: "center", padding: space.xl, gap: space.l },
-  emptyTitle: { fontSize: 22, fontWeight: "700", lineHeight: 28 },
-  emptyBody: { fontSize: 16, lineHeight: 23 },
+  content: { paddingHorizontal: space.l, gap: space.l, paddingBottom: space.xxl },
+  hero: { gap: space.m, padding: space.xl },
+  heroHead: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   headlineRow: { flexDirection: "row", alignItems: "baseline", gap: space.s },
-  headline: { fontSize: 52, fontWeight: "700", fontVariant: ["tabular-nums"] },
-  unit: { fontSize: 20, fontWeight: "500" },
-  statsRow: { flexDirection: "row", gap: space.l },
-  stat: { flex: 1, gap: 2 },
-  statLabel: { fontSize: 12 },
-  statValue: { fontSize: 15, fontWeight: "600", fontVariant: ["tabular-nums"] },
-  forecast: { fontSize: 15, lineHeight: 21, marginTop: space.s },
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: space.m,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    minHeight: 48,
-    alignItems: "center",
-  },
-  rowDate: { fontSize: 15 },
-  rowValue: { fontSize: 16, fontWeight: "600", fontVariant: ["tabular-nums"] },
-  hint: { fontSize: 12, marginTop: space.s },
+  unit: { fontSize: 22, fontWeight: "600" },
+  chips: { flexDirection: "row", gap: space.s },
+  stat: { flex: 1, borderRadius: radius.m, paddingVertical: space.s, paddingHorizontal: space.m, gap: 2 },
+  statLabel: { fontSize: 11, fontWeight: "600", letterSpacing: 0.4, textTransform: "uppercase" },
+  goal: { gap: space.xs },
+  track: { height: 8, borderRadius: 4, overflow: "hidden" },
+  fill: { height: 8, borderRadius: 4 },
+  footnote: { textAlign: "center", paddingHorizontal: space.l },
 });

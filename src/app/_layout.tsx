@@ -5,8 +5,9 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import migrations from "../../drizzle/migrations";
 import { ensureSettings } from "@/data/repo";
+import { useAppSync } from "@/data/use-app-sync";
 import { db } from "@/db/client";
-import { useTheme } from "@/ui/theme";
+import { type Theme, useTheme } from "@/ui/theme";
 
 export default function RootLayout() {
   const theme = useTheme();
@@ -40,6 +41,13 @@ export default function RootLayout() {
     );
   }
 
+  return <App theme={theme} />;
+}
+
+/** Mounted only once the database is migrated, so its live queries are safe. */
+function App({ theme }: { theme: Theme }) {
+  useAppSync();
+  const modal = { presentation: "modal" } as const;
   return (
     <>
       <StatusBar style="auto" />
@@ -47,17 +55,20 @@ export default function RootLayout() {
         screenOptions={{
           headerStyle: { backgroundColor: theme.background },
           headerTintColor: theme.text,
+          headerTitleStyle: { fontWeight: "700" },
           headerShadowVisible: false,
           contentStyle: { backgroundColor: theme.background },
         }}
       >
-        <Stack.Screen name="index" options={{ title: "Tenulo" }} />
-        <Stack.Screen name="add-weight" options={{ title: "Log weight", presentation: "modal" }} />
-        <Stack.Screen name="setup-medication" options={{ title: "Your medication", presentation: "modal" }} />
-        <Stack.Screen name="log-injection" options={{ title: "Log injection", presentation: "modal" }} />
-        <Stack.Screen name="log-side-effect" options={{ title: "Log side effect", presentation: "modal" }} />
-        <Stack.Screen name="injections" options={{ title: "History & plan" }} />
-        <Stack.Screen name="settings" options={{ title: "Settings" }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="add-weight" options={{ title: "Log weight", ...modal }} />
+        <Stack.Screen name="setup-medication" options={{ title: "Your medication", ...modal }} />
+        <Stack.Screen name="log-injection" options={{ title: "Log injection", ...modal }} />
+        <Stack.Screen name="log-side-effect" options={{ title: "Log side effect", ...modal }} />
+        <Stack.Screen name="report" options={{ title: "Doctor report", ...modal }} />
+        <Stack.Screen name="pro" options={{ title: "Tenulo Pro", ...modal }} />
+        <Stack.Screen name="medication" options={{ title: "Medication & plan" }} />
+        <Stack.Screen name="privacy" options={{ title: "Privacy" }} />
       </Stack>
     </>
   );

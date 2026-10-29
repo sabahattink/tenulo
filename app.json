@@ -3,26 +3,29 @@
     "name": "Tenulo",
     "slug": "tenulo",
     "scheme": "tenulo",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
+    "backgroundColor": "#F4F1EA",
     "android": {
       "package": "com.sabahattinkalkan.tenulo",
       "versionCode": 1,
       "allowBackup": false,
-      "permissions": [],
+      "permissions": ["android.permission.health.READ_WEIGHT"],
       "blockedPermissions": [
         "com.google.android.gms.permission.AD_ID",
         "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_BACKGROUND_LOCATION",
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO",
         "android.permission.READ_CONTACTS",
-        "android.permission.SYSTEM_ALERT_WINDOW"
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.health.WRITE_WEIGHT"
       ],
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#2F6B5B",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -32,16 +35,29 @@
     "plugins": [
       "expo-router",
       "expo-sqlite",
+      "react-native-health-connect",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 160,
+          "resizeMode": "contain",
+          "backgroundColor": "#F4F1EA",
+          "dark": {
+            "image": "./assets/splash-icon-dark.png",
+            "backgroundColor": "#101412"
+          }
+        }
+      ],
       [
         "expo-build-properties",
         {
           "android": {
-            "cmakeVersion": "4.1.2"
+            "cmakeVersion": "4.1.2",
+            "minSdkVersion": 26
           }
         }
-      ],
-      "expo-sharing",
-      "react-native-health-connect"
+      ]
     ],
     "experiments": {
       "typedRoutes": true
