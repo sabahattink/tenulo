@@ -13,8 +13,10 @@ import {
   setInjectionReminder,
   setWeighInReminder,
   setWeightUnit,
+  today,
   useSettings,
 } from "@/data/repo";
+import { seedSampleData } from "@/data/sample";
 import { parseWeightInput } from "@/domain/parse";
 import { type WeightUnit, weightNumber } from "@/domain/weight";
 import { setDevUnlocked, useIsPro, useProState } from "@/platform/billing";
@@ -308,13 +310,21 @@ export default function SettingsScreen() {
         <ListRow theme={theme} icon="shield" title="Privacy" detail="No account, no servers, no tracking" onPress={() => router.push("/privacy")} />
         {isPro && <ListRow theme={theme} icon="sparkle" title="Tenulo Pro" detail="Unlocked. Thank you for supporting Tenulo." />}
         {__DEV__ && (
-          <SwitchRow
-            theme={theme}
-            title="Unlock Pro (development build)"
-            detail="Not in release builds"
-            value={pro.devUnlocked}
-            onChange={setDevUnlocked}
-          />
+          <>
+            <SwitchRow
+              theme={theme}
+              title="Unlock Pro (development build)"
+              detail="Not in release builds"
+              value={pro.devUnlocked}
+              onChange={setDevUnlocked}
+            />
+            <ListRow
+              theme={theme}
+              title="Load sample data (development build)"
+              detail="Nine weeks of made-up entries, for trying the app"
+              onPress={() => void run("sample", () => seedSampleData(today()))}
+            />
+          </>
         )}
         <ListRow theme={theme} title="Version" detail={`Tenulo ${Constants.expoConfig?.version ?? ""}`} last />
       </Section>
