@@ -1,0 +1,10 @@
+{
+  "platforms": ["android"],
+  "android": {
+    "modules": [
+      "expo.modules.tenulonative.RemindersModule",
+      "expo.modules.tenulonative.BillingModule",
+      "expo.modules.tenulonative.LaunchModule"
+    ]
+  }
+}

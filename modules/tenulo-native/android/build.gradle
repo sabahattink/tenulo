@@ -1,0 +1,22 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'com.sabahattinkalkan.tenulo'
+version = '1.0.0'
+
+android {
+  namespace "expo.modules.tenulonative"
+  defaultConfig {
+    versionCode 1
+    versionName "1.0.0"
+  }
+}
+
+dependencies {
+  // Play Billing, used directly: Tenulo Pro is the only part of the app that talks to a server.
+  implementation 'com.android.billingclient:billing:9.1.0'
+  // NotificationCompat for local reminders. No Firebase: reminders are AlarmManager alarms.
+  implementation 'androidx.core:core:1.17.0'
+}
