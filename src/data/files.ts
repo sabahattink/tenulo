@@ -16,6 +16,6 @@ export function sweepExports(olderThanMs: number, now: number = Date.now()): voi
   }
   for (const entry of entries) {
     if (!(entry instanceof File) || !entry.name.startsWith(EXPORT_PREFIX)) continue;
-    if (now - (entry.modificationTime ?? 0) >= olderThanMs) entry.delete();
+    if (now - (entry.lastModified ?? 0) >= olderThanMs) entry.delete();
   }
 }
