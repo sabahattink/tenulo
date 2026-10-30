@@ -163,9 +163,30 @@ export function backupProblem(r: Extract<ParseBackupResult, { ok: false }>): str
       return "This file is not a Tenulo backup.";
     case "newer-version":
       return "This backup was made by a newer version of Tenulo. Update Tenulo, then try again.";
-    case "invalid":
-      return `The backup is damaged or was edited, so nothing was restored. (${r.detail})`;
+    case "invalid": {
+      const place = backupPlace(r.path);
+      const why = place !== undefined ? ` The problem is in ${place}.` : r.path.length === 0 ? ` ${r.detail}.` : "";
+      return `The backup is damaged or was edited, so nothing was restored.${why}`;
+    }
   }
+}
+
+const BACKUP_RECORDS: Readonly<Record<string, string>> = {
+  weights: "weigh-in",
+  medications: "medication",
+  planSteps: "plan step",
+  injections: "injection",
+  sideEffects: "side effect",
+};
+
+/** "weigh-in 4" for ["data", "weights", 3, "weightG"]: the record a person could find, counted from 1. */
+function backupPlace(path: readonly PropertyKey[]): string | undefined {
+  const [root, table, index] = path;
+  if (root !== "data") return undefined;
+  if (table === "settings") return "the settings";
+  const record = typeof table === "string" ? BACKUP_RECORDS[table] : undefined;
+  if (record === undefined) return undefined;
+  return typeof index === "number" ? `${record} ${index + 1}` : `the ${record}s`;
 }
 
 /** "Last read 29 Oct at 08:15", relative to `now`. */

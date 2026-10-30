@@ -71,7 +71,21 @@ describe("data copy", () => {
   it("explains refused backups", () => {
     expect(backupProblem({ ok: false, reason: "not-json" })).toContain("not a Tenulo backup");
     expect(backupProblem({ ok: false, reason: "newer-version" })).toContain("newer version");
-    expect(backupProblem({ ok: false, reason: "invalid", detail: "data.weights.0.weightG: too small" })).toContain("weightG");
+    const damaged = "The backup is damaged or was edited, so nothing was restored.";
+    expect(backupProblem({ ok: false, reason: "invalid", detail: "Too small", path: ["data", "weights", 3, "weightG"] })).toBe(
+      `${damaged} The problem is in weigh-in 4.`,
+    );
+    expect(backupProblem({ ok: false, reason: "invalid", detail: "Too small", path: ["data", "sideEffects", 0, "severity"] })).toBe(
+      `${damaged} The problem is in side effect 1.`,
+    );
+    expect(backupProblem({ ok: false, reason: "invalid", detail: "Too big", path: ["data", "settings", "goalWeightG"] })).toBe(
+      `${damaged} The problem is in the settings.`,
+    );
+    // Whole-backup checks have no path; their messages are already sentences.
+    expect(backupProblem({ ok: false, reason: "invalid", detail: "Injection for a medication not in the backup", path: [] })).toBe(
+      `${damaged} Injection for a medication not in the backup.`,
+    );
+    expect(backupProblem({ ok: false, reason: "invalid", detail: "Invalid input", path: ["exportedAt"] })).toBe(damaged);
   });
 
   it("describes the last Health Connect read", () => {

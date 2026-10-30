@@ -148,6 +148,11 @@ describe("parseBackup rejects files it cannot trust", () => {
     }
   });
 
+  it("says where a rejected value is", () => {
+    const r = parseBackup(tampered((j) => void (j.data.weights![1]!.weightG = 8_240)));
+    expect(r).toMatchObject({ ok: false, reason: "invalid", path: ["data", "weights", 1, "weightG"] });
+  });
+
   it("rejects references that point outside the backup", () => {
     const orphanShot = tampered((j) => void (j.data.injections![0]!.medicationId = id(99)));
     const orphanStep = tampered((j) => void (j.data.planSteps![0]!.medicationId = id(99)));

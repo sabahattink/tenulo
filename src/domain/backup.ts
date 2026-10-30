@@ -134,7 +134,14 @@ export type Backup = z.infer<typeof backupSchema>;
 export type ParseBackupResult =
   | { readonly ok: true; readonly backup: Backup }
   | { readonly ok: false; readonly reason: "not-json" | "not-a-backup" | "newer-version" }
-  | { readonly ok: false; readonly reason: "invalid"; readonly detail: string };
+  | {
+      readonly ok: false;
+      readonly reason: "invalid";
+      /** The first problem, in Zod's words. */
+      readonly detail: string;
+      /** Where it is, e.g. ["data", "weights", 3, "weightG"]; empty for whole-backup checks. */
+      readonly path: readonly PropertyKey[];
+    };
 
 export function createBackup(data: BackupData, exportedAt: number, appVersion: string): Backup {
   return { format: BACKUP_FORMAT, version: BACKUP_VERSION, exportedAt, appVersion, data };
@@ -158,8 +165,7 @@ export function parseBackup(text: string): ParseBackupResult {
   const parsed = backupSchema.safeParse(json);
   if (!parsed.success) {
     const first = parsed.error.issues[0];
-    const where = first?.path.join(".") ?? "";
-    return { ok: false, reason: "invalid", detail: `${where}${where ? ": " : ""}${first?.message ?? "invalid"}` };
+    return { ok: false, reason: "invalid", detail: first?.message ?? "Invalid backup", path: first?.path ?? [] };
   }
   return { ok: true, backup: parsed.data };
 }
