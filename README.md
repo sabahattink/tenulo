@@ -9,6 +9,8 @@ Private GLP-1 and weight log for Android. Local-first: no account, no analytics,
 
 ## What it does
 
+- **Welcome**: three illustrated pages on first launch (and after "Delete all data"), then the
+  kg/lb choice, suggested from the phone's region.
 - **Weight**: daily weigh-ins smoothed into a trend (time-aware EMA), weekly change, goal progress,
   a goal date only when the data supports one; chart with 30D / 90D / 1Y / All.
 - **Injections**: the user's own dose plan shown back (step, period, next step), due date and a
@@ -48,6 +50,7 @@ src/ui/        theme tokens, kit, icons, chart and body-map geometry, copy (test
 src/app/       Expo Router screens: (tabs)/ Today, History, Settings; modals and detail screens
 modules/tenulo-native/   Kotlin Expo module: local reminders, Play Billing, launch intents
 drizzle/       generated SQL migrations (bundled into the app)
+assets/illustrations/   paper-cut illustrations (made in Canva), 960 px WebP
 scripts/       brand asset generator
 docs/          ADRs, release checklist, store listing and graphics
 ```
