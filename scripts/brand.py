@@ -151,11 +151,26 @@ def main() -> None:
 
 
 def feature_graphic(font_path: Path, sage_bg: Image.Image) -> None:
-    """Play Store feature graphic, 1024 x 500. No drug names, no claims: what the app is."""
+    """Play Store feature graphic, 1024 x 500. No drug names, no claims: what the app is.
+
+    Warm paper with the welcome screen's paper-cut trend landscape (assets/illustrations, made in
+    Canva) on the right, its left edge fading into the paper so the hills have no hard cut.
+    """
     w, h = 1024, 500
     s = SUPERSAMPLE
-    img = vertical_gradient(w * s, h * s, (52, 117, 99), SAGE_DEEP)
-    draw_mark(img, (250 * s, 250 * s), 13.5 * s, PAPER + (255,), SAGE_LIGHT + (150,))
+    art = Image.open(ASSETS / "illustrations" / "trend.webp").convert("RGB")
+    paper = art.getpixel((art.width - 8, 8))  # the illustration's own paper, so the seams vanish
+    img = Image.new("RGBA", (w * s, h * s), paper + (255,))
+
+    # The landscape band of the 960 px square, scaled to sit on the bottom edge.
+    band = art.crop((30, 200, 960, 880)).resize((620 * s, 453 * s), Image.LANCZOS).convert("RGBA")
+    # linear_gradient runs black to white downwards; turned a quarter it runs left to right.
+    fade = Image.linear_gradient("L").rotate(90, expand=True).resize((220 * s, band.height))
+    mask = Image.new("L", band.size, 255)
+    mask.paste(fade, (0, 0))
+    band.putalpha(mask)
+    img.alpha_composite(band, ((w - 620) * s, (h - 453) * s))
+
     d = ImageDraw.Draw(img)
 
     def font(size: int, weight: bytes) -> ImageFont.FreeTypeFont:
@@ -163,9 +178,20 @@ def feature_graphic(font_path: Path, sage_bg: Image.Image) -> None:
         f.set_variation_by_name(weight)
         return f
 
-    d.text((460 * s, 150 * s), "Tenulo", font=font(92, b"Bold"), fill=PAPER + (255,))
-    d.text((464 * s, 268 * s), "Private GLP-1 and weight log", font=font(34, b"Medium"), fill=PAPER + (255,))
-    d.text((464 * s, 318 * s), "No account. Everything stays on your phone.", font=font(26, b"Regular"), fill=SAGE_LIGHT + (255,))
+    # The app icon beside the name, rounded like a launcher would show it.
+    icon = mark_image(84 * s, 0.66, PAPER + (255,), SAGE_LIGHT + (150,), background=sage_bg)
+    rounded = Image.new("L", icon.size, 0)
+    ImageDraw.Draw(rounded).rounded_rectangle([0, 0, icon.width - 1, icon.height - 1], radius=20 * s, fill=255)
+    icon.putalpha(rounded)
+    img.alpha_composite(icon, (64 * s, 96 * s))
+
+    ink = (28, 33, 30, 255)
+    muted = (91, 97, 92, 255)
+    d.text((166 * s, 92 * s), "Tenulo", font=font(80, b"Bold"), fill=SAGE + (255,))
+    d.text((66 * s, 218 * s), "Your trend,", font=font(40, b"Bold"), fill=ink)
+    d.text((66 * s, 266 * s), "not the noise.", font=font(40, b"Bold"), fill=ink)
+    d.text((68 * s, 338 * s), "Private GLP-1 and weight log.", font=font(24, b"Medium"), fill=muted)
+    d.text((68 * s, 372 * s), "No account. Stays on your phone.", font=font(24, b"Regular"), fill=muted)
     img.resize((w, h), Image.LANCZOS).convert("RGB").save(STORE / "feature-graphic.png")
 
 
