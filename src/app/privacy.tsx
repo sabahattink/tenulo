@@ -1,4 +1,5 @@
-import { Linking, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Linking, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { Illustration } from "@/ui/Illustration";
 import { Icon, type IconName } from "@/ui/icons";
 import { Button } from "@/ui/kit";
 import { type Theme, space, type, useTheme } from "@/ui/theme";
@@ -41,8 +42,12 @@ const POINTS: readonly { icon: IconName; title: string; body: string }[] = [
 /** Also the screen Health Connect opens when the user asks why Tenulo wants access. */
 export default function PrivacyScreen() {
   const theme = useTheme();
+  const { width } = useWindowDimensions();
   return (
     <ScrollView style={{ backgroundColor: theme.background }} contentContainerStyle={styles.content}>
+      <View style={styles.art}>
+        <Illustration name="private" theme={theme} size={Math.min(width - space.xl * 2, 260)} />
+      </View>
       <Text style={[type.body, { color: theme.text }]}>
         Tenulo is a private log for your weight and your GLP-1 medication. Here is what that means in practice.
       </Text>
@@ -74,6 +79,7 @@ function Point({ theme, icon, title, body }: { theme: Theme; icon: IconName; tit
 
 const styles = StyleSheet.create({
   content: { padding: space.xl, gap: space.xl, paddingBottom: space.xxl },
+  art: { alignItems: "center" },
   point: { flexDirection: "row", gap: space.l, alignItems: "flex-start" },
   icon: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center" },
   text: { flex: 1, gap: 2 },

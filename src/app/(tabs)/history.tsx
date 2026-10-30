@@ -9,6 +9,7 @@ import { formatDose } from "@/domain/parse";
 import { isSeverity } from "@/domain/side-effect";
 import { formatWeight } from "@/domain/weight";
 import { SEVERITY_LABELS, SIDE_EFFECT_LABELS, SITE_LABELS, monthTitle, relativeDay } from "@/ui/copy";
+import { Illustration } from "@/ui/Illustration";
 import { Icon, type IconName } from "@/ui/icons";
 import { Chip, ScreenTitle } from "@/ui/kit";
 import { type TimelineFilter, type TimelineItem, timeline } from "@/ui/timeline";
@@ -101,10 +102,20 @@ export default function History() {
 
       {sections.length === 0 && (
         <View style={styles.empty}>
-          <Icon name="calendar" color={theme.muted} size={32} />
-          <Text style={[type.body, { color: theme.muted, textAlign: "center" }]}>
-            {filter === "all" ? "Nothing logged yet. Your weigh-ins, injections and side effects will appear here." : "Nothing of this kind yet."}
-          </Text>
+          {filter === "all" ? (
+            <>
+              <Illustration name="journal" theme={theme} size={220} />
+              <Text style={[type.heading, { color: theme.text }]}>Your log starts here</Text>
+              <Text style={[type.body, { color: theme.muted, textAlign: "center" }]}>
+                Weigh-ins, injections and side effects appear here as one timeline, newest first.
+              </Text>
+            </>
+          ) : (
+            <>
+              <Icon name="calendar" color={theme.muted} size={32} />
+              <Text style={[type.body, { color: theme.muted, textAlign: "center" }]}>Nothing of this kind yet.</Text>
+            </>
+          )}
         </View>
       )}
 

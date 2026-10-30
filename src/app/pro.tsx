@@ -1,8 +1,9 @@
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import type { StoreProduct } from "../../modules/tenulo-native";
 import { billingAvailable, buyPro, proProduct, refreshPro, useIsPro, useProState } from "@/platform/billing";
+import { Illustration } from "@/ui/Illustration";
 import { Icon, type IconName } from "@/ui/icons";
 import { Button } from "@/ui/kit";
 import { type Theme, radius, space, type, useTheme } from "@/ui/theme";
@@ -27,6 +28,7 @@ const FEATURES: readonly { icon: IconName; title: string; body: string }[] = [
 
 export default function ProScreen() {
   const theme = useTheme();
+  const { width } = useWindowDimensions();
   const isPro = useIsPro();
   const { pending } = useProState();
   const [product, setProduct] = useState<StoreProduct | null | undefined>();
@@ -68,10 +70,10 @@ export default function ProScreen() {
 
   return (
     <ScrollView style={{ backgroundColor: theme.background }} contentContainerStyle={styles.content}>
-      <View style={[styles.hero, { backgroundColor: theme.accent }]}>
-        <Icon name="sparkle" color={theme.accentText} size={36} />
-        <Text style={[type.title, { color: theme.accentText }]}>Tenulo Pro</Text>
-        <Text style={[type.body, { color: theme.accentText }]}>
+      <View style={styles.hero}>
+        <Illustration name="report" theme={theme} size={Math.min(width - space.xl * 2, 300)} />
+        <Text style={[type.title, styles.center, { color: theme.text }]}>Tenulo Pro</Text>
+        <Text style={[type.body, styles.center, { color: theme.muted }]}>
           One purchase. Yours on every phone signed in to your Google account.
         </Text>
       </View>
@@ -125,7 +127,8 @@ function Feature({ theme, icon, title, body }: { theme: Theme; icon: IconName; t
 
 const styles = StyleSheet.create({
   content: { padding: space.xl, gap: space.xl, paddingBottom: space.xxl },
-  hero: { borderRadius: radius.l, padding: space.xl, gap: space.s },
+  hero: { alignItems: "center", gap: space.s },
+  center: { textAlign: "center" },
   feature: { flexDirection: "row", gap: space.l, alignItems: "flex-start" },
   featureIcon: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center" },
   flex: { flex: 1, gap: 2 },
