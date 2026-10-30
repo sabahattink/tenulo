@@ -7,7 +7,7 @@
  * query API (`.run()`, `.all()`) inside a synchronous callback. Tested against the real driver in
  * ops.test.ts.
  */
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import type { ExpoSQLiteDatabase } from "drizzle-orm/expo-sqlite/driver";
 import type { BackupData } from "../domain/backup";
 import type { LocalDate } from "../domain/date";
@@ -28,10 +28,16 @@ function chunks<T>(rows: readonly T[]): T[][] {
   return out;
 }
 
-/** "Delete all data": every row of every table, then a fresh settings row. All or nothing. */
+/**
+ * "Delete all data": every row of every table, then a fresh settings row. All or nothing.
+ *
+ * The always-true WHERE is load-bearing. Without one, SQLite clears a table that has no triggers
+ * or foreign keys in a single step (the truncate optimization) and skips the update hook, so
+ * expo-sqlite reports no change and open screens keep showing the deleted rows.
+ */
 export function wipeAll(database: SyncDb, now: number): void {
   database.transaction((tx) => {
-    for (const table of ALL_TABLES_DELETE_ORDER) tx.delete(table).run();
+    for (const table of ALL_TABLES_DELETE_ORDER) tx.delete(table).where(sql`1`).run();
     tx.insert(settings).values({ id: 1, updatedAt: now }).run();
   });
 }

@@ -58,14 +58,20 @@ class StatementAdapter {
   }
 }
 
-/** A migrated in-memory database, plus the raw handle for setup and assertions. */
+/** A migrated in-memory database, the raw handle for setup and assertions, and every SQL statement Drizzle prepared. */
 export function testDb() {
   const sqlite = new DatabaseSync(":memory:");
   sqlite.exec("PRAGMA foreign_keys = ON");
   applyMigrations(sqlite);
-  const client = { prepareSync: (sql: string) => new StatementAdapter(sqlite.prepare(sql)) };
+  const statements: string[] = [];
+  const client = {
+    prepareSync: (sql: string) => {
+      statements.push(sql);
+      return new StatementAdapter(sqlite.prepare(sql));
+    },
+  };
   const database = drizzle(client as unknown as Parameters<typeof drizzle>[0], { schema });
-  return { sqlite, database };
+  return { sqlite, database, statements };
 }
 
 export function count(sqlite: DatabaseSync, table: string): number {

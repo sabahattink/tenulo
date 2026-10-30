@@ -42,6 +42,17 @@ describe("wipeAll", () => {
     expect(t.sqlite.prepare("SELECT weight_unit, goal_weight_g FROM settings").get()).toEqual({ weight_unit: "kg", goal_weight_g: null });
   });
 
+  it("deletes with a WHERE clause, so live queries hear about every table", () => {
+    // A bare `DELETE FROM t` on a table without triggers or foreign keys takes SQLite's truncate
+    // optimization, which skips the update hook. expo-sqlite's change listener, and so every
+    // useLiveQuery, is built on that hook: History kept showing weigh-ins after "Delete all data".
+    t.statements.length = 0;
+    wipeAll(t.database, now);
+    const deletes = t.statements.filter((s) => /^\s*delete\b/i.test(s));
+    expect(deletes).toHaveLength(ALL_TABLES_DELETE_ORDER.length);
+    for (const s of deletes) expect(s).toMatch(/\bwhere\b/i);
+  });
+
   it("is all or nothing: a failure part-way deletes nothing", () => {
     seedLinkedRows();
     failOn("weight_entry", "DELETE");
