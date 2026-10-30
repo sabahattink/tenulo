@@ -36,6 +36,7 @@ pnpm test           # domain, UI logic and migration tests
 pnpm db:generate    # after editing src/db/schema.ts
 pnpm android        # expo run:android (needs JDK 17 + Android SDK)
 python scripts/brand.py path/to/Roboto.ttf   # regenerate icons, splash and store graphics
+python scripts/store_screens.py path/to/Roboto.ttf   # frame raw captures into store screenshots
 ```
 
 ## Layout
@@ -51,6 +52,6 @@ src/app/       Expo Router screens: (tabs)/ Today, History, Settings; modals and
 modules/tenulo-native/   Kotlin Expo module: local reminders, Play Billing, launch intents
 drizzle/       generated SQL migrations (bundled into the app)
 assets/illustrations/   paper-cut illustrations (made in Canva), 960 px WebP
-scripts/       brand asset generator
+scripts/       brand asset and store screenshot generators
 docs/          ADRs, release checklist, store listing and graphics
 ```

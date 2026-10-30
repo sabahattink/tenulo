@@ -45,3 +45,15 @@ TENULO PRO (one-time purchase)
 
 Tenulo is a personal log for adults. It is not medical advice and does not replace your doctor
 or pharmacist.
+
+## Phone screenshots (upload in this order)
+
+Made by `scripts/store_screens.py` from the release build with the sample backup restored.
+
+| File | Caption | Screen |
+| --- | --- | --- |
+| `screenshots/01-trend.png` | Your trend, not the noise | Today |
+| `screenshots/02-chart.png` | See where you are heading | Trend chart |
+| `screenshots/03-injection.png` | Your plan, your sites | Log injection with the body map |
+| `screenshots/04-history.png` | One calm timeline | History |
+| `screenshots/05-private.png` | It stays on this phone | Welcome, last page |

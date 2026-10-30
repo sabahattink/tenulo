@@ -54,7 +54,10 @@ Answers that match the code (re-check against Google's current definitions befor
 - Text: `docs/store/listing.md`.
 - Graphics: `docs/store/icon-512.png`, `docs/store/feature-graphic.png` (regenerate with
   `python scripts/brand.py <Roboto.ttf>`).
-- Screenshots: phone, at least 2; use the development build with sample data, never real data.
+- Screenshots: `docs/store/screenshots/01-trend.png` … `05-private.png` (1080 × 1920). To redo
+  them: release build with the sample backup restored (never real data), Android's demo-mode
+  status bar, raw captures into `docs/store/screenshots/raw/`, then
+  `python scripts/store_screens.py <Roboto.ttf>`.
 - Content rating questionnaire: medical/health reference, no user-generated content shared.
 - Target audience: 18+ (matches the privacy policy).
 
