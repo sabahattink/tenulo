@@ -31,15 +31,19 @@ function seedLinkedRows(): void {
 }
 
 describe("wipeAll", () => {
-  it("empties every table and leaves one fresh settings row", () => {
+  it("empties every table and leaves one fresh settings row, so the welcome screens show again", () => {
     seedLinkedRows();
-    t.sqlite.exec("UPDATE settings SET weight_unit = 'lb', goal_weight_g = 70000");
+    t.sqlite.exec(`UPDATE settings SET weight_unit = 'lb', goal_weight_g = 70000, welcomed_at = ${now}`);
     wipeAll(t.database, now);
     for (const table of ALL_TABLES_DELETE_ORDER) {
       const name = getTableName(table);
       expect(count(t.sqlite, name), name).toBe(name === "settings" ? 1 : 0);
     }
-    expect(t.sqlite.prepare("SELECT weight_unit, goal_weight_g FROM settings").get()).toEqual({ weight_unit: "kg", goal_weight_g: null });
+    expect(t.sqlite.prepare("SELECT weight_unit, goal_weight_g, welcomed_at FROM settings").get()).toEqual({
+      weight_unit: "kg",
+      goal_weight_g: null,
+      welcomed_at: null,
+    });
   });
 
   it("deletes with a WHERE clause, so live queries hear about every table", () => {

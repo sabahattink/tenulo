@@ -4,7 +4,7 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import migrations from "../../drizzle/migrations";
-import { ensureSettings } from "@/data/repo";
+import { ensureSettings, readWelcomed, useSettings } from "@/data/repo";
 import { useAppSync } from "@/data/use-app-sync";
 import { db } from "@/db/client";
 import { type Theme, useTheme } from "@/ui/theme";
@@ -12,13 +12,14 @@ import { type Theme, useTheme } from "@/ui/theme";
 export default function RootLayout() {
   const theme = useTheme();
   const { success, error } = useMigrations(db, migrations);
-  const [ready, setReady] = useState(false);
+  const [welcomed, setWelcomed] = useState<boolean | undefined>();
   const [setupError, setSetupError] = useState<Error | undefined>();
 
   useEffect(() => {
     if (!success) return;
     ensureSettings()
-      .then(() => setReady(true))
+      .then(() => readWelcomed())
+      .then(setWelcomed)
       .catch((e: unknown) => setSetupError(e instanceof Error ? e : new Error(String(e))));
   }, [success]);
 
@@ -33,7 +34,7 @@ export default function RootLayout() {
     );
   }
 
-  if (!ready) {
+  if (welcomed === undefined) {
     return (
       <View style={[styles.center, { backgroundColor: theme.background }]}>
         <ActivityIndicator color={theme.accent} />
@@ -41,12 +42,15 @@ export default function RootLayout() {
     );
   }
 
-  return <App theme={theme} />;
+  return <App theme={theme} initiallyWelcomed={welcomed} />;
 }
 
 /** Mounted only once the database is migrated, so its live queries are safe. */
-function App({ theme }: { theme: Theme }) {
+function App({ theme, initiallyWelcomed }: { theme: Theme; initiallyWelcomed: boolean }) {
   useAppSync();
+  const settings = useSettings();
+  // The live query is empty for its first render; the value read at start covers that moment.
+  const welcomed = settings === undefined ? initiallyWelcomed : settings.welcomedAt !== null;
   const modal = { presentation: "modal" } as const;
   return (
     <>
@@ -60,15 +64,21 @@ function App({ theme }: { theme: Theme }) {
           contentStyle: { backgroundColor: theme.background },
         }}
       >
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="add-weight" options={{ title: "Log weight", ...modal }} />
-        <Stack.Screen name="setup-medication" options={{ title: "Your medication", ...modal }} />
-        <Stack.Screen name="log-injection" options={{ title: "Log injection", ...modal }} />
-        <Stack.Screen name="log-side-effect" options={{ title: "Log side effect", ...modal }} />
-        <Stack.Screen name="report" options={{ title: "Doctor report", ...modal }} />
-        <Stack.Screen name="pro" options={{ title: "Tenulo Pro", ...modal }} />
-        <Stack.Screen name="medication" options={{ title: "Medication & plan" }} />
-        <Stack.Screen name="privacy" options={{ title: "Privacy" }} />
+        {/* Finishing the welcome screens, or "Delete all data", flips the guards and the router follows. */}
+        <Stack.Protected guard={welcomed}>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="add-weight" options={{ title: "Log weight", ...modal }} />
+          <Stack.Screen name="setup-medication" options={{ title: "Your medication", ...modal }} />
+          <Stack.Screen name="log-injection" options={{ title: "Log injection", ...modal }} />
+          <Stack.Screen name="log-side-effect" options={{ title: "Log side effect", ...modal }} />
+          <Stack.Screen name="report" options={{ title: "Doctor report", ...modal }} />
+          <Stack.Screen name="pro" options={{ title: "Tenulo Pro", ...modal }} />
+          <Stack.Screen name="medication" options={{ title: "Medication & plan" }} />
+          <Stack.Screen name="privacy" options={{ title: "Privacy" }} />
+        </Stack.Protected>
+        <Stack.Protected guard={!welcomed}>
+          <Stack.Screen name="welcome" options={{ headerShown: false, animation: "fade" }} />
+        </Stack.Protected>
       </Stack>
     </>
   );

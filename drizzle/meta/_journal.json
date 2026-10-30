@@ -15,6 +15,13 @@
       "when": 1793232147314,
       "tag": "0001_silly_namor",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1793370224159,
+      "tag": "0002_long_selene",
+      "breakpoints": true
     }
   ]
 }

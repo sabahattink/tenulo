@@ -20,6 +20,12 @@ export async function ensureSettings(database: Db = db): Promise<void> {
     .onConflictDoNothing({ target: settings.id });
 }
 
+/** Whether the welcome screens are done, read once at start before the live query has data. */
+export async function readWelcomed(database: Db = db): Promise<boolean> {
+  const [row] = await database.select({ welcomedAt: settings.welcomedAt }).from(settings).where(eq(settings.id, 1));
+  return row?.welcomedAt != null;
+}
+
 export function useSettings(): Settings | undefined {
   const { data } = useLiveQuery(db.select().from(settings).where(eq(settings.id, 1)));
   return data[0];
@@ -48,6 +54,12 @@ export async function setWeighInReminder(enabled: boolean, minute: number): Prom
     .update(settings)
     .set({ weighInReminderEnabled: enabled, weighInReminderMinute: minute, updatedAt: Date.now() })
     .where(eq(settings.id, 1));
+}
+
+/** Ends the welcome screens with the unit the user chose. */
+export async function finishWelcome(unit: WeightUnit): Promise<void> {
+  const now = Date.now();
+  await db.update(settings).set({ weightUnit: unit, welcomedAt: now, updatedAt: now }).where(eq(settings.id, 1));
 }
 
 export async function setHealthConnectEnabled(enabled: boolean): Promise<void> {

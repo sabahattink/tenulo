@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { addDays, parseLocalDate } from "./date";
 import { DEFAULT_FORECAST, forecast, trendRate } from "./forecast";
 import { type TrendPoint, smoothedTrend } from "./trend";
-import { formatWeight, fromGrams, isPlausibleWeight, toGrams } from "./weight";
+import { defaultWeightUnit, formatWeight, fromGrams, isPlausibleWeight, toGrams } from "./weight";
 
 const start = parseLocalDate("2026-01-01");
 const series = (n: number, f: (i: number) => number) =>
@@ -25,6 +25,31 @@ describe("weight units", () => {
     expect(isPlausibleWeight(82_400)).toBe(true);
     expect(isPlausibleWeight(8_240)).toBe(false);
     expect(() => toGrams(Number.NaN, "kg")).toThrow(RangeError);
+  });
+});
+
+describe("defaultWeightUnit", () => {
+  it("suggests pounds where people weigh themselves in pounds", () => {
+    expect(defaultWeightUnit("en-US")).toBe("lb");
+    expect(defaultWeightUnit("es-US")).toBe("lb");
+    expect(defaultWeightUnit("en-LR")).toBe("lb");
+    expect(defaultWeightUnit("my-MM")).toBe("lb");
+  });
+
+  it("suggests kilograms everywhere else and when the locale names no region", () => {
+    expect(defaultWeightUnit("en-GB")).toBe("kg");
+    expect(defaultWeightUnit("tr-TR")).toBe("kg");
+    expect(defaultWeightUnit("az-Latn-AZ")).toBe("kg");
+    expect(defaultWeightUnit("en")).toBe("kg");
+    expect(defaultWeightUnit("")).toBe("kg");
+  });
+
+  it("finds the region in underscore and extended tags, never inside an extension", () => {
+    expect(defaultWeightUnit("en_US")).toBe("lb");
+    expect(defaultWeightUnit("en-us")).toBe("lb");
+    expect(defaultWeightUnit("en-US-u-ca-gregory")).toBe("lb");
+    expect(defaultWeightUnit("de-u-rg-uszzzz")).toBe("kg");
+    expect(defaultWeightUnit("en-x-us")).toBe("kg");
   });
 });
 

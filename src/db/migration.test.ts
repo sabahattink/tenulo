@@ -172,4 +172,19 @@ describe("upgrades", () => {
     });
     expect(old.prepare("SELECT count(*) AS n FROM weight_entry").get()).toEqual({ n: 1 });
   });
+
+  it("does not show the welcome screens to someone already using Tenulo", () => {
+    const old = new DatabaseSync(":memory:");
+    applyMigrations(old, 0, 1);
+    old.prepare("INSERT INTO settings (id, updated_at) VALUES (1, ?)").run(now);
+
+    applyMigrations(old, 2, Number.MAX_SAFE_INTEGER);
+
+    expect(old.prepare("SELECT welcomed_at FROM settings").get()).toEqual({ welcomed_at: now });
+  });
+
+  it("shows them on a fresh install", () => {
+    db.prepare("INSERT INTO settings (id, updated_at) VALUES (1, ?)").run(now);
+    expect(db.prepare("SELECT welcomed_at FROM settings").get()).toEqual({ welcomed_at: null });
+  });
 });

@@ -38,6 +38,8 @@ export const settings = sqliteTable(
     healthConnectEnabled: integer("health_connect_enabled", { mode: "boolean" }).notNull().default(false),
     /** End of the last successful Health Connect read (epoch ms); the next sync starts near it. */
     healthConnectSyncedAt: integer("health_connect_synced_at"),
+    /** When the user finished the welcome screens (epoch ms). Null shows them; "Delete all data" resets it. */
+    welcomedAt: integer("welcomed_at"),
     updatedAt: updatedAt(),
   },
   (t) => [

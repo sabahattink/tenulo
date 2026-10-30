@@ -18,6 +18,22 @@ export const GRAMS_PER_POUND = 453.59237;
 export const MIN_WEIGHT_G = 20_000;
 export const MAX_WEIGHT_G = 400_000;
 
+/** Regions where people weigh themselves in pounds. */
+const POUND_REGIONS: ReadonlySet<string> = new Set(["US", "LR", "MM"]);
+
+/**
+ * The unit a new user most likely weighs in, from a BCP 47 locale tag such as "en-US". Only a
+ * suggestion for the welcome screen: the user picks, and can change it in Settings.
+ */
+export function defaultWeightUnit(locale: string): WeightUnit {
+  for (const subtag of locale.split(/[-_]/).slice(1)) {
+    // A singleton starts an extension ("u-…") or private use ("x-…"): no region after it.
+    if (subtag.length === 1) break;
+    if (/^[A-Za-z]{2}$/.test(subtag)) return POUND_REGIONS.has(subtag.toUpperCase()) ? "lb" : "kg";
+  }
+  return "kg";
+}
+
 export function toGrams(value: number, unit: WeightUnit): number {
   if (!Number.isFinite(value)) throw new RangeError(`Weight must be a finite number: ${value}`);
   const grams = unit === "kg" ? value * 1000 : value * GRAMS_PER_POUND;
