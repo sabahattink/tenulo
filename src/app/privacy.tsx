@@ -1,7 +1,7 @@
 import { Linking, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { Illustration } from "@/ui/Illustration";
 import { Icon, type IconName } from "@/ui/icons";
-import { Button } from "@/ui/kit";
+import { Button, useScrollEndPadding } from "@/ui/kit";
 import { type Theme, space, type, useTheme } from "@/ui/theme";
 
 const PRIVACY_URL = "https://sabahattinkalkan.com/tenulo/privacy/";
@@ -42,9 +42,10 @@ const POINTS: readonly { icon: IconName; title: string; body: string }[] = [
 /** Also the screen Health Connect opens when the user asks why Tenulo wants access. */
 export default function PrivacyScreen() {
   const theme = useTheme();
+  const endPadding = useScrollEndPadding();
   const { width } = useWindowDimensions();
   return (
-    <ScrollView style={{ backgroundColor: theme.background }} contentContainerStyle={styles.content}>
+    <ScrollView style={{ backgroundColor: theme.background }} contentContainerStyle={[styles.content, { paddingBottom: endPadding }]}>
       <View style={styles.art}>
         <Illustration name="private" theme={theme} size={Math.min(width - space.xl * 2, 260)} />
       </View>
@@ -78,7 +79,7 @@ function Point({ theme, icon, title, body }: { theme: Theme; icon: IconName; tit
 }
 
 const styles = StyleSheet.create({
-  content: { padding: space.xl, gap: space.xl, paddingBottom: space.xxl },
+  content: { padding: space.xl, gap: space.xl },
   art: { alignItems: "center" },
   point: { flexDirection: "row", gap: space.l, alignItems: "flex-start" },
   icon: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center" },

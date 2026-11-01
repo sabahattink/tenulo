@@ -6,11 +6,12 @@ import { useToday } from "@/data/use-today";
 import { SEVERITIES, SIDE_EFFECT_TYPES } from "@/domain/side-effect";
 import { DayPicker } from "@/ui/DayPicker";
 import { SEVERITY_LABELS, SIDE_EFFECT_LABELS } from "@/ui/copy";
-import { Button, Chip, Label, Segmented } from "@/ui/kit";
+import { Button, Chip, Label, Segmented, useScrollEndPadding } from "@/ui/kit";
 import { radius, space, useTheme } from "@/ui/theme";
 
 export default function LogSideEffect() {
   const theme = useTheme();
+  const endPadding = useScrollEndPadding();
   const now = useToday();
   const medication = useActiveMedication();
   const [type, setType] = useState<SideEffectType | undefined>();
@@ -34,7 +35,7 @@ export default function LogSideEffect() {
   };
 
   return (
-    <ScrollView style={{ backgroundColor: theme.background }} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+    <ScrollView style={{ backgroundColor: theme.background }} contentContainerStyle={[styles.content, { paddingBottom: endPadding }]} keyboardShouldPersistTaps="handled">
       <Label theme={theme}>What did you notice?</Label>
       <View style={styles.chips} accessibilityRole="radiogroup">
         {SIDE_EFFECT_TYPES.map((t) => (
@@ -77,7 +78,7 @@ export default function LogSideEffect() {
 }
 
 const styles = StyleSheet.create({
-  content: { padding: space.xl, gap: space.s, paddingBottom: space.xxl },
+  content: { padding: space.xl, gap: space.s },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: space.s, marginBottom: space.l },
   segment: { marginBottom: space.l },
   input: { borderWidth: 1.5, borderRadius: radius.m, paddingHorizontal: space.m, minHeight: 52, fontSize: 16 },

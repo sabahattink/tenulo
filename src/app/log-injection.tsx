@@ -8,11 +8,12 @@ import { type InjectionSite, injectionStatus } from "@/domain/injection";
 import { parseDoseInput } from "@/domain/parse";
 import { DayPicker } from "@/ui/DayPicker";
 import { BodyMap } from "@/ui/BodyMap";
-import { Button, Label } from "@/ui/kit";
+import { Button, Label, useScrollEndPadding } from "@/ui/kit";
 import { radius, space, useTheme } from "@/ui/theme";
 
 export default function LogInjection() {
   const theme = useTheme();
+  const endPadding = useScrollEndPadding();
   const now = useToday();
   const medication = useActiveMedication();
   const history = useInjections(medication?.id);
@@ -58,7 +59,7 @@ export default function LogInjection() {
   }
 
   return (
-    <ScrollView style={{ backgroundColor: theme.background }} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+    <ScrollView style={{ backgroundColor: theme.background }} contentContainerStyle={[styles.content, { paddingBottom: endPadding }]} keyboardShouldPersistTaps="handled">
       <Text style={[styles.medication, { color: theme.text }]}>{medication.name}</Text>
 
       <Label theme={theme}>Dose (mg)</Label>
@@ -108,7 +109,7 @@ export default function LogInjection() {
 
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
-  content: { padding: space.xl, gap: space.s, paddingBottom: space.xxl },
+  content: { padding: space.xl, gap: space.s },
   medication: { fontSize: 22, fontWeight: "700", marginBottom: space.m },
   input: { borderWidth: 1.5, borderRadius: radius.m, paddingHorizontal: space.m, minHeight: 52, fontSize: 20, fontWeight: "600" },
   note: { fontSize: 16, fontWeight: "400", marginBottom: space.s },

@@ -8,12 +8,13 @@ import { planPosition } from "@/domain/injection";
 import { formatDose, parseDoseInput } from "@/domain/parse";
 import { DayPicker } from "@/ui/DayPicker";
 import { intervalText, longDate } from "@/ui/copy";
-import { Button, Card, Label } from "@/ui/kit";
+import { Button, Card, Label, useScrollEndPadding } from "@/ui/kit";
 import { radius, space, type, useTheme } from "@/ui/theme";
 
 /** The user's own plan, shown back to them; and the medication's name. Tenulo never edits either. */
 export default function MedicationScreen() {
   const theme = useTheme();
+  const endPadding = useScrollEndPadding();
   const now = useToday();
   const medication = useActiveMedication();
   const steps = usePlanSteps(medication?.id);
@@ -47,7 +48,7 @@ export default function MedicationScreen() {
   const field = [styles.input, { color: theme.text, backgroundColor: theme.surfaceAlt }];
 
   return (
-    <ScrollView style={{ backgroundColor: theme.background }} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+    <ScrollView style={{ backgroundColor: theme.background }} contentContainerStyle={[styles.content, { paddingBottom: endPadding }]} keyboardShouldPersistTaps="handled">
       <Card theme={theme}>
         <Label theme={theme}>Your plan</Label>
         <Text style={[type.small, { color: theme.muted }]}>
@@ -137,7 +138,7 @@ export default function MedicationScreen() {
 
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: "center", justifyContent: "center", gap: space.l, padding: space.xl },
-  content: { padding: space.l, gap: space.l, paddingBottom: space.xxl },
+  content: { padding: space.l, gap: space.l },
   input: { borderRadius: radius.m, paddingHorizontal: space.m, minHeight: 52, fontSize: 18, fontWeight: "600" },
   timeline: { marginTop: space.s },
   step: { flexDirection: "row", gap: space.m, minHeight: 56 },

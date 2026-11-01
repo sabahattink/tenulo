@@ -39,8 +39,13 @@ declare class TenuloLaunchModule extends NativeModule<{ onLaunch: (e: LaunchInfo
   initial(): LaunchInfo;
 }
 
+declare class TenuloSystemBarsModule extends NativeModule {
+  setNavigationBarLight(light: boolean): Promise<void>;
+}
+
 export const Reminders = requireOptionalNativeModule<TenuloRemindersModule>("TenuloReminders");
 export const Billing = requireOptionalNativeModule<TenuloBillingModule>("TenuloBilling");
 export const Launch = requireOptionalNativeModule<TenuloLaunchModule>("TenuloLaunch");
+export const SystemBars = requireOptionalNativeModule<TenuloSystemBarsModule>("TenuloSystemBars");
 
 export type { EventSubscription };

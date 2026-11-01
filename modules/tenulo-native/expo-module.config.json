@@ -4,7 +4,8 @@
     "modules": [
       "expo.modules.tenulonative.RemindersModule",
       "expo.modules.tenulonative.BillingModule",
-      "expo.modules.tenulonative.LaunchModule"
+      "expo.modules.tenulonative.LaunchModule",
+      "expo.modules.tenulonative.SystemBarsModule"
     ]
   }
 }

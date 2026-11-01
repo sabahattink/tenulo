@@ -5,7 +5,7 @@ import { createMedication } from "@/data/injections";
 import { useToday } from "@/data/use-today";
 import { parseDoseInput } from "@/domain/parse";
 import { DayPicker } from "@/ui/DayPicker";
-import { Button, Label, Segmented } from "@/ui/kit";
+import { Button, Label, Segmented, useScrollEndPadding } from "@/ui/kit";
 import { radius, space, useTheme } from "@/ui/theme";
 
 const INTERVALS = [7, 14, 1] as const;
@@ -13,6 +13,7 @@ const INTERVAL_LABELS: Record<(typeof INTERVALS)[number], string> = { 7: "Weekly
 
 export default function SetupMedication() {
   const theme = useTheme();
+  const endPadding = useScrollEndPadding();
   const now = useToday();
   const [name, setName] = useState("");
   const [doseText, setDoseText] = useState("");
@@ -43,7 +44,7 @@ export default function SetupMedication() {
   const input = [styles.input, { color: theme.text, backgroundColor: theme.card, borderColor: theme.border }];
 
   return (
-    <ScrollView style={{ backgroundColor: theme.background }} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+    <ScrollView style={{ backgroundColor: theme.background }} contentContainerStyle={[styles.content, { paddingBottom: endPadding }]} keyboardShouldPersistTaps="handled">
       <Text style={[styles.intro, { color: theme.muted }]}>
         Enter your medication the way your prescription describes it. Tenulo only records what you enter; it never
         suggests doses.
@@ -95,7 +96,7 @@ export default function SetupMedication() {
 }
 
 const styles = StyleSheet.create({
-  content: { padding: space.xl, gap: space.s, paddingBottom: space.xxl },
+  content: { padding: space.xl, gap: space.s },
   intro: { fontSize: 15, lineHeight: 21, marginBottom: space.m },
   input: { borderWidth: 1.5, borderRadius: radius.m, paddingHorizontal: space.m, minHeight: 52, fontSize: 18, marginBottom: space.m },
   message: { fontSize: 14, minHeight: 20 },

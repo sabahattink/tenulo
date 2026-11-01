@@ -2,16 +2,22 @@ import { useMigrations } from "drizzle-orm/expo-sqlite/migrator";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, StyleSheet, Text, View, useColorScheme } from "react-native";
 import migrations from "../../drizzle/migrations";
 import { ensureSettings, readWelcomed, useSettings } from "@/data/repo";
 import { useAppSync } from "@/data/use-app-sync";
 import { db } from "@/db/client";
+import { setNavigationBarLight } from "@/platform/system-bars";
 import { type Theme, useTheme } from "@/ui/theme";
 
 export default function RootLayout() {
   const theme = useTheme();
+  const scheme = useColorScheme();
   const { success, error } = useMigrations(db, migrations);
+
+  useEffect(() => {
+    setNavigationBarLight(scheme !== "dark");
+  }, [scheme]);
   const [welcomed, setWelcomed] = useState<boolean | undefined>();
   const [setupError, setSetupError] = useState<Error | undefined>();
 

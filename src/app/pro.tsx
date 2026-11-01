@@ -5,7 +5,7 @@ import type { StoreProduct } from "../../modules/tenulo-native";
 import { billingAvailable, buyPro, proProduct, refreshPro, useIsPro, useProState } from "@/platform/billing";
 import { Illustration } from "@/ui/Illustration";
 import { Icon, type IconName } from "@/ui/icons";
-import { Button } from "@/ui/kit";
+import { Button, useScrollEndPadding } from "@/ui/kit";
 import { type Theme, radius, space, type, useTheme } from "@/ui/theme";
 
 const FEATURES: readonly { icon: IconName; title: string; body: string }[] = [
@@ -28,6 +28,7 @@ const FEATURES: readonly { icon: IconName; title: string; body: string }[] = [
 
 export default function ProScreen() {
   const theme = useTheme();
+  const endPadding = useScrollEndPadding();
   const { width } = useWindowDimensions();
   const isPro = useIsPro();
   const { pending } = useProState();
@@ -69,7 +70,7 @@ export default function ProScreen() {
   const price = product?.price;
 
   return (
-    <ScrollView style={{ backgroundColor: theme.background }} contentContainerStyle={styles.content}>
+    <ScrollView style={{ backgroundColor: theme.background }} contentContainerStyle={[styles.content, { paddingBottom: endPadding }]}>
       <View style={styles.hero}>
         <Illustration name="report" theme={theme} size={Math.min(width - space.xl * 2, 300)} />
         <Text style={[type.title, styles.center, { color: theme.text }]}>Tenulo Pro</Text>
@@ -126,7 +127,7 @@ function Feature({ theme, icon, title, body }: { theme: Theme; icon: IconName; t
 }
 
 const styles = StyleSheet.create({
-  content: { padding: space.xl, gap: space.xl, paddingBottom: space.xxl },
+  content: { padding: space.xl, gap: space.xl },
   hero: { alignItems: "center", gap: space.s },
   center: { textAlign: "center" },
   feature: { flexDirection: "row", gap: space.l, alignItems: "flex-start" },

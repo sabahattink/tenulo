@@ -8,7 +8,7 @@ import { REPORT_PERIODS, type Report, type ReportPeriod } from "@/domain/report"
 import { formatWeight, formatWeightChange } from "@/domain/weight";
 import { useIsPro } from "@/platform/billing";
 import { longDate } from "@/ui/copy";
-import { Button, Card, Label, Segmented } from "@/ui/kit";
+import { Button, Card, Label, Segmented, useScrollEndPadding } from "@/ui/kit";
 import { type Theme, radius, space, type, useTheme } from "@/ui/theme";
 
 const PERIOD_LABELS: Record<string, string> = { "30": "30 days", "90": "90 days", "180": "6 months", all: "All" };
@@ -16,6 +16,7 @@ const OPTIONS = REPORT_PERIODS.map((p) => ({ value: p, label: PERIOD_LABELS[Stri
 
 export default function ReportScreen() {
   const theme = useTheme();
+  const endPadding = useScrollEndPadding();
   const isPro = useIsPro();
   const unit = useSettings()?.weightUnit ?? "kg";
   const now = useToday();
@@ -62,7 +63,7 @@ export default function ReportScreen() {
 
   const w = report?.weight;
   return (
-    <ScrollView style={{ backgroundColor: theme.background }} contentContainerStyle={styles.content}>
+    <ScrollView style={{ backgroundColor: theme.background }} contentContainerStyle={[styles.content, { paddingBottom: endPadding }]}>
       <Text style={[type.body, { color: theme.muted }]}>
         A one-page summary of what you logged, for your doctor or pharmacist. It is created on this phone; you choose where
         to send it.
@@ -117,7 +118,7 @@ function Fact({ theme, label, value }: { theme: Theme; label: string; value: str
 }
 
 const styles = StyleSheet.create({
-  content: { padding: space.xl, gap: space.l, paddingBottom: space.xxl },
+  content: { padding: space.xl, gap: space.l },
   center: { flex: 1, alignItems: "center", justifyContent: "center", padding: space.xl, gap: space.l },
   loading: { marginVertical: space.xxl },
   preview: { gap: space.m },
