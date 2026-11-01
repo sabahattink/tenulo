@@ -1,7 +1,16 @@
 import type { ReactNode } from "react";
 import { Pressable, StyleSheet, Switch, Text, View, type ViewStyle } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Icon, type IconName } from "./icons";
 import { type Theme, radius, space, type } from "./theme";
+
+/**
+ * Bottom padding for a scrolling stack screen. Screens draw edge to edge, so the end of the
+ * content must clear the navigation bar, which is twice as tall with three-button navigation.
+ */
+export function useScrollEndPadding(): number {
+  return useSafeAreaInsets().bottom + space.xxl;
+}
 
 export function Card({ theme, children, style }: { theme: Theme; children: ReactNode; style?: ViewStyle }) {
   return (
@@ -156,8 +165,8 @@ export function SwitchRow({
           onValueChange={onChange}
           disabled={disabled}
           accessibilityLabel={title}
-          trackColor={{ false: theme.muted, true: theme.accent }}
-          thumbColor={theme.card}
+          trackColor={{ false: theme.switchOffTrack, true: theme.accent }}
+          thumbColor={value ? theme.accentText : theme.switchOffThumb}
         />
       }
     />
@@ -188,7 +197,7 @@ export function Segmented<T extends string | number>({
             accessibilityRole="radio"
             accessibilityState={{ selected }}
             onPress={() => onChange(o.value)}
-            style={[styles.segmentItem, selected && [styles.segmentSelected, { backgroundColor: theme.card }]]}
+            style={[styles.segmentItem, selected && [styles.segmentSelected, { backgroundColor: theme.raised }]]}
           >
             <Text style={[styles.segmentText, { color: selected ? theme.text : theme.muted }]}>{o.label}</Text>
           </Pressable>

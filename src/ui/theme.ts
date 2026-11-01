@@ -11,6 +11,8 @@ const light = {
   card: "#FFFFFF",
   /** Recessed surfaces: segmented controls, chips, progress tracks. */
   surfaceAlt: "#ECE8DF",
+  /** Lifted out of a recessed surface: the selected segment. Lighter than surfaceAlt in both schemes. */
+  raised: "#FFFFFF",
   /** Accent tint behind accent-colored content. */
   accentSoft: "#DCEBE5",
   border: "#E3DFD6",
@@ -24,12 +26,19 @@ const light = {
   warn: "#A4552C",
   danger: "#B3261E",
   tabBar: "#FBF9F5",
+  /**
+   * Switch when off (on is accent with an accentText thumb). Track >= 3:1 on card, thumb >= 3:1
+   * on the track, in both schemes, so the off state stays visible (WCAG 1.4.11).
+   */
+  switchOffTrack: "#5B615C",
+  switchOffThumb: "#FFFFFF",
 } as const;
 
 const dark: { [K in keyof typeof light]: string } = {
   background: "#101412",
   card: "#191E1B",
   surfaceAlt: "#232A26",
+  raised: "#36403B",
   accentSoft: "#1F3A32",
   border: "#2A312D",
   text: "#ECEFEC",
@@ -42,6 +51,8 @@ const dark: { [K in keyof typeof light]: string } = {
   warn: "#E8A27A",
   danger: "#F2B8B5",
   tabBar: "#141916",
+  switchOffTrack: "#6B7670",
+  switchOffThumb: "#ECEFEC",
 };
 
 export type Theme = { readonly [K in keyof typeof light]: string };
