@@ -64,6 +64,9 @@ Answers that match the code (re-check against Google's current definitions befor
 ## Known doctor warnings
 
 - `@expo/config-plugins` installed directly: it pins the peer of `react-native-health-connect`
-  to the version Expo already uses, so pnpm does not add a second, newer copy.
-- Patch versions one behind the SDK's latest: pnpm's `minimumReleaseAge` rejects packages
-  published in the last day. Run `npx expo install --fix` a day later.
+  to the version Expo already uses, so pnpm does not add a second, newer copy. After
+  `npx expo install --fix`, set the pin to the version in `node_modules/expo/package.json` and
+  check that `node_modules` holds only one copy of `@expo/config-plugins`.
+
+If `npx expo install --fix` says a version is too new, that is pnpm's `minimumReleaseAge`
+rejecting packages published in the last day: run it again a day later.
