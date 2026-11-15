@@ -35,3 +35,6 @@ reconciles the alarms with settings and the injection log on every change (`useA
   daily alarms are re-armed in the new zone immediately.
 - "Delete all data" also cancels every alarm, clears the stored reminders and removes reminder
   notifications still on screen.
+- A tapped reminder opens its screen once. Android restarts an activity with the intent that first
+  created it, so after it ends the process in the background, reopening from Recents would replay
+  the tap; each notification carries a token, and a token already routed is not routed again.

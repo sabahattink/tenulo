@@ -76,8 +76,29 @@ object ReminderScheduler {
   const val EXTRA_ID = "reminderId"
   /** Put on the launch intent when a reminder notification is tapped. */
   const val EXTRA_LAUNCHED_BY = "tenulo.reminder"
+  /** Also on that intent: unique per notification posted, so a replayed tap can be told apart. */
+  const val EXTRA_LAUNCH_TOKEN = "tenulo.launch"
+  private const val LAUNCH_PREFS = "tenulo_launch"
+  private const val LAST_LAUNCH = "last"
 
   private fun prefs(context: Context) = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+
+  private fun launchPrefs(context: Context) = context.getSharedPreferences(LAUNCH_PREFS, Context.MODE_PRIVATE)
+
+  /**
+   * True the first time a tapped notification's token is seen. Android restarts an activity with
+   * the intent that first created it: after it ends Tenulo's process in the background, reopening
+   * from Recents replays the original tap, and that replay must not open the screen again. A
+   * launch without a token (no notification behind it) is never treated as a replay.
+   */
+  fun firstLaunchOf(context: Context, token: String?): Boolean {
+    if (token == null) return true
+    val launches = launchPrefs(context)
+    if (launches.getString(LAST_LAUNCH, null) == token) return false
+    // commit, not apply: the process may be ended right after this, and the token must survive it.
+    launches.edit().putString(LAST_LAUNCH, token).commit()
+    return true
+  }
 
   fun canNotify(context: Context): Boolean = NotificationManagerCompat.from(context).areNotificationsEnabled()
 
@@ -98,6 +119,7 @@ object ReminderScheduler {
    */
   fun cancelAll(context: Context) {
     for (id in prefs(context).all.keys.toList()) cancel(context, id)
+    launchPrefs(context).edit().clear().apply()
     NotificationManagerCompat.from(context).cancelAll()
   }
 
@@ -169,6 +191,7 @@ object ReminderScheduler {
     val launch = context.packageManager.getLaunchIntentForPackage(context.packageName)?.apply {
       flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
       putExtra(EXTRA_LAUNCHED_BY, reminder.id)
+      putExtra(EXTRA_LAUNCH_TOKEN, "${reminder.id}@${System.currentTimeMillis()}")
     }
     val content = launch?.let {
       PendingIntent.getActivity(
