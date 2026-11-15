@@ -82,7 +82,7 @@ export default function LogInjection() {
         theme={theme}
         selected={site}
         lastSite={status.lastSite}
-        suggestedSite={status.suggestedSite}
+        longestAgoSite={status.longestAgoSite}
         onSelect={setSite}
       />
 

@@ -78,7 +78,7 @@ describe("injectionStatus", () => {
     expect(s.lastDate).toBeUndefined();
     expect(s.nextDue).toBeUndefined();
     expect(s.intervalDays).toBe(7);
-    expect(s.suggestedSite).toBe("abdomen-left");
+    expect(s.longestAgoSite).toBe("abdomen-left");
   });
 
   it("uses the plan's interval and dose, and ignores input order", async () => {
@@ -100,7 +100,7 @@ describe("injectionStatus", () => {
     expect(s.daysUntilDue).toBe(0);
     expect(s.expectedDoseMcg).toBe(500);
     expect(s.plan?.period).toBe(1);
-    expect(s.suggestedSite).toBe("thigh-left");
+    expect(s.longestAgoSite).toBe("thigh-left");
   });
 
   it("falls back to the last logged dose without a plan, and reports overdue", async () => {
