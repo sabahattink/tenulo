@@ -140,9 +140,9 @@ export default function SettingsScreen() {
               try {
                 const summary = restoreBackup(backup);
                 const inactive =
-                  summary.inactiveMedications > 0
-                    ? " The medication from the backup was added as inactive; this phone keeps its current one."
-                    : "";
+                  summary.inactiveMedications === 0
+                    ? ""
+                    : ` ${summary.inactiveMedications === 1 ? "One medication" : `${summary.inactiveMedications} medications`} from the backup ${summary.inactiveMedications === 1 ? "was" : "were"} added as inactive: Tenulo keeps one current medication. Their injections are in History.`;
                 Alert.alert("Backup restored", `${restoreSummaryText(summary)}${inactive}`);
               } catch (e) {
                 Alert.alert("Restore failed", `Nothing was changed. ${errorText(e)}`);

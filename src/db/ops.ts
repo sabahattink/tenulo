@@ -89,16 +89,31 @@ export interface RestoreSummary {
   readonly sideEffects: number;
   readonly medications: number;
   readonly planSteps: number;
-  /** Medications added as inactive because the phone already has an active one. */
+  /** Medications added as inactive so that the phone keeps one current medication. */
   readonly inactiveMedications: number;
+}
+
+/**
+ * The backup medication that becomes current on a phone without one: the oldest active one, which
+ * is the one useActiveMedication shows. Ties go to the smaller id, so row order never decides.
+ */
+function oldestActive(meds: BackupData["medications"]): string | undefined {
+  let oldest: BackupData["medications"][number] | undefined;
+  for (const m of meds) {
+    if (!m.active) continue;
+    if (oldest === undefined || m.createdAt < oldest.createdAt || (m.createdAt === oldest.createdAt && m.id < oldest.id)) {
+      oldest = m;
+    }
+  }
+  return oldest?.id;
 }
 
 /**
  * Adds every record from a validated backup that is not on the phone yet. Nothing on the phone is
  * changed or removed: a row whose id (or Health Connect id, or plan date) exists is skipped. Unit
- * and goal come from the backup only on a phone with no records yet. If the phone already has an
- * active medication, the backup's other medications are added as inactive, so the phone keeps
- * exactly one current medication.
+ * and goal come from the backup only on a phone with no records yet. The phone keeps exactly one
+ * current medication: its own if it has one, otherwise the backup's oldest active one; every other
+ * active medication in the backup is added as inactive (its injections still show in History).
  */
 export function restoreData(database: SyncDb, data: BackupData, now: number): RestoreSummary {
   return database.transaction((tx) => {
@@ -108,12 +123,14 @@ export function restoreData(database: SyncDb, data: BackupData, now: number): Re
     const activeIds = new Set(
       tx.select({ id: medications.id }).from(medications).where(eq(medications.active, true)).all().map((m) => m.id),
     );
-    const keepActive = activeIds.size === 0;
-    const meds = data.medications.map((m) => ({ ...m, active: m.active && (keepActive || activeIds.has(m.id)) }));
-    const inactiveMedications = meds.filter((m, i) => !m.active && data.medications[i]?.active === true).length;
+    const current = activeIds.size > 0 ? undefined : oldestActive(data.medications);
+    const staysActive = (m: { id: string; active: boolean }) => m.active && (activeIds.has(m.id) || m.id === current);
+    const meds = data.medications.map((m) => ({ ...m, active: staysActive(m) }));
+    const demoted = new Set(data.medications.filter((m) => m.active && !staysActive(m)).map((m) => m.id));
 
+    /** Inserts in chunks; returns the ids actually added (rows already on the phone are skipped). */
     const insertAll = <T>(rows: readonly T[], insert: (chunk: T[]) => { id: string }[]) =>
-      chunks(rows).reduce((added, chunk) => added + insert(chunk).length, 0);
+      chunks(rows).flatMap((chunk) => insert(chunk).map((r) => r.id));
 
     // Parents before children, so every foreign key already resolves.
     const medicationsAdded = insertAll(meds, (c) =>
@@ -121,16 +138,16 @@ export function restoreData(database: SyncDb, data: BackupData, now: number): Re
     );
     const planStepsAdded = insertAll(data.planSteps, (c) =>
       tx.insert(planSteps).values(c).onConflictDoNothing().returning({ id: planSteps.id }).all(),
-    );
+    ).length;
     const injectionsAdded = insertAll(data.injections, (c) =>
       tx.insert(injections).values(c).onConflictDoNothing().returning({ id: injections.id }).all(),
-    );
+    ).length;
     const sideEffectsAdded = insertAll(data.sideEffects, (c) =>
       tx.insert(sideEffects).values(c).onConflictDoNothing().returning({ id: sideEffects.id }).all(),
-    );
+    ).length;
     const weightsAdded = insertAll(data.weights, (c) =>
       tx.insert(weightEntries).values(c).onConflictDoNothing().returning({ id: weightEntries.id }).all(),
-    );
+    ).length;
 
     if (!hadRecords && data.settings !== null) {
       tx.update(settings)
@@ -142,9 +159,9 @@ export function restoreData(database: SyncDb, data: BackupData, now: number): Re
       weights: weightsAdded,
       injections: injectionsAdded,
       sideEffects: sideEffectsAdded,
-      medications: medicationsAdded,
+      medications: medicationsAdded.length,
       planSteps: planStepsAdded,
-      inactiveMedications: medicationsAdded === 0 ? 0 : inactiveMedications,
+      inactiveMedications: medicationsAdded.filter((id) => demoted.has(id)).length,
     };
   });
 }

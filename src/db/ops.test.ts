@@ -7,7 +7,13 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { BackupData } from "../domain/backup";
 import { parseLocalDate as d } from "../domain/date";
 import { ulid } from "../domain/id";
-import { createMedicationWithPlan, insertImportedWeights, purgeDeletedData, restoreData, wipeAll } from "./ops";
+import {
+  createMedicationWithPlan,
+  insertImportedWeights,
+  purgeDeletedData,
+  restoreData,
+  wipeAll,
+} from "./ops";
 import { ALL_TABLES_DELETE_ORDER } from "./tables";
 import { eq, getTableName } from "drizzle-orm";
 import { medications, weightEntries } from "./schema";
@@ -224,6 +230,33 @@ describe("restoreData", () => {
     const summary = restoreData(t.database, backup(), now);
     expect(summary.inactiveMedications).toBe(1);
     expect(t.sqlite.prepare("SELECT name FROM medication WHERE active = 1").all()).toEqual([{ name: "Phone pen" }]);
+  });
+
+  it("counts as inactive only the medications it actually added", () => {
+    // The phone has its own pen and, from an earlier restore, the backup's pen as inactive.
+    t.sqlite.exec(`
+      INSERT INTO medication (id, name, active, created_at, updated_at) VALUES ('${id(50)}', 'Phone pen', 1, ${now}, ${now});
+      INSERT INTO medication (id, name, active, created_at, updated_at) VALUES ('${id(1)}', 'Backup pen', 0, ${now}, ${now});
+    `);
+    const data = backup();
+    const withSecond = {
+      ...data,
+      medications: [...data.medications, { id: id(60), name: "Second pen", active: true, createdAt: now, updatedAt: now }],
+    };
+    const summary = restoreData(t.database, withSecond, now);
+    expect(summary.medications).toBe(1);
+    expect(summary.inactiveMedications).toBe(1);
+  });
+
+  it("keeps one current medication when a backup has several active: the oldest, which the app shows", () => {
+    const data = backup();
+    const several = {
+      ...data,
+      medications: [{ id: id(61), name: "Newer pen", active: true, createdAt: now, updatedAt: now }, ...data.medications],
+    };
+    const summary = restoreData(t.database, several, now);
+    expect(t.sqlite.prepare("SELECT name FROM medication WHERE active = 1").all()).toEqual([{ name: "Backup pen" }]);
+    expect(summary.inactiveMedications).toBe(1);
   });
 
   it("is all or nothing: a failure part-way adds nothing", () => {
