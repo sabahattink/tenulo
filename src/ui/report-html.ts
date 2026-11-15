@@ -9,7 +9,7 @@ import { formatDose } from "../domain/parse";
 import type { Report } from "../domain/report";
 import { type WeightUnit, formatWeight, formatWeightChange, fromGrams } from "../domain/weight";
 import { chartGeometry } from "./chart-geometry";
-import { SEVERITY_LABELS, SIDE_EFFECT_LABELS, SITE_LABELS, intervalText, longDate } from "./copy";
+import { PUBLISHER, SEVERITY_LABELS, SIDE_EFFECT_LABELS, SITE_LABELS, intervalText, longDate } from "./copy";
 
 /** Print palette: the light theme, which prints well in color and in grey. */
 const INK = "#1E2320";
@@ -56,7 +56,7 @@ ${sideEffectBlock(report)}
 <footer>
   Recorded by the patient in Tenulo, a personal log. Values are shown exactly as the patient entered
   them. Tenulo does not give medical advice and does not recommend medications or doses.
-  Created ${e(longDate(created))}.
+  Created ${e(longDate(created))}. Tenulo by ${e(PUBLISHER)}.
 </footer>
 </body>
 </html>`;

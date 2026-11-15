@@ -2,6 +2,11 @@
 
 No drug brand names anywhere in the listing, screenshots or graphics (AGENTS.md).
 
+## Developer name
+
+Kalkan Software (set on the Play Console developer account, not per app; the app shows the same
+name in Settings, on the Privacy screen and under the doctor report: `PUBLISHER` in `src/ui/copy.ts`).
+
 ## App name (30)
 
 Tenulo: GLP-1 & Weight Log
