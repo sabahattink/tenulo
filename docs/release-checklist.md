@@ -11,7 +11,13 @@ npx expo-doctor            # see "Known doctor warnings" below
 npx eas-cli@latest build --platform android --profile production   # or a local signed build
 ```
 
-- `app.json`: `version` 1.0.0, `android.versionCode` 1. Bump `versionCode` on every upload.
+- `app.json`: `version` 1.0.0, `android.versionCode` 1. Bump `versionCode` on every upload and commit
+  it: `eas.json` sets `appVersionSource: "local"`, so the version in git is the one that ships, for
+  EAS and local builds alike (`package.json` `version` is kept equal to `expo.version`).
+- `eas.json` profiles: `production` builds the AAB for Play; `preview` is a release-mode APK to
+  sideload (store screenshots, testing); `development` is the dev client. All enable `corepack`, so
+  EAS installs the pnpm version pinned in `package.json` `packageManager`: the lockfile and
+  `pnpm-workspace.yaml` (`allowBuilds`) need that pnpm major.
 - Signing: use Play App Signing; keep the upload key out of the repo (`*.jks` is gitignored).
 
 ## 2. In-app product

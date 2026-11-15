@@ -1,6 +1,6 @@
 {
   "name": "tenulo",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "main": "expo-router/entry",
   "packageManager": "pnpm@12.10.1",
