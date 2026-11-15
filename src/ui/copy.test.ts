@@ -71,6 +71,7 @@ describe("data copy", () => {
   it("explains refused backups", () => {
     expect(backupProblem({ ok: false, reason: "not-json" })).toContain("not a Tenulo backup");
     expect(backupProblem({ ok: false, reason: "newer-version" })).toContain("newer version");
+    expect(backupProblem({ ok: false, reason: "too-large" })).toContain("too large to be a Tenulo backup");
     const damaged = "The backup is damaged or was edited, so nothing was restored.";
     expect(backupProblem({ ok: false, reason: "invalid", detail: "Too small", path: ["data", "weights", 3, "weightG"] })).toBe(
       `${damaged} The problem is in weigh-in 4.`,

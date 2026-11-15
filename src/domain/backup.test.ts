@@ -3,7 +3,9 @@ import {
   BACKUP_FORMAT,
   BACKUP_VERSION,
   type BackupData,
+  MAX_BACKUP_BYTES,
   backupFileName,
+  backupTooLarge,
   createBackup,
   parseBackup,
   serializeBackup,
@@ -118,6 +120,13 @@ describe("parseBackup rejects files it cannot trust", () => {
     expect(parseBackup("not json {")).toEqual({ ok: false, reason: "not-json" });
     expect(parseBackup(JSON.stringify({ hello: "world" }))).toEqual({ ok: false, reason: "not-a-backup" });
     expect(parseBackup("[]")).toEqual({ ok: false, reason: "not-a-backup" });
+  });
+
+  it("refuses a file far larger than any real backup, before reading it if its size is known", () => {
+    expect(backupTooLarge(MAX_BACKUP_BYTES)).toBe(false);
+    expect(backupTooLarge(MAX_BACKUP_BYTES + 1)).toBe(true);
+    expect(backupTooLarge(null)).toBe(false);
+    expect(parseBackup(" ".repeat(MAX_BACKUP_BYTES + 1))).toEqual({ ok: false, reason: "too-large" });
   });
 
   it("refuses a backup written by a newer Tenulo", () => {
