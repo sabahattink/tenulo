@@ -1,5 +1,5 @@
 /**
- * Every multi-statement write, as one real transaction.
+ * Every multi-statement write, and the backup read, as one real transaction.
  *
  * Drizzle's expo-sqlite driver is synchronous: `transaction()` commits as soon as its callback
  * returns. An `async` callback returns at its first `await`, so the rest would run outside the
@@ -81,6 +81,37 @@ export function createMedicationWithPlan(
       .run();
   });
   return id;
+}
+
+/**
+ * Every record on the phone, in backup form, read in one transaction without yielding: a write that
+ * happens meanwhile (a Health Connect sync, say) is either wholly in the backup or wholly out of it.
+ */
+export function readBackupData(database: SyncDb): BackupData {
+  return database.transaction((tx) => {
+    const [s] = tx.select().from(settings).where(eq(settings.id, 1)).all();
+    // Rows come from the database, whose CHECKs and triggers match the backup schema; only the
+    // LocalDate brand on the date columns is missing from Drizzle's row types. ops.test.ts parses
+    // the result with parseBackup to keep that true.
+    return {
+      settings:
+        s === undefined
+          ? null
+          : {
+              weightUnit: s.weightUnit,
+              goalWeightG: s.goalWeightG,
+              injectionReminderEnabled: s.injectionReminderEnabled,
+              injectionReminderMinute: s.injectionReminderMinute,
+              weighInReminderEnabled: s.weighInReminderEnabled,
+              weighInReminderMinute: s.weighInReminderMinute,
+            },
+      weights: tx.select().from(weightEntries).all(),
+      medications: tx.select().from(medications).all(),
+      planSteps: tx.select().from(planSteps).all(),
+      injections: tx.select().from(injections).all(),
+      sideEffects: tx.select().from(sideEffects).all(),
+    } as BackupData;
+  });
 }
 
 export interface RestoreSummary {

@@ -4,13 +4,14 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import type { BackupData } from "../domain/backup";
+import { type BackupData, createBackup, parseBackup, serializeBackup } from "../domain/backup";
 import { parseLocalDate as d } from "../domain/date";
 import { ulid } from "../domain/id";
 import {
   createMedicationWithPlan,
   insertImportedWeights,
   purgeDeletedData,
+  readBackupData,
   restoreData,
   wipeAll,
 } from "./ops";
@@ -276,6 +277,30 @@ describe("restoreData", () => {
       localDate: d("2026-01-01"),
     }));
     expect(restoreData(t.database, { ...big, weights: many }, now).weights).toBe(1_500);
+  });
+});
+
+describe("readBackupData", () => {
+  it("reads every table inside one transaction, so a backup never mixes two moments", () => {
+    restoreData(t.database, backup(), now);
+    t.statements.length = 0;
+    readBackupData(t.database);
+    expect(t.statements[0]).toMatch(/^begin/i);
+    expect(t.statements.at(-1)).toMatch(/^commit/i);
+    expect(t.statements.filter((s) => /^\s*select/i.test(s))).toHaveLength(ALL_TABLES_DELETE_ORDER.length);
+  });
+
+  it("makes a file that passes the backup checks and restores to the same records", async () => {
+    restoreData(t.database, backup(), now);
+    const data = readBackupData(t.database);
+
+    const parsed = parseBackup(serializeBackup(createBackup(data, now, "test")));
+    if (!parsed.ok) throw new Error(`Backup rejected: ${JSON.stringify(parsed)}`);
+    const other = await testDb();
+    other.sqlite.prepare("INSERT INTO settings (id, updated_at) VALUES (1, ?)").run(now);
+    restoreData(other.database, parsed.backup.data, now);
+
+    expect(readBackupData(other.database)).toEqual(data);
   });
 });
 
