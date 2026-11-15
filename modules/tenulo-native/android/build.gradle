@@ -3,7 +3,7 @@ plugins {
   id 'expo-module-gradle-plugin'
 }
 
-group = 'com.sabahattinkalkan.tenulo'
+group = 'com.kalkansoftware.tenulo'
 version = '1.0.0'
 
 android {

@@ -2,7 +2,7 @@
 
 Private GLP-1 and weight log for Android. Local-first: no account, no analytics, no data collected.
 
-- Play package: `com.sabahattinkalkan.tenulo`
+- Play package: `com.kalkansoftware.tenulo`
 - Privacy policy: https://sabahattinkalkan.com/tenulo/privacy/
 - Project rules (privacy invariants, medical boundaries, data rules): [AGENTS.md](AGENTS.md)
 - Decisions: [docs/adr](docs/adr) · Release steps: [docs/release-checklist.md](docs/release-checklist.md)
