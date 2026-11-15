@@ -4,27 +4,48 @@
  *
  * The adapter implements the few expo-sqlite methods the driver calls (prepareSync, executeSync,
  * executeForRawResultSync), so transactions, conflict handling and RETURNING go through exactly
- * the code paths the phone runs. Never imported by app code.
+ * the code paths the phone runs. Migrations run through Drizzle's own migrator, as at app start:
+ * every pending migration in one transaction (where `PRAGMA foreign_keys=OFF` does nothing).
+ * Never imported by app code.
  */
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { DatabaseSync, type SQLInputValue, type StatementSync } from "node:sqlite";
 import { drizzle } from "drizzle-orm/expo-sqlite/driver";
+import { migrate } from "drizzle-orm/expo-sqlite/migrator";
+import { CONNECTION_PRAGMAS } from "./connection";
 import * as schema from "./schema";
 
 const root = join(__dirname, "..", "..", "drizzle");
 
-export function applyMigrations(db: DatabaseSync, fromIdx = 0, toIdx = Number.MAX_SAFE_INTEGER): void {
-  const journal = JSON.parse(readFileSync(join(root, "meta", "_journal.json"), "utf8")) as {
-    entries: { idx: number; tag: string }[];
+interface JournalEntry {
+  readonly idx: number;
+  readonly when: number;
+  readonly tag: string;
+  readonly breakpoints: boolean;
+}
+
+export interface MigrationBundle {
+  readonly journal: { readonly entries: JournalEntry[] };
+  readonly migrations: Record<string, string>;
+}
+
+/** The bundle drizzle/migrations.js gives the app, read from the same files, up to `lastIdx`. */
+export function migrationBundle(lastIdx = Number.MAX_SAFE_INTEGER): MigrationBundle {
+  const journal = JSON.parse(readFileSync(join(root, "meta", "_journal.json"), "utf8")) as { entries: JournalEntry[] };
+  const entries = journal.entries.filter((e) => e.idx <= lastIdx);
+  return {
+    journal: { ...journal, entries },
+    migrations: Object.fromEntries(
+      entries.map((e) => [`m${String(e.idx).padStart(4, "0")}`, readFileSync(join(root, `${e.tag}.sql`), "utf8")]),
+    ),
   };
-  for (const { idx, tag } of [...journal.entries].sort((a, b) => a.idx - b.idx)) {
-    if (idx < fromIdx || idx > toIdx) continue;
-    const sql = readFileSync(join(root, `${tag}.sql`), "utf8");
-    for (const statement of sql.split("--> statement-breakpoint")) {
-      if (statement.trim()) db.exec(statement);
-    }
-  }
+}
+
+/** Each migration's SQL, for checks over everything the app will ever run. */
+export function migrationSql(): { readonly tag: string; readonly sql: string }[] {
+  const { journal, migrations } = migrationBundle();
+  return journal.entries.map((e) => ({ tag: e.tag, sql: migrations[`m${String(e.idx).padStart(4, "0")}`] ?? "" }));
 }
 
 const toInput = (params: readonly unknown[]): SQLInputValue[] =>
@@ -58,11 +79,16 @@ class StatementAdapter {
   }
 }
 
-/** A migrated in-memory database, the raw handle for setup and assertions, and every SQL statement Drizzle prepared. */
-export function testDb() {
-  const sqlite = new DatabaseSync(":memory:");
-  sqlite.exec("PRAGMA foreign_keys = ON");
-  applyMigrations(sqlite);
+export type TestDb = Awaited<ReturnType<typeof testDb>>;
+
+/**
+ * A database with the app's connection settings, migrated up to `lastIdx` (default: all), the raw
+ * handle for setup and assertions, and every SQL statement Drizzle prepared after migrating. In
+ * memory unless `path` names a file.
+ */
+export async function testDb(path = ":memory:", lastIdx = Number.MAX_SAFE_INTEGER) {
+  const sqlite = new DatabaseSync(path);
+  sqlite.exec(CONNECTION_PRAGMAS);
   const statements: string[] = [];
   const client = {
     prepareSync: (sql: string) => {
@@ -71,7 +97,14 @@ export function testDb() {
     },
   };
   const database = drizzle(client as unknown as Parameters<typeof drizzle>[0], { schema });
+  await migrate(database, migrationBundle(lastIdx));
+  statements.length = 0;
   return { sqlite, database, statements };
+}
+
+/** Runs the migrations a newer app version brings, as its start-up would: the pending ones only. */
+export async function upgrade(t: TestDb, lastIdx = Number.MAX_SAFE_INTEGER): Promise<void> {
+  await migrate(t.database, migrationBundle(lastIdx));
 }
 
 export function count(sqlite: DatabaseSync, table: string): number {

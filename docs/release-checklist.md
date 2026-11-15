@@ -11,8 +11,18 @@ npx expo-doctor            # see "Known doctor warnings" below
 npx eas-cli@latest build --platform android --profile production   # or a local signed build
 ```
 
-- `app.json`: `version` 1.0.0, `android.versionCode` 1. Bump `versionCode` on every upload.
+- `app.json`: `version` 1.0.0, `android.versionCode` 1. Bump `versionCode` on every upload and commit
+  it: `eas.json` sets `appVersionSource: "local"`, so the version in git is the one that ships, for
+  EAS and local builds alike (`package.json` `version` is kept equal to `expo.version`).
+- `eas.json` profiles: `production` builds the AAB for Play; `preview` is a release-mode APK to
+  sideload (store screenshots, testing); `development` is the dev client. All enable `corepack`, so
+  EAS installs the pnpm version pinned in `package.json` `packageManager`: the lockfile and
+  `pnpm-workspace.yaml` (`allowBuilds`) need that pnpm major.
 - Signing: use Play App Signing; keep the upload key out of the repo (`*.jks` is gitignored).
+- On a `preview` build with data in it, run Settings → Delete all data once. The alert must say
+  "Tenulo is empty again. Reminders were cancelled too." with nothing after it. The other text means
+  VACUUM or the WAL checkpoint failed on the device's SQLite, which the Node tests cannot show (see
+  `purgeDeletedData` in `src/db/ops.ts`).
 
 ## 2. In-app product
 

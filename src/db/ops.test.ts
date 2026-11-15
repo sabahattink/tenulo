@@ -1,19 +1,31 @@
-import { beforeEach, describe, expect, it } from "vitest";
-import type { BackupData } from "../domain/backup";
+/// <reference types="node" />
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { DatabaseSync } from "node:sqlite";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { type BackupData, createBackup, parseBackup, serializeBackup } from "../domain/backup";
 import { parseLocalDate as d } from "../domain/date";
 import { ulid } from "../domain/id";
-import { createMedicationWithPlan, insertImportedWeights, restoreData, wipeAll } from "./ops";
+import {
+  createMedicationWithPlan,
+  insertImportedWeights,
+  purgeDeletedData,
+  readBackupData,
+  restoreData,
+  wipeAll,
+} from "./ops";
 import { ALL_TABLES_DELETE_ORDER } from "./tables";
-import { getTableName } from "drizzle-orm";
-import { medications } from "./schema";
-import { count, testDb } from "./test-db";
+import { eq, getTableName } from "drizzle-orm";
+import { medications, weightEntries } from "./schema";
+import { type TestDb, count, testDb } from "./test-db";
 
 const now = 1_792_300_000_000;
 const id = (n: number) => ulid(now + n, () => 0.5);
-let t: ReturnType<typeof testDb>;
+let t: TestDb;
 
-beforeEach(() => {
-  t = testDb();
+beforeEach(async () => {
+  t = await testDb();
   t.sqlite.prepare("INSERT INTO settings (id, updated_at) VALUES (1, ?)").run(now);
 });
 
@@ -63,6 +75,87 @@ describe("wipeAll", () => {
     expect(() => wipeAll(t.database, now)).toThrow(/boom/);
     for (const table of ["side_effect", "injection", "plan_step", "medication", "weight_entry", "settings"]) {
       expect(count(t.sqlite, table), table).toBe(1);
+    }
+  });
+});
+
+describe("deleted records leave no bytes in the database files (secure_delete, purgeDeletedData)", () => {
+  /** Text that appears only in the records below, so finding its bytes means a record survived. */
+  const MARKER = "tenulo-erase-check-7f3a";
+  let dir: string;
+  let file: string;
+  let disk: TestDb;
+
+  beforeEach(async () => {
+    dir = mkdtempSync(join(tmpdir(), "tenulo-"));
+    file = join(dir, "tenulo.db");
+    disk = await testDb(file);
+    disk.sqlite.prepare("INSERT INTO settings (id, updated_at) VALUES (1, ?)").run(now);
+  });
+
+  afterEach(() => {
+    disk.sqlite.close();
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  const insertMarked = (key: string) =>
+    disk.sqlite.exec(`
+      INSERT INTO weight_entry (id, measured_at, local_date, weight_g, source, note, created_at, updated_at) VALUES ('w${key}', ${now}, '2026-10-18', 82400, 'manual', '${MARKER} weight', ${now}, ${now});
+      INSERT INTO medication (id, name, created_at, updated_at) VALUES ('m${key}', '${MARKER}', ${now}, ${now});
+      INSERT INTO injection (id, medication_id, taken_at, local_date, dose_mcg, note, created_at, updated_at) VALUES ('i${key}', 'm${key}', ${now}, '2026-10-18', 250, '${MARKER} shot', ${now}, ${now});
+      INSERT INTO side_effect (id, local_date, type, severity, injection_id, note, created_at, updated_at) VALUES ('s${key}', '2026-10-18', 'nausea', 1, 'i${key}', '${MARKER} effect', ${now}, ${now});
+    `);
+  const filesHoldingMarker = (text = MARKER) =>
+    [file, `${file}-wal`].filter((f) => existsSync(f) && readFileSync(f).includes(text));
+
+  it("overwrites a single deleted entry in the database file, not only unlinks it", () => {
+    insertMarked("1");
+    disk.sqlite.exec("PRAGMA wal_checkpoint(TRUNCATE)");
+    expect(filesHoldingMarker(`${MARKER} weight`)).toEqual([file]);
+
+    disk.database.delete(weightEntries).where(eq(weightEntries.id, "w1")).run();
+    disk.sqlite.exec("PRAGMA wal_checkpoint(TRUNCATE)");
+
+    expect(filesHoldingMarker(`${MARKER} weight`)).toEqual([]);
+    expect(filesHoldingMarker(`${MARKER} shot`)).toEqual([file]);
+  });
+
+  it("leaves no byte of a deleted record in the database file or its write-ahead log", () => {
+    insertMarked("1");
+    // Older records live in the database file itself, recent ones only in the WAL: cover both.
+    disk.sqlite.exec("PRAGMA wal_checkpoint(TRUNCATE)");
+    insertMarked("2");
+    expect(filesHoldingMarker()).toEqual([file, `${file}-wal`]);
+
+    wipeAll(disk.database, now);
+    purgeDeletedData(disk.database);
+
+    expect(filesHoldingMarker()).toEqual([]);
+  });
+
+  it("is never blocked by app code that leaves a query half-read", () => {
+    // On the phone a statement stepped but not run to its end stays open (Drizzle's expo driver
+    // never finalizes), and an open statement makes VACUUM fail and the checkpoint stay busy. The
+    // tests run node:sqlite, which reads to the end, so they would not notice: forbid the reads.
+    const halfReads = /\.get(<[^>]*>)?\(\s*sql\b|\bget(First|Each)(Sync|Async)\b|\bgenerator(Sync|Async)\b/;
+    const src = join(__dirname, "..");
+    const offenders = readdirSync(src, { recursive: true, encoding: "utf8" })
+      .filter((f) => /\.tsx?$/.test(f) && !/\.test\.ts$|test-db\.ts$/.test(f))
+      .filter((f) => halfReads.test(readFileSync(join(src, f), "utf8")));
+    expect(offenders).toEqual([]);
+  });
+
+  it("fails loudly when the write-ahead log cannot be emptied", () => {
+    insertMarked("1");
+    wipeAll(disk.database, now);
+    // A second connection in the middle of a read pins the old log, so it cannot be truncated.
+    const reader = new DatabaseSync(file);
+    try {
+      reader.exec("BEGIN");
+      reader.prepare("SELECT count(*) FROM settings").get();
+      expect(() => purgeDeletedData(disk.database)).toThrow(/write-ahead log/);
+    } finally {
+      reader.close();
     }
   });
 });
@@ -140,6 +233,33 @@ describe("restoreData", () => {
     expect(t.sqlite.prepare("SELECT name FROM medication WHERE active = 1").all()).toEqual([{ name: "Phone pen" }]);
   });
 
+  it("counts as inactive only the medications it actually added", () => {
+    // The phone has its own pen and, from an earlier restore, the backup's pen as inactive.
+    t.sqlite.exec(`
+      INSERT INTO medication (id, name, active, created_at, updated_at) VALUES ('${id(50)}', 'Phone pen', 1, ${now}, ${now});
+      INSERT INTO medication (id, name, active, created_at, updated_at) VALUES ('${id(1)}', 'Backup pen', 0, ${now}, ${now});
+    `);
+    const data = backup();
+    const withSecond = {
+      ...data,
+      medications: [...data.medications, { id: id(60), name: "Second pen", active: true, createdAt: now, updatedAt: now }],
+    };
+    const summary = restoreData(t.database, withSecond, now);
+    expect(summary.medications).toBe(1);
+    expect(summary.inactiveMedications).toBe(1);
+  });
+
+  it("keeps one current medication when a backup has several active: the oldest, which the app shows", () => {
+    const data = backup();
+    const several = {
+      ...data,
+      medications: [{ id: id(61), name: "Newer pen", active: true, createdAt: now, updatedAt: now }, ...data.medications],
+    };
+    const summary = restoreData(t.database, several, now);
+    expect(t.sqlite.prepare("SELECT name FROM medication WHERE active = 1").all()).toEqual([{ name: "Backup pen" }]);
+    expect(summary.inactiveMedications).toBe(1);
+  });
+
   it("is all or nothing: a failure part-way adds nothing", () => {
     failOn("weight_entry", "INSERT");
     expect(() => restoreData(t.database, backup(), now)).toThrow(/boom/);
@@ -157,6 +277,30 @@ describe("restoreData", () => {
       localDate: d("2026-01-01"),
     }));
     expect(restoreData(t.database, { ...big, weights: many }, now).weights).toBe(1_500);
+  });
+});
+
+describe("readBackupData", () => {
+  it("reads every table inside one transaction, so a backup never mixes two moments", () => {
+    restoreData(t.database, backup(), now);
+    t.statements.length = 0;
+    readBackupData(t.database);
+    expect(t.statements[0]).toMatch(/^begin/i);
+    expect(t.statements.at(-1)).toMatch(/^commit/i);
+    expect(t.statements.filter((s) => /^\s*select/i.test(s))).toHaveLength(ALL_TABLES_DELETE_ORDER.length);
+  });
+
+  it("makes a file that passes the backup checks and restores to the same records", async () => {
+    restoreData(t.database, backup(), now);
+    const data = readBackupData(t.database);
+
+    const parsed = parseBackup(serializeBackup(createBackup(data, now, "test")));
+    if (!parsed.ok) throw new Error(`Backup rejected: ${JSON.stringify(parsed)}`);
+    const other = await testDb();
+    other.sqlite.prepare("INSERT INTO settings (id, updated_at) VALUES (1, ?)").run(now);
+    restoreData(other.database, parsed.backup.data, now);
+
+    expect(readBackupData(other.database)).toEqual(data);
   });
 });
 

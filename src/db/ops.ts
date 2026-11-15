@@ -1,5 +1,5 @@
 /**
- * Every multi-statement write, as one real transaction.
+ * Every multi-statement write, and the backup read, as one real transaction.
  *
  * Drizzle's expo-sqlite driver is synchronous: `transaction()` commits as soon as its callback
  * returns. An `async` callback returns at its first `await`, so the rest would run outside the
@@ -42,6 +42,24 @@ export function wipeAll(database: SyncDb, now: number): void {
   });
 }
 
+/**
+ * After "Delete all data": leaves no byte of a deleted record in the database's files.
+ *
+ * Deleted rows are only marked free; their bytes stay in the database file and, in WAL mode, in
+ * earlier copies of each page in the write-ahead log. VACUUM rebuilds the file from the rows that
+ * are left, and a TRUNCATE checkpoint writes that into the file and empties the log. Runs outside
+ * any transaction; throws when the log could not be emptied, so a failure is never silent.
+ */
+export function purgeDeletedData(database: SyncDb): void {
+  database.run(sql`VACUUM`);
+  // `.all()` steps the statement to the end. A half-read statement would stay busy, and an open
+  // statement makes the next VACUUM fail.
+  const [checkpoint] = database.all<{ busy: number }>(sql`PRAGMA wal_checkpoint(TRUNCATE)`);
+  if (checkpoint === undefined || checkpoint.busy !== 0) {
+    throw new Error("The write-ahead log is in use and could not be emptied");
+  }
+}
+
 export function createMedicationWithPlan(
   database: SyncDb,
   input: { name: string; doseMcg: number; intervalDays: number; startDate: LocalDate },
@@ -65,22 +83,68 @@ export function createMedicationWithPlan(
   return id;
 }
 
+/**
+ * Every record on the phone, in backup form, read in one transaction without yielding: a write that
+ * happens meanwhile (a Health Connect sync, say) is either wholly in the backup or wholly out of it.
+ */
+export function readBackupData(database: SyncDb): BackupData {
+  return database.transaction((tx) => {
+    const [s] = tx.select().from(settings).where(eq(settings.id, 1)).all();
+    // Rows come from the database, whose CHECKs and triggers match the backup schema; only the
+    // LocalDate brand on the date columns is missing from Drizzle's row types. ops.test.ts parses
+    // the result with parseBackup to keep that true.
+    return {
+      settings:
+        s === undefined
+          ? null
+          : {
+              weightUnit: s.weightUnit,
+              goalWeightG: s.goalWeightG,
+              injectionReminderEnabled: s.injectionReminderEnabled,
+              injectionReminderMinute: s.injectionReminderMinute,
+              weighInReminderEnabled: s.weighInReminderEnabled,
+              weighInReminderMinute: s.weighInReminderMinute,
+            },
+      weights: tx.select().from(weightEntries).all(),
+      medications: tx.select().from(medications).all(),
+      planSteps: tx.select().from(planSteps).all(),
+      injections: tx.select().from(injections).all(),
+      sideEffects: tx.select().from(sideEffects).all(),
+    } as BackupData;
+  });
+}
+
 export interface RestoreSummary {
   readonly weights: number;
   readonly injections: number;
   readonly sideEffects: number;
   readonly medications: number;
   readonly planSteps: number;
-  /** Medications added as inactive because the phone already has an active one. */
+  /** Medications added as inactive so that the phone keeps one current medication. */
   readonly inactiveMedications: number;
+}
+
+/**
+ * The backup medication that becomes current on a phone without one: the oldest active one, which
+ * is the one useActiveMedication shows. Ties go to the smaller id, so row order never decides.
+ */
+function oldestActive(meds: BackupData["medications"]): string | undefined {
+  let oldest: BackupData["medications"][number] | undefined;
+  for (const m of meds) {
+    if (!m.active) continue;
+    if (oldest === undefined || m.createdAt < oldest.createdAt || (m.createdAt === oldest.createdAt && m.id < oldest.id)) {
+      oldest = m;
+    }
+  }
+  return oldest?.id;
 }
 
 /**
  * Adds every record from a validated backup that is not on the phone yet. Nothing on the phone is
  * changed or removed: a row whose id (or Health Connect id, or plan date) exists is skipped. Unit
- * and goal come from the backup only on a phone with no records yet. If the phone already has an
- * active medication, the backup's other medications are added as inactive, so the phone keeps
- * exactly one current medication.
+ * and goal come from the backup only on a phone with no records yet. The phone keeps exactly one
+ * current medication: its own if it has one, otherwise the backup's oldest active one; every other
+ * active medication in the backup is added as inactive (its injections still show in History).
  */
 export function restoreData(database: SyncDb, data: BackupData, now: number): RestoreSummary {
   return database.transaction((tx) => {
@@ -90,12 +154,14 @@ export function restoreData(database: SyncDb, data: BackupData, now: number): Re
     const activeIds = new Set(
       tx.select({ id: medications.id }).from(medications).where(eq(medications.active, true)).all().map((m) => m.id),
     );
-    const keepActive = activeIds.size === 0;
-    const meds = data.medications.map((m) => ({ ...m, active: m.active && (keepActive || activeIds.has(m.id)) }));
-    const inactiveMedications = meds.filter((m, i) => !m.active && data.medications[i]?.active === true).length;
+    const current = activeIds.size > 0 ? undefined : oldestActive(data.medications);
+    const staysActive = (m: { id: string; active: boolean }) => m.active && (activeIds.has(m.id) || m.id === current);
+    const meds = data.medications.map((m) => ({ ...m, active: staysActive(m) }));
+    const demoted = new Set(data.medications.filter((m) => m.active && !staysActive(m)).map((m) => m.id));
 
+    /** Inserts in chunks; returns the ids actually added (rows already on the phone are skipped). */
     const insertAll = <T>(rows: readonly T[], insert: (chunk: T[]) => { id: string }[]) =>
-      chunks(rows).reduce((added, chunk) => added + insert(chunk).length, 0);
+      chunks(rows).flatMap((chunk) => insert(chunk).map((r) => r.id));
 
     // Parents before children, so every foreign key already resolves.
     const medicationsAdded = insertAll(meds, (c) =>
@@ -103,16 +169,16 @@ export function restoreData(database: SyncDb, data: BackupData, now: number): Re
     );
     const planStepsAdded = insertAll(data.planSteps, (c) =>
       tx.insert(planSteps).values(c).onConflictDoNothing().returning({ id: planSteps.id }).all(),
-    );
+    ).length;
     const injectionsAdded = insertAll(data.injections, (c) =>
       tx.insert(injections).values(c).onConflictDoNothing().returning({ id: injections.id }).all(),
-    );
+    ).length;
     const sideEffectsAdded = insertAll(data.sideEffects, (c) =>
       tx.insert(sideEffects).values(c).onConflictDoNothing().returning({ id: sideEffects.id }).all(),
-    );
+    ).length;
     const weightsAdded = insertAll(data.weights, (c) =>
       tx.insert(weightEntries).values(c).onConflictDoNothing().returning({ id: weightEntries.id }).all(),
-    );
+    ).length;
 
     if (!hadRecords && data.settings !== null) {
       tx.update(settings)
@@ -124,9 +190,9 @@ export function restoreData(database: SyncDb, data: BackupData, now: number): Re
       weights: weightsAdded,
       injections: injectionsAdded,
       sideEffects: sideEffectsAdded,
-      medications: medicationsAdded,
+      medications: medicationsAdded.length,
       planSteps: planStepsAdded,
-      inactiveMedications: medicationsAdded === 0 ? 0 : inactiveMedications,
+      inactiveMedications: medicationsAdded.filter((id) => demoted.has(id)).length,
     };
   });
 }

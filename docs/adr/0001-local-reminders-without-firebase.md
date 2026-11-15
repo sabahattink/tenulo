@@ -33,4 +33,5 @@ reconciles the alarms with settings and the injection log on every change (`useA
 - A reminder may arrive a few minutes late in Doze; acceptable for this use.
 - One-shot alarms computed in the old time zone are recomputed the next time the app opens;
   daily alarms are re-armed in the new zone immediately.
-- "Delete all data" also cancels every alarm and clears the stored reminders.
+- "Delete all data" also cancels every alarm, clears the stored reminders and removes reminder
+  notifications still on screen.

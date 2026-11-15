@@ -1,8 +1,9 @@
 import { desc, eq } from "drizzle-orm";
 import { useLiveQuery } from "drizzle-orm/expo-sqlite";
+import { File, Paths } from "expo-file-system";
 import { type Db, db } from "@/db/client";
 import { settings, weightEntries } from "@/db/schema";
-import { wipeAll } from "@/db/ops";
+import { purgeDeletedData, wipeAll } from "@/db/ops";
 import { type LocalDate, localDateOf } from "@/domain/date";
 import { ulid } from "@/domain/id";
 import { isMinuteOfDay } from "@/domain/reminder";
@@ -99,15 +100,49 @@ export async function deleteWeight(id: string): Promise<void> {
 }
 
 /**
- * Erases every record in every table and resets settings in one transaction, then cancels every
- * scheduled reminder and deletes exported files left in the cache. This is the "Delete all data"
- * promised in the privacy policy.
+ * Exists while a "Delete all data" has not finished clearing the database files. It lives outside
+ * the database (app-private storage, never backed up) so it survives a crash or a failed purge,
+ * and the next start finishes the job: by then the user is on the welcome screens, where Settings
+ * and its "Delete all data" are out of reach.
  */
-export async function deleteAllData(): Promise<void> {
+const purgeMarker = () => new File(Paths.document, "tenulo-purge-pending");
+
+export interface DeleteAllResult {
+  /** False when old copies are still in the database files; the next start clears them. */
+  readonly filesCleared: boolean;
+}
+
+/**
+ * Erases every record in every table and resets settings in one transaction, then cancels every
+ * scheduled reminder (and removes reminder notifications already shown), deletes exported files
+ * left in the cache, and finally clears the deleted records' bytes from the database files. This is
+ * the "Delete all data" promised in the privacy policy.
+ */
+export async function deleteAllData(): Promise<DeleteAllResult> {
+  // First, so an interruption anywhere below is finished at the next start.
+  purgeMarker().create({ overwrite: true });
   wipeAll(db, Date.now());
-  // Scheduled reminders and exported files carry the same data; they go with it.
+  // Reminders, their notifications and exported files carry the same data; they go with it.
   cancelAllReminders();
   sweepExports(0);
+  return { filesCleared: finishPendingPurge() };
+}
+
+/**
+ * Clears deleted records' bytes from the database files if a "Delete all data" left that
+ * unfinished. Called by deleteAllData and at every start. True when nothing is left pending; on
+ * failure the marker stays and the next start tries again.
+ */
+export function finishPendingPurge(): boolean {
+  const marker = purgeMarker();
+  if (!marker.exists) return true;
+  try {
+    purgeDeletedData(db);
+  } catch {
+    return false;
+  }
+  marker.delete();
+  return true;
 }
 
 export function today(): LocalDate {

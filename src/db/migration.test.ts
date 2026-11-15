@@ -1,40 +1,22 @@
 /// <reference types="node" />
 /**
- * Runs the generated migrations against a real SQLite database (Node's built-in node:sqlite)
- * and checks that the constraints reject what the app must never store.
+ * Runs the generated migrations, through Drizzle's own migrator as the app does at start, against
+ * a real SQLite database (Node's built-in node:sqlite) and checks that the constraints reject what
+ * the app must never store.
  */
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
-import { DatabaseSync } from "node:sqlite";
+import type { DatabaseSync } from "node:sqlite";
+import { getTableName } from "drizzle-orm";
+import { migrate } from "drizzle-orm/expo-sqlite/migrator";
+import { getTableConfig } from "drizzle-orm/sqlite-core";
 import { beforeEach, describe, expect, it } from "vitest";
-
-const root = join(__dirname, "..", "..", "drizzle");
-const journal = JSON.parse(readFileSync(join(root, "meta", "_journal.json"), "utf8")) as {
-  entries: { idx: number; tag: string }[];
-};
-
-function applyMigrations(db: DatabaseSync, fromIdx: number, toIdx: number): void {
-  for (const { idx, tag } of [...journal.entries].sort((a, b) => a.idx - b.idx)) {
-    if (idx < fromIdx || idx > toIdx) continue;
-    const sql = readFileSync(join(root, `${tag}.sql`), "utf8");
-    for (const statement of sql.split("--> statement-breakpoint")) {
-      if (statement.trim()) db.exec(statement);
-    }
-  }
-}
-
-function migratedDb(): DatabaseSync {
-  const db = new DatabaseSync(":memory:");
-  db.exec("PRAGMA foreign_keys = ON");
-  applyMigrations(db, 0, Number.MAX_SAFE_INTEGER);
-  return db;
-}
+import { ALL_TABLES_DELETE_ORDER } from "./tables";
+import { migrationBundle, migrationSql, testDb, upgrade } from "./test-db";
 
 const now = 1_792_300_000_000;
 let db: DatabaseSync;
 
-beforeEach(() => {
-  db = migratedDb();
+beforeEach(async () => {
+  db = (await testDb()).sqlite;
 });
 
 const insertWeight = (values: Record<string, unknown>) => {
@@ -96,6 +78,42 @@ describe("schema constraints", () => {
     expect(() => db.prepare("DELETE FROM medication WHERE id = 'm'").run()).toThrow(/FOREIGN KEY/);
   });
 
+  it("rejects malformed dates on injections, side effects and plan steps, on insert and on update", () => {
+    db.prepare("INSERT INTO medication (id, name, created_at, updated_at) VALUES ('m', 'Pen', ?, ?)").run(now, now);
+    const rows = {
+      injection: (date: string) =>
+        db
+          .prepare(
+            "INSERT INTO injection (id, medication_id, taken_at, local_date, dose_mcg, created_at, updated_at) VALUES (?, 'm', ?, ?, 250, ?, ?)",
+          )
+          .run(`i-${date}`, now, date, now, now),
+      side_effect: (date: string) =>
+        db
+          .prepare(
+            "INSERT INTO side_effect (id, local_date, type, severity, created_at, updated_at) VALUES (?, ?, 'nausea', 1, ?, ?)",
+          )
+          .run(`s-${date}`, date, now, now),
+      plan_step: (date: string) =>
+        db
+          .prepare(
+            "INSERT INTO plan_step (id, medication_id, start_date, dose_mcg, created_at, updated_at) VALUES (?, 'm', ?, 250, ?, ?)",
+          )
+          .run(`p-${date}`, date, now, now),
+    };
+    const column = { injection: "local_date", side_effect: "local_date", plan_step: "start_date" } as const;
+
+    for (const [table, insert] of Object.entries(rows) as [keyof typeof rows, (d: string) => unknown][]) {
+      insert("2026-10-18");
+      for (const bad of ["18.10.2026", "2026-1-8", "", "2026-10-18T09:00"]) {
+        expect(() => insert(bad), `${table} insert ${bad}`).toThrow(/CHECK/);
+      }
+      expect(() => db.prepare(`UPDATE ${table} SET ${column[table]} = '10/18/2026'`).run(), `${table} update`).toThrow(
+        /CHECK/,
+      );
+      expect(db.prepare(`SELECT ${column[table]} AS d FROM ${table}`).all(), table).toEqual([{ d: "2026-10-18" }]);
+    }
+  });
+
   it("rejects empty medication names and bad side effects", () => {
     expect(() =>
       db.prepare("INSERT INTO medication (id, name, created_at, updated_at) VALUES ('x', '   ', ?, ?)").run(now, now),
@@ -151,40 +169,105 @@ describe("delete all data", () => {
 });
 
 describe("upgrades", () => {
-  it("keeps a 0.1 user's settings and weights when adding Health Connect settings", () => {
-    const old = new DatabaseSync(":memory:");
-    old.exec("PRAGMA foreign_keys = ON");
-    applyMigrations(old, 0, 0);
-    old.prepare("INSERT INTO settings (id, weight_unit, goal_weight_g, updated_at) VALUES (1, 'lb', 75000, ?)").run(now);
-    old
+  it("keeps a 0.1 user's settings and weights when adding Health Connect settings", async () => {
+    const old = await testDb(":memory:", 0);
+    old.sqlite.prepare("INSERT INTO settings (id, weight_unit, goal_weight_g, updated_at) VALUES (1, 'lb', 75000, ?)").run(now);
+    old.sqlite
       .prepare(
         "INSERT INTO weight_entry (id, measured_at, local_date, weight_g, source, created_at, updated_at) VALUES ('w', ?, '2026-10-18', 82400, 'manual', ?, ?)",
       )
       .run(now, now, now);
 
-    applyMigrations(old, 1, Number.MAX_SAFE_INTEGER);
+    await upgrade(old);
 
-    expect(old.prepare("SELECT weight_unit, goal_weight_g, health_connect_enabled, health_connect_synced_at FROM settings").get()).toEqual({
+    expect(
+      old.sqlite.prepare("SELECT weight_unit, goal_weight_g, health_connect_enabled, health_connect_synced_at FROM settings").get(),
+    ).toEqual({
       weight_unit: "lb",
       goal_weight_g: 75000,
       health_connect_enabled: 0,
       health_connect_synced_at: null,
     });
-    expect(old.prepare("SELECT count(*) AS n FROM weight_entry").get()).toEqual({ n: 1 });
+    expect(old.sqlite.prepare("SELECT count(*) AS n FROM weight_entry").get()).toEqual({ n: 1 });
   });
 
-  it("does not show the welcome screens to someone already using Tenulo", () => {
-    const old = new DatabaseSync(":memory:");
-    applyMigrations(old, 0, 1);
-    old.prepare("INSERT INTO settings (id, updated_at) VALUES (1, ?)").run(now);
+  it("does not show the welcome screens to someone already using Tenulo", async () => {
+    const old = await testDb(":memory:", 1);
+    old.sqlite.prepare("INSERT INTO settings (id, updated_at) VALUES (1, ?)").run(now);
 
-    applyMigrations(old, 2, Number.MAX_SAFE_INTEGER);
+    await upgrade(old);
 
-    expect(old.prepare("SELECT welcomed_at FROM settings").get()).toEqual({ welcomed_at: now });
+    expect(old.sqlite.prepare("SELECT welcomed_at FROM settings").get()).toEqual({ welcomed_at: now });
+  });
+
+  it("adds the date checks to an existing log without touching its rows or their links", async () => {
+    const old = await testDb(":memory:", 2);
+    old.sqlite.exec(`
+      INSERT INTO medication (id, name, created_at, updated_at) VALUES ('m', 'Pen', ${now}, ${now});
+      INSERT INTO plan_step (id, medication_id, start_date, dose_mcg, created_at, updated_at) VALUES ('p', 'm', '2026-10-01', 250, ${now}, ${now});
+      INSERT INTO injection (id, medication_id, taken_at, local_date, dose_mcg, created_at, updated_at) VALUES ('i', 'm', ${now}, '2026-10-18', 250, ${now}, ${now});
+      INSERT INTO side_effect (id, local_date, type, severity, injection_id, created_at, updated_at) VALUES ('s', '2026-10-18', 'nausea', 1, 'i', ${now}, ${now});
+    `);
+
+    await upgrade(old);
+
+    expect(old.sqlite.prepare("SELECT id, injection_id FROM side_effect").all()).toEqual([{ id: "s", injection_id: "i" }]);
+    expect(old.sqlite.prepare("SELECT count(*) AS n FROM plan_step").get()).toEqual({ n: 1 });
+    expect(() => old.sqlite.prepare("UPDATE injection SET local_date = '18.10.2026'").run()).toThrow(/CHECK/);
   });
 
   it("shows them on a fresh install", () => {
     db.prepare("INSERT INTO settings (id, updated_at) VALUES (1, ?)").run(now);
     expect(db.prepare("SELECT welcomed_at FROM settings").get()).toEqual({ welcomed_at: null });
+  });
+});
+
+describe("migrations on the phone", () => {
+  /** Tables other tables point at with a foreign key. */
+  const referenced = [
+    ...new Set(
+      ALL_TABLES_DELETE_ORDER.flatMap((t) =>
+        getTableConfig(t).foreignKeys.map((fk) => getTableName(fk.reference().foreignTable)),
+      ),
+    ),
+  ];
+
+  it("run in one transaction, where PRAGMA foreign_keys=OFF does nothing", async () => {
+    // The shape drizzle-kit generates to change a table's constraints in SQLite.
+    const rebuild = [
+      "PRAGMA foreign_keys=OFF;",
+      "CREATE TABLE `__new_injection` AS SELECT * FROM `injection`;",
+      "DROP TABLE `injection`;",
+      "ALTER TABLE `__new_injection` RENAME TO `injection`;",
+      "PRAGMA foreign_keys=ON;",
+    ].join("--> statement-breakpoint\n");
+    const t = await testDb();
+    t.sqlite.exec(`
+      INSERT INTO medication (id, name, created_at, updated_at) VALUES ('m', 'Pen', ${now}, ${now});
+      INSERT INTO injection (id, medication_id, taken_at, local_date, dose_mcg, created_at, updated_at) VALUES ('i', 'm', ${now}, '2026-10-18', 250, ${now}, ${now});
+      INSERT INTO side_effect (id, local_date, type, severity, injection_id, created_at, updated_at) VALUES ('s', '2026-10-18', 'nausea', 1, 'i', ${now}, ${now});
+    `);
+    const bundle = migrationBundle();
+    const last = bundle.journal.entries.at(-1);
+    if (last === undefined) throw new Error("No migrations");
+    const next = { idx: last.idx + 1, when: last.when + 1, tag: "rebuild", breakpoints: true };
+
+    await migrate(t.database, {
+      journal: { entries: [...bundle.journal.entries, next] },
+      migrations: { ...bundle.migrations, [`m${String(next.idx).padStart(4, "0")}`]: rebuild },
+    });
+
+    // Dropping the parent ran its ON DELETE SET NULL: the side effect lost its injection. If this
+    // ever keeps the link, Drizzle stopped wrapping migrations in a transaction.
+    expect(t.sqlite.prepare("SELECT injection_id FROM side_effect").get()).toEqual({ injection_id: null });
+  });
+
+  it("never drop a table that others reference, so a migration cannot clear or break their rows", () => {
+    // Change such a table with a new table plus copy, or with triggers, never a drop-and-rename.
+    expect([...referenced].sort()).toEqual(["injection", "medication"]);
+    const drops = migrationSql().flatMap(({ tag, sql }) =>
+      referenced.filter((name) => new RegExp(`DROP TABLE\\s+[\`"]?${name}[\`"]?\\s*;`, "i").test(sql)).map((name) => `${tag}: ${name}`),
+    );
+    expect(drops).toEqual([]);
   });
 });
