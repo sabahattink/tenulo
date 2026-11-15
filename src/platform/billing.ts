@@ -37,17 +37,27 @@ export function billingAvailable(): boolean {
   return Billing !== null;
 }
 
-/** Asks Play what the user owns. Safe to call often; failures leave the last known state. */
-export async function refreshPro(): Promise<void> {
+/** What Play said when asked; "unavailable" means a build without Play Billing. */
+export type ProCheck = "owned" | "pending" | "not-owned" | "failed" | "unavailable";
+
+/**
+ * Asks Play what the user owns and says what it answered. Safe to call often; a failure leaves the
+ * last known state.
+ */
+export async function refreshPro(): Promise<ProCheck> {
   if (Billing === null) {
     set({ checked: true });
-    return;
+    return "unavailable";
   }
   try {
     const { owned, pending } = await Billing.ownedProducts();
-    set({ pro: owned.includes(PRO_PRODUCT_ID), pending: pending.includes(PRO_PRODUCT_ID), checked: true });
+    const pro = owned.includes(PRO_PRODUCT_ID);
+    const isPending = pending.includes(PRO_PRODUCT_ID);
+    set({ pro, pending: isPending, checked: true });
+    return pro ? "owned" : isPending ? "pending" : "not-owned";
   } catch {
     set({ checked: true });
+    return "failed";
   }
 }
 

@@ -2,7 +2,7 @@ import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { Alert, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import type { StoreProduct } from "../../modules/tenulo-native";
-import { billingAvailable, buyPro, proProduct, refreshPro, useIsPro, useProState } from "@/platform/billing";
+import { type ProCheck, billingAvailable, buyPro, proProduct, refreshPro, useIsPro, useProState } from "@/platform/billing";
 import { Illustration } from "@/ui/Illustration";
 import { Icon, type IconName } from "@/ui/icons";
 import { Button, useScrollEndPadding } from "@/ui/kit";
@@ -25,6 +25,21 @@ const FEATURES: readonly { icon: IconName; title: string; body: string }[] = [
     body: "No account, no subscription, no tracking. Google Play confirms the purchase; Tenulo never learns who you are.",
   },
 ];
+
+/** What "Restore purchase" tells the user for each answer from Play. */
+const RESTORE_RESULT: Record<ProCheck, { readonly title: string; readonly body: string }> = {
+  owned: { title: "Tenulo Pro restored", body: "Your purchase is confirmed by Google Play. Thank you." },
+  pending: { title: "Purchase pending", body: "Pro unlocks as soon as Google Play confirms your payment." },
+  "not-owned": {
+    title: "No purchase found",
+    body: "Google Play has no Tenulo Pro purchase for the Google account on this phone. If you bought it with another account, switch to it in the Play Store and try again.",
+  },
+  failed: { title: "Could not reach Google Play", body: "Check your connection and try again." },
+  unavailable: {
+    title: "Purchases are not available here",
+    body: "Purchases work in the version of Tenulo installed from Google Play.",
+  },
+};
 
 export default function ProScreen() {
   const theme = useTheme();
@@ -62,8 +77,12 @@ export default function ProScreen() {
 
   const restore = async () => {
     setBusy(true);
-    await refreshPro();
-    setBusy(false);
+    try {
+      const { title, body } = RESTORE_RESULT[await refreshPro()];
+      Alert.alert(title, body);
+    } finally {
+      setBusy(false);
+    }
   };
 
   const available = billingAvailable() && product !== null;
