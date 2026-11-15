@@ -10,6 +10,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { DatabaseSync, type SQLInputValue, type StatementSync } from "node:sqlite";
 import { drizzle } from "drizzle-orm/expo-sqlite/driver";
+import { CONNECTION_PRAGMAS } from "./connection";
 import * as schema from "./schema";
 
 const root = join(__dirname, "..", "..", "drizzle");
@@ -58,10 +59,13 @@ class StatementAdapter {
   }
 }
 
-/** A migrated in-memory database, the raw handle for setup and assertions, and every SQL statement Drizzle prepared. */
-export function testDb() {
-  const sqlite = new DatabaseSync(":memory:");
-  sqlite.exec("PRAGMA foreign_keys = ON");
+/**
+ * A migrated database with the app's connection settings, the raw handle for setup and assertions,
+ * and every SQL statement Drizzle prepared. In memory unless `path` names a file.
+ */
+export function testDb(path = ":memory:") {
+  const sqlite = new DatabaseSync(path);
+  sqlite.exec(CONNECTION_PRAGMAS);
   applyMigrations(sqlite);
   const statements: string[] = [];
   const client = {

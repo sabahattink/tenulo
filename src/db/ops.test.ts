@@ -1,11 +1,16 @@
-import { beforeEach, describe, expect, it } from "vitest";
+/// <reference types="node" />
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { DatabaseSync } from "node:sqlite";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { BackupData } from "../domain/backup";
 import { parseLocalDate as d } from "../domain/date";
 import { ulid } from "../domain/id";
-import { createMedicationWithPlan, insertImportedWeights, restoreData, wipeAll } from "./ops";
+import { createMedicationWithPlan, insertImportedWeights, purgeDeletedData, restoreData, wipeAll } from "./ops";
 import { ALL_TABLES_DELETE_ORDER } from "./tables";
-import { getTableName } from "drizzle-orm";
-import { medications } from "./schema";
+import { eq, getTableName } from "drizzle-orm";
+import { medications, weightEntries } from "./schema";
 import { count, testDb } from "./test-db";
 
 const now = 1_792_300_000_000;
@@ -63,6 +68,87 @@ describe("wipeAll", () => {
     expect(() => wipeAll(t.database, now)).toThrow(/boom/);
     for (const table of ["side_effect", "injection", "plan_step", "medication", "weight_entry", "settings"]) {
       expect(count(t.sqlite, table), table).toBe(1);
+    }
+  });
+});
+
+describe("deleted records leave no bytes in the database files (secure_delete, purgeDeletedData)", () => {
+  /** Text that appears only in the records below, so finding its bytes means a record survived. */
+  const MARKER = "tenulo-erase-check-7f3a";
+  let dir: string;
+  let file: string;
+  let disk: ReturnType<typeof testDb>;
+
+  beforeEach(() => {
+    dir = mkdtempSync(join(tmpdir(), "tenulo-"));
+    file = join(dir, "tenulo.db");
+    disk = testDb(file);
+    disk.sqlite.prepare("INSERT INTO settings (id, updated_at) VALUES (1, ?)").run(now);
+  });
+
+  afterEach(() => {
+    disk.sqlite.close();
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  const insertMarked = (key: string) =>
+    disk.sqlite.exec(`
+      INSERT INTO weight_entry (id, measured_at, local_date, weight_g, source, note, created_at, updated_at) VALUES ('w${key}', ${now}, '2026-10-18', 82400, 'manual', '${MARKER} weight', ${now}, ${now});
+      INSERT INTO medication (id, name, created_at, updated_at) VALUES ('m${key}', '${MARKER}', ${now}, ${now});
+      INSERT INTO injection (id, medication_id, taken_at, local_date, dose_mcg, note, created_at, updated_at) VALUES ('i${key}', 'm${key}', ${now}, '2026-10-18', 250, '${MARKER} shot', ${now}, ${now});
+      INSERT INTO side_effect (id, local_date, type, severity, injection_id, note, created_at, updated_at) VALUES ('s${key}', '2026-10-18', 'nausea', 1, 'i${key}', '${MARKER} effect', ${now}, ${now});
+    `);
+  const filesHoldingMarker = (text = MARKER) =>
+    [file, `${file}-wal`].filter((f) => existsSync(f) && readFileSync(f).includes(text));
+
+  it("overwrites a single deleted entry in the database file, not only unlinks it", () => {
+    insertMarked("1");
+    disk.sqlite.exec("PRAGMA wal_checkpoint(TRUNCATE)");
+    expect(filesHoldingMarker(`${MARKER} weight`)).toEqual([file]);
+
+    disk.database.delete(weightEntries).where(eq(weightEntries.id, "w1")).run();
+    disk.sqlite.exec("PRAGMA wal_checkpoint(TRUNCATE)");
+
+    expect(filesHoldingMarker(`${MARKER} weight`)).toEqual([]);
+    expect(filesHoldingMarker(`${MARKER} shot`)).toEqual([file]);
+  });
+
+  it("leaves no byte of a deleted record in the database file or its write-ahead log", () => {
+    insertMarked("1");
+    // Older records live in the database file itself, recent ones only in the WAL: cover both.
+    disk.sqlite.exec("PRAGMA wal_checkpoint(TRUNCATE)");
+    insertMarked("2");
+    expect(filesHoldingMarker()).toEqual([file, `${file}-wal`]);
+
+    wipeAll(disk.database, now);
+    purgeDeletedData(disk.database);
+
+    expect(filesHoldingMarker()).toEqual([]);
+  });
+
+  it("is never blocked by app code that leaves a query half-read", () => {
+    // On the phone a statement stepped but not run to its end stays open (Drizzle's expo driver
+    // never finalizes), and an open statement makes VACUUM fail and the checkpoint stay busy. The
+    // tests run node:sqlite, which reads to the end, so they would not notice: forbid the reads.
+    const halfReads = /\.get(<[^>]*>)?\(\s*sql\b|\bget(First|Each)(Sync|Async)\b|\bgenerator(Sync|Async)\b/;
+    const src = join(__dirname, "..");
+    const offenders = readdirSync(src, { recursive: true, encoding: "utf8" })
+      .filter((f) => /\.tsx?$/.test(f) && !/\.test\.ts$|test-db\.ts$/.test(f))
+      .filter((f) => halfReads.test(readFileSync(join(src, f), "utf8")));
+    expect(offenders).toEqual([]);
+  });
+
+  it("fails loudly when the write-ahead log cannot be emptied", () => {
+    insertMarked("1");
+    wipeAll(disk.database, now);
+    // A second connection in the middle of a read pins the old log, so it cannot be truncated.
+    const reader = new DatabaseSync(file);
+    try {
+      reader.exec("BEGIN");
+      reader.prepare("SELECT count(*) FROM settings").get();
+      expect(() => purgeDeletedData(disk.database)).toThrow(/write-ahead log/);
+    } finally {
+      reader.close();
     }
   });
 });

@@ -42,6 +42,24 @@ export function wipeAll(database: SyncDb, now: number): void {
   });
 }
 
+/**
+ * After "Delete all data": leaves no byte of a deleted record in the database's files.
+ *
+ * Deleted rows are only marked free; their bytes stay in the database file and, in WAL mode, in
+ * earlier copies of each page in the write-ahead log. VACUUM rebuilds the file from the rows that
+ * are left, and a TRUNCATE checkpoint writes that into the file and empties the log. Runs outside
+ * any transaction; throws when the log could not be emptied, so a failure is never silent.
+ */
+export function purgeDeletedData(database: SyncDb): void {
+  database.run(sql`VACUUM`);
+  // `.all()` steps the statement to the end. A half-read statement would stay busy, and an open
+  // statement makes the next VACUUM fail.
+  const [checkpoint] = database.all<{ busy: number }>(sql`PRAGMA wal_checkpoint(TRUNCATE)`);
+  if (checkpoint === undefined || checkpoint.busy !== 0) {
+    throw new Error("The write-ahead log is in use and could not be emptied");
+  }
+}
+
 export function createMedicationWithPlan(
   database: SyncDb,
   input: { name: string; doseMcg: number; intervalDays: number; startDate: LocalDate },

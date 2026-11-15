@@ -4,7 +4,7 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View, useColorScheme } from "react-native";
 import migrations from "../../drizzle/migrations";
-import { ensureSettings, readWelcomed, useSettings } from "@/data/repo";
+import { ensureSettings, finishPendingPurge, readWelcomed, useSettings } from "@/data/repo";
 import { useAppSync } from "@/data/use-app-sync";
 import { db } from "@/db/client";
 import { setNavigationBarLight } from "@/platform/system-bars";
@@ -24,7 +24,12 @@ export default function RootLayout() {
   useEffect(() => {
     if (!success) return;
     ensureSettings()
-      .then(() => readWelcomed())
+      .then(() => {
+        // Finishes a "Delete all data" that could not clear the database files last time. If it
+        // fails again the marker stays, and the next start retries.
+        finishPendingPurge();
+        return readWelcomed();
+      })
       .then(setWelcomed)
       .catch((e: unknown) => setSetupError(e instanceof Error ? e : new Error(String(e))));
   }, [success]);

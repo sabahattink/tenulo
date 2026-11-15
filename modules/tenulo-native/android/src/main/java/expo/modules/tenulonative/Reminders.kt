@@ -91,8 +91,14 @@ object ReminderScheduler {
     prefs(context).edit().remove(id).apply()
   }
 
+  /**
+   * "Delete all data": every alarm, every stored reminder, and every reminder notification still
+   * on screen. Reminders are the only notifications Tenulo posts. A one-shot reminder has already
+   * left the stored list once it fired, so its notification is cleared by cancelAll, not by id.
+   */
   fun cancelAll(context: Context) {
     for (id in prefs(context).all.keys.toList()) cancel(context, id)
+    NotificationManagerCompat.from(context).cancelAll()
   }
 
   fun scheduledIds(context: Context): List<String> = prefs(context).all.keys.sorted()

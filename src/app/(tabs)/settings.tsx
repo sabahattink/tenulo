@@ -170,8 +170,13 @@ export default function SettingsScreen() {
                 style: "destructive",
                 onPress: () =>
                   void run("delete", async () => {
-                    await deleteAllData();
-                    Alert.alert("All data deleted", "Tenulo is empty again. Reminders were cancelled too.");
+                    const { filesCleared } = await deleteAllData();
+                    Alert.alert(
+                      "All data deleted",
+                      filesCleared
+                        ? "Tenulo is empty again. Reminders were cancelled too."
+                        : "Tenulo is empty again. Reminders were cancelled too. Old copies in its database file are cleared the next time Tenulo starts.",
+                    );
                   }),
               },
             ]),
