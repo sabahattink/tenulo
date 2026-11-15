@@ -5,6 +5,11 @@
  *  - Ids are ULIDs (text): sortable by creation time, generated offline, safe to merge on restore.
  *  - Instants are UTC epoch milliseconds (integer). Calendar dates are `YYYY-MM-DD` text, the
  *    user's local date at the time of the event, so history never shifts when they travel.
+ *    The format is enforced in the database: by a CHECK on weight_entry.local_date, and by
+ *    triggers on injection.local_date, side_effect.local_date and plan_step.start_date
+ *    (drizzle/0003_date_format_triggers.sql). Drizzle does not model triggers, so they do not
+ *    appear below; migration.test.ts covers them. Never add a CHECK to an existing table that
+ *    others reference: drizzle-kit rebuilds it, and the rebuild clears their links on the phone.
  *  - Weights are integer grams, doses integer micrograms. No floats are stored.
  *  - Enumerations are text with CHECK constraints, so bad values fail at the database too.
  */

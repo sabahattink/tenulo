@@ -1,5 +1,5 @@
 import { useMigrations } from "drizzle-orm/expo-sqlite/migrator";
-import { Stack } from "expo-router";
+import { type ErrorBoundaryProps, Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View, useColorScheme } from "react-native";
@@ -8,6 +8,7 @@ import { ensureSettings, finishPendingPurge, readWelcomed, useSettings } from "@
 import { useAppSync } from "@/data/use-app-sync";
 import { db } from "@/db/client";
 import { setNavigationBarLight } from "@/platform/system-bars";
+import { Button } from "@/ui/kit";
 import { type Theme, useTheme } from "@/ui/theme";
 
 export default function RootLayout() {
@@ -95,8 +96,27 @@ function App({ theme, initiallyWelcomed }: { theme: Theme; initiallyWelcomed: bo
   );
 }
 
+/**
+ * Expo Router wraps this layout, and so the whole app, in this boundary. A render error (for
+ * example a record that no longer parses) shows this screen instead of closing the app. Nothing is
+ * reported anywhere: Tenulo sends no data off the phone.
+ */
+export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
+  const theme = useTheme();
+  return (
+    <View style={[styles.center, { backgroundColor: theme.background }]}>
+      <Text style={[styles.title, { color: theme.text }]}>Something went wrong in Tenulo</Text>
+      <Text style={[styles.detail, { color: theme.muted }]}>{error.message}</Text>
+      <View style={styles.retry}>
+        <Button theme={theme} label="Try again" onPress={() => void retry()} />
+      </View>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: "center", justifyContent: "center", padding: 24, gap: 8 },
+  retry: { marginTop: 16, alignSelf: "stretch" },
   title: { fontSize: 17, fontWeight: "600", textAlign: "center" },
   detail: { fontSize: 13, textAlign: "center" },
 });

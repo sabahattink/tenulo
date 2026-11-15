@@ -11,14 +11,14 @@ import { createMedicationWithPlan, insertImportedWeights, purgeDeletedData, rest
 import { ALL_TABLES_DELETE_ORDER } from "./tables";
 import { eq, getTableName } from "drizzle-orm";
 import { medications, weightEntries } from "./schema";
-import { count, testDb } from "./test-db";
+import { type TestDb, count, testDb } from "./test-db";
 
 const now = 1_792_300_000_000;
 const id = (n: number) => ulid(now + n, () => 0.5);
-let t: ReturnType<typeof testDb>;
+let t: TestDb;
 
-beforeEach(() => {
-  t = testDb();
+beforeEach(async () => {
+  t = await testDb();
   t.sqlite.prepare("INSERT INTO settings (id, updated_at) VALUES (1, ?)").run(now);
 });
 
@@ -77,12 +77,12 @@ describe("deleted records leave no bytes in the database files (secure_delete, p
   const MARKER = "tenulo-erase-check-7f3a";
   let dir: string;
   let file: string;
-  let disk: ReturnType<typeof testDb>;
+  let disk: TestDb;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     dir = mkdtempSync(join(tmpdir(), "tenulo-"));
     file = join(dir, "tenulo.db");
-    disk = testDb(file);
+    disk = await testDb(file);
     disk.sqlite.prepare("INSERT INTO settings (id, updated_at) VALUES (1, ?)").run(now);
   });
 
