@@ -4,14 +4,12 @@ Everything in code is done; these steps need the Play Console account owner.
 
 ## 0. Developer account
 
-- Publish under **Kalkan Software**: the developer name shown on Play must match `PUBLISHER` in
-  `src/ui/copy.ts`. If Kalkan Software is a registered business, Google expects an organization
-  developer account, which needs a D-U-N-S number; check Play Console's current requirements first.
+- Publish from the **Kalkan Software** Play Console account: the personal account whose developer
+  name is "Kalkan Software", the one Fazor uses. That name must match `PUBLISHER` in
+  `src/ui/copy.ts`; the account's developer contact is `support@kalkansoftware.com` and
+  `https://kalkansoftware.com`.
 - Create the app with package **`com.kalkansoftware.tenulo`** (`app.json`). A package name is
   permanent once any build is uploaded, to any track.
-- Play asks every developer that distributes in the EU whether they are a trader (Digital Services
-  Act). Selling Tenulo Pro is commercial, so expect to declare trader status; Play then shows the
-  trader's name and contact details on the listing, and they should be Kalkan Software's.
 
 ## 1. Build
 
