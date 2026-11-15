@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, FlatList, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { deleteInjection, deleteSideEffect, useAllInjections, useSideEffects } from "@/data/injections";
 import { deleteWeight, useSettings, useWeightEntries } from "@/data/repo";
@@ -19,6 +19,13 @@ interface Row extends TimelineItem {
   readonly title: string;
   readonly detail: string;
   readonly icon: IconName;
+}
+
+/** One calendar month of the timeline, drawn as one card. */
+interface MonthSection {
+  /** "YYYY-MM" */
+  readonly month: string;
+  readonly rows: readonly Row[];
 }
 
 const FILTERS: readonly { value: TimelineFilter; label: string }[] = [
@@ -74,7 +81,7 @@ export default function History() {
         }),
       ),
     ];
-    return timeline(rows, filter);
+    return timeline(rows, filter).map((s): MonthSection => ({ month: s.month, rows: s.items }));
   }, [weights, shots, effects, filter, unit]);
 
   const confirmDelete = (row: Row) =>
@@ -88,19 +95,46 @@ export default function History() {
       },
     ]);
 
+  // A virtualized list of months: years of daily weigh-ins would otherwise mount every row at once.
+  // Each month is drawn whole, as one card. Splitting a card's border across row cells left a
+  // one-pixel gap between rows on fractional pixel densities (1 dp = 2.625 px).
   return (
-    <ScrollView
+    <FlatList<MonthSection>
+      data={sections}
+      keyExtractor={(section) => section.month}
+      initialNumToRender={2}
       style={{ backgroundColor: theme.background }}
       contentContainerStyle={[styles.content, { paddingTop: insets.top + space.l }]}
-    >
-      <ScreenTitle theme={theme} title="History" />
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters} accessibilityRole="radiogroup">
-        {FILTERS.map((f) => (
-          <Chip key={f.value} theme={theme} label={f.label} selected={filter === f.value} onPress={() => setFilter(f.value)} />
-        ))}
-      </ScrollView>
-
-      {sections.length === 0 && (
+      ListHeaderComponent={
+        <View style={styles.header}>
+          <ScreenTitle theme={theme} title="History" />
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters} accessibilityRole="radiogroup">
+            {FILTERS.map((f) => (
+              <Chip key={f.value} theme={theme} label={f.label} selected={filter === f.value} onPress={() => setFilter(f.value)} />
+            ))}
+          </ScrollView>
+        </View>
+      }
+      renderItem={({ item: section }) => (
+        <View style={styles.section}>
+          <Text style={[type.caption, styles.month, { color: theme.muted }]}>
+            {monthTitle(parseLocalDate(`${section.month}-01`))}
+          </Text>
+          <View style={[styles.group, { backgroundColor: theme.card, borderColor: theme.border }]}>
+            {section.rows.map((row, i) => (
+              <TimelineRow
+                key={`${row.kind}-${row.id}`}
+                theme={theme}
+                row={row}
+                now={now}
+                last={i === section.rows.length - 1}
+                onLongPress={() => confirmDelete(row)}
+              />
+            ))}
+          </View>
+        </View>
+      )}
+      ListEmptyComponent={
         <View style={styles.empty}>
           {filter === "all" ? (
             <>
@@ -117,31 +151,13 @@ export default function History() {
             </>
           )}
         </View>
-      )}
-
-      {sections.map((section) => (
-        <View key={section.month} style={styles.section}>
-          <Text style={[type.caption, styles.month, { color: theme.muted }]}>
-            {monthTitle(parseLocalDate(`${section.month}-01`))}
-          </Text>
-          <View style={[styles.group, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            {section.items.map((row, i) => (
-              <TimelineRow
-                key={`${row.kind}-${row.id}`}
-                theme={theme}
-                row={row}
-                now={now}
-                last={i === section.items.length - 1}
-                onLongPress={() => confirmDelete(row)}
-              />
-            ))}
-          </View>
-        </View>
-      ))}
-      {sections.length > 0 && (
-        <Text style={[type.small, styles.hint, { color: theme.muted }]}>Long press an entry to delete it.</Text>
-      )}
-    </ScrollView>
+      }
+      ListFooterComponent={
+        sections.length > 0 ? (
+          <Text style={[type.small, styles.hint, { color: theme.muted }]}>Long press an entry to delete it.</Text>
+        ) : undefined
+      }
+    />
   );
 }
 
@@ -191,14 +207,15 @@ function TimelineRow({
 }
 
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: space.l, gap: space.l, paddingBottom: space.xxl },
+  content: { paddingHorizontal: space.l, paddingBottom: space.xxl },
+  header: { gap: space.l },
   filters: { gap: space.s, paddingRight: space.l },
-  empty: { alignItems: "center", gap: space.m, paddingVertical: space.xxl, paddingHorizontal: space.xl },
-  section: { gap: space.s },
+  empty: { alignItems: "center", gap: space.m, paddingVertical: space.xxl, paddingHorizontal: space.xl, marginTop: space.l },
+  section: { gap: space.s, paddingTop: space.l },
   month: { paddingHorizontal: space.xs },
   group: { borderWidth: 1, borderRadius: radius.l, paddingHorizontal: space.l },
   row: { flexDirection: "row", alignItems: "center", gap: space.m, minHeight: 64, paddingVertical: space.m },
   icon: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center" },
   text: { flex: 1, gap: 2 },
-  hint: { textAlign: "center" },
+  hint: { textAlign: "center", paddingTop: space.l },
 });
