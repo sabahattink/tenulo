@@ -43,3 +43,6 @@ yarn-error.*
 # local native module build output
 modules/*/android/build/
 modules/*/android/.cxx/
+
+# JetBrains IDE settings: personal, not part of the project
+.idea/
