@@ -1,7 +1,8 @@
-import { and, asc, desc, eq } from "drizzle-orm";
+import { asc, desc, eq } from "drizzle-orm";
 import { useLiveQuery } from "drizzle-orm/expo-sqlite";
 import { db } from "@/db/client";
 import { createMedicationWithPlan } from "@/db/ops";
+import { injectionOnOrBefore } from "@/db/queries";
 import { injections, medications, planSteps, sideEffects } from "@/db/schema";
 import type { LocalDate } from "@/domain/date";
 import { ulid } from "@/domain/id";
@@ -166,11 +167,5 @@ export async function deleteSideEffect(id: string): Promise<void> {
 
 /** The latest injection on or before `date`, to link a side effect to the shot it followed. */
 export async function injectionBefore(medicationId: string, date: LocalDate): Promise<string | null> {
-  const rows = await db
-    .select({ id: injections.id, localDate: injections.localDate })
-    .from(injections)
-    .where(and(eq(injections.medicationId, medicationId)))
-    .orderBy(desc(injections.localDate))
-    .limit(30);
-  return rows.find((r) => r.localDate <= date)?.id ?? null;
+  return injectionOnOrBefore(db, medicationId, date);
 }

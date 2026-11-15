@@ -23,8 +23,15 @@ class LaunchModule : Module() {
     }
   }
 
-  private fun describe(intent: Intent?): Map<String, String?> = mapOf(
-    "action" to intent?.action,
-    "reminder" to intent?.getStringExtra(ReminderScheduler.EXTRA_LAUNCHED_BY),
-  )
+  /** A reminder tap already routed once (replayed by Android after ending the process) reports none. */
+  private fun describe(intent: Intent?): Map<String, String?> {
+    val reminder = intent?.getStringExtra(ReminderScheduler.EXTRA_LAUNCHED_BY)
+    val token = intent?.getStringExtra(ReminderScheduler.EXTRA_LAUNCH_TOKEN)
+    val context = appContext.reactContext
+    val replayed = reminder != null && context != null && !ReminderScheduler.firstLaunchOf(context, token)
+    return mapOf(
+      "action" to intent?.action,
+      "reminder" to reminder.takeUnless { replayed },
+    )
+  }
 }

@@ -163,6 +163,8 @@ export function backupProblem(r: Extract<ParseBackupResult, { ok: false }>): str
       return "This file is not a Tenulo backup.";
     case "newer-version":
       return "This backup was made by a newer version of Tenulo. Update Tenulo, then try again.";
+    case "too-large":
+      return "This file is too large to be a Tenulo backup. Nothing was read from it.";
     case "invalid": {
       const place = backupPlace(r.path);
       const why = place !== undefined ? ` The problem is in ${place}.` : r.path.length === 0 ? ` ${r.detail}.` : "";

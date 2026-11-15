@@ -7,6 +7,7 @@ import {
   type Backup,
   type ParseBackupResult,
   backupFileName,
+  backupTooLarge,
   createBackup,
   parseBackup,
   serializeBackup,
@@ -31,6 +32,8 @@ export type PickResult = { readonly canceled: true } | ({ readonly canceled: fal
 export async function pickBackup(): Promise<PickResult> {
   const picked = await File.pickFileAsync({ mimeTypes: ["application/json", "text/*", "application/octet-stream"] });
   if (picked.canceled) return { canceled: true };
+  // Checked before reading: a wrong pick (a video, say) must not be loaded into memory.
+  if (backupTooLarge(picked.result.size)) return { canceled: false, ok: false, reason: "too-large" };
   return { canceled: false, ...parseBackup(await picked.result.text()) };
 }
 

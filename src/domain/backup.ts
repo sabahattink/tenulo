@@ -18,6 +18,17 @@ export const BACKUP_FORMAT = "tenulo-backup";
 /** Bump when the shape changes; older versions must stay readable. */
 export const BACKUP_VERSION = 1;
 
+/**
+ * Far above any real backup (ten years of daily records is about 1.5 MB). A file bigger than this
+ * was picked by mistake (a video, say) and is refused before it is read into memory.
+ */
+export const MAX_BACKUP_BYTES = 32 * 1024 * 1024;
+
+/** Whether a file of this many bytes is too large to read as a backup. Unknown size: let parseBackup decide. */
+export function backupTooLarge(bytes: number | null): boolean {
+  return bytes !== null && bytes > MAX_BACKUP_BYTES;
+}
+
 const MAX_NOTE = 1_000;
 const MINUTES_PER_DAY = 1_440;
 
@@ -133,7 +144,7 @@ export type Backup = z.infer<typeof backupSchema>;
 
 export type ParseBackupResult =
   | { readonly ok: true; readonly backup: Backup }
-  | { readonly ok: false; readonly reason: "not-json" | "not-a-backup" | "newer-version" }
+  | { readonly ok: false; readonly reason: "not-json" | "not-a-backup" | "newer-version" | "too-large" }
   | {
       readonly ok: false;
       readonly reason: "invalid";
@@ -152,6 +163,8 @@ export function serializeBackup(backup: Backup): string {
 }
 
 export function parseBackup(text: string): ParseBackupResult {
+  // The second line of defence when the file's size was unknown before reading it.
+  if (text.length > MAX_BACKUP_BYTES) return { ok: false, reason: "too-large" };
   let json: unknown;
   try {
     json = JSON.parse(text);

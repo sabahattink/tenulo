@@ -121,8 +121,8 @@ export interface InjectionStatus {
   readonly plan: PlanPosition | undefined;
   /** Dose for the next shot: the user's plan if they have one, else what they logged last. */
   readonly expectedDoseMcg: number | undefined;
-  /** Hint only: the enabled site used longest ago. */
-  readonly suggestedSite: InjectionSite | undefined;
+  /** A fact from the user's own log, not advice: the site used longest ago. */
+  readonly longestAgoSite: InjectionSite | undefined;
 }
 
 export const DEFAULT_INTERVAL_DAYS = 7;
@@ -146,7 +146,7 @@ export function injectionStatus(
     daysUntilDue: last ? daysUntilDue(last.date, intervalDays, today) : undefined,
     plan,
     expectedDoseMcg: plan?.step.doseMcg ?? last?.doseMcg,
-    suggestedSite: leastRecentSite(withSite),
+    longestAgoSite: leastRecentSite(withSite),
   };
 }
 

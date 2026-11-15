@@ -65,7 +65,7 @@ export default function ReportScreen() {
   return (
     <ScrollView style={{ backgroundColor: theme.background }} contentContainerStyle={[styles.content, { paddingBottom: endPadding }]}>
       <Text style={[type.body, { color: theme.muted }]}>
-        A one-page summary of what you logged, for your doctor or pharmacist. It is created on this phone; you choose where
+        A summary of what you logged, for your doctor or pharmacist. It is created on this phone; you choose where
         to send it.
       </Text>
       <Segmented theme={theme} label="Report period" options={OPTIONS} value={period} onChange={setPeriod} />

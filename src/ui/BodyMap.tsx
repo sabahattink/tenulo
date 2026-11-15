@@ -10,13 +10,13 @@ export function BodyMap({
   theme,
   selected,
   lastSite,
-  suggestedSite,
+  longestAgoSite,
   onSelect,
 }: {
   theme: Theme;
   selected: InjectionSite | null;
   lastSite: InjectionSite | undefined;
-  suggestedSite: InjectionSite | undefined;
+  longestAgoSite: InjectionSite | undefined;
   onSelect: (site: InjectionSite | null) => void;
 }) {
   const [width, setWidth] = useState(0);
@@ -28,7 +28,7 @@ export function BodyMap({
     s === selected ? theme.accent : s === lastSite ? theme.reading : "transparent";
   // "Used longest ago" is a fact from the user's own log, not advice: it gets a quiet solid outline,
   // never the accent color a selection uses.
-  const strokeFor = (s: InjectionSite) => (s === selected ? theme.accent : s === suggestedSite ? theme.text : theme.muted);
+  const strokeFor = (s: InjectionSite) => (s === selected ? theme.accent : s === longestAgoSite ? theme.text : theme.muted);
 
   return (
     <View style={styles.wrap}>
@@ -59,8 +59,8 @@ export function BodyMap({
                   fill={fillFor(s)}
                   fillOpacity={s === selected ? 0.9 : 0.6}
                   stroke={strokeFor(s)}
-                  strokeWidth={s === selected ? 2.5 : s === suggestedSite ? 1.8 : 1.5}
-                  strokeDasharray={s === selected || s === suggestedSite ? undefined : "4 3"}
+                  strokeWidth={s === selected ? 2.5 : s === longestAgoSite ? 1.8 : 1.5}
+                  strokeDasharray={s === selected || s === longestAgoSite ? undefined : "4 3"}
                 />
               );
             })}
@@ -77,7 +77,7 @@ export function BodyMap({
         {width > 0 &&
           siteTargets(scale).map(({ site: s, left, top, width: w, height: h }) => {
             const isSelected = s === selected;
-            const tag = s === lastSite ? ", last time" : s === suggestedSite ? ", used longest ago" : "";
+            const tag = s === lastSite ? ", last time" : s === longestAgoSite ? ", used longest ago" : "";
             return (
               <Pressable
                 key={s}
