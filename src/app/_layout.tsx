@@ -96,6 +96,8 @@ function Navigator({ theme, welcomed }: { theme: Theme; welcomed: boolean }) {
           <Stack.Screen name="setup-medication" options={{ title: t.screens.setupMedication, ...modal }} />
           <Stack.Screen name="log-injection" options={{ title: t.screens.logInjection, ...modal }} />
           <Stack.Screen name="log-side-effect" options={{ title: t.screens.logSideEffect, ...modal }} />
+          <Stack.Screen name="water" options={{ title: t.waterLog.title, ...modal }} />
+          <Stack.Screen name="log-exercise" options={{ title: t.exerciseLog.title, ...modal }} />
           <Stack.Screen name="report" options={{ title: t.screens.report, ...modal }} />
           <Stack.Screen name="pro" options={{ title: t.screens.pro, ...modal }} />
           <Stack.Screen name="medication" options={{ title: t.screens.medication }} />
