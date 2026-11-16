@@ -237,6 +237,7 @@ const backup = (): BackupData => ({
       catalogFoodId: null,
       customFoodId: id(5),
       name: "Mantı",
+      portionId: null,
       portionLabel: "1 tabak",
       quantityMilli: 1000,
       grams: 300,

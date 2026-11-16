@@ -1,8 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "8e4253cf-e61f-4893-bc1e-04f345d2158a",
-  "prevId": "1511fa30-f498-455b-b237-95eabd795853",
+  "id": "6baef65d-90e4-442d-a6ed-958815c79230",
+  "prevId": "b886901d-e768-4c5b-a1bf-7a019cdb2b14",
   "tables": {
     "custom_food": {
       "name": "custom_food",
@@ -271,6 +271,13 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true,
+          "autoincrement": false
+        },
+        "portion_id": {
+          "name": "portion_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
           "autoincrement": false
         },
         "portion_label": {

@@ -1,5 +1,75 @@
 import { describe, expect, it } from "vitest";
-import { defaultMealFor, formatQuantity, parseGramsToMg, parseQuantity, stepQuantity } from "./food-log";
+import {
+  type LoggedFood,
+  defaultMealFor,
+  formatQuantity,
+  parseGramsToMg,
+  parseQuantity,
+  recentFoods,
+  sourceKey,
+  stepQuantity,
+  totals,
+} from "./food-log";
+
+const logged = (over: Partial<LoggedFood>): LoggedFood => ({
+  catalogFoodId: "egg-boiled",
+  customFoodId: null,
+  portionId: "piece",
+  quantityMilli: 1000,
+  loggedAt: 1,
+  meal: "breakfast",
+  energyKcal: 78,
+  proteinMg: 6_300,
+  carbMg: 600,
+  fatMg: 5_300,
+  fiberMg: 0,
+  ...over,
+});
+
+describe("recentFoods", () => {
+  it("lists each food once, most recently logged first, with the portion used last", () => {
+    const recents = recentFoods(
+      [
+        logged({ loggedAt: 1, quantityMilli: 1000 }),
+        logged({ catalogFoodId: "simit", portionId: "piece", loggedAt: 2 }),
+        logged({ loggedAt: 3, quantityMilli: 2000, portionId: "piece" }),
+        logged({ catalogFoodId: null, customFoodId: "01CUSTOM", portionId: null, loggedAt: 4 }),
+      ],
+      10,
+    );
+    expect(recents.map((r) => sourceKey(r))).toEqual(["custom:01CUSTOM", "catalog:egg-boiled", "catalog:simit"]);
+    expect(recents[1]).toMatchObject({ quantityMilli: 2000, portionId: "piece" });
+  });
+
+  it("skips entries whose custom food was deleted and stops at the limit", () => {
+    const recents = recentFoods(
+      [logged({ catalogFoodId: null, customFoodId: null, loggedAt: 5 }), logged({ loggedAt: 1 }), logged({ catalogFoodId: "simit", loggedAt: 2 })],
+      1,
+    );
+    expect(recents.map((r) => sourceKey(r))).toEqual(["catalog:simit"]);
+  });
+});
+
+describe("totals", () => {
+  it("adds energy and nutrients, and says which nutrients are missing for some entries", () => {
+    const t = totals([logged({}), logged({ energyKcal: 200, proteinMg: null, carbMg: 10_000 })]);
+    expect(t.energyKcal).toBe(278);
+    expect(t.proteinMg).toBe(6_300);
+    expect(t.carbMg).toBe(10_600);
+    expect(t.incomplete).toEqual({ proteinMg: true, carbMg: false, fatMg: false, fiberMg: false });
+  });
+
+  it("is zero for an empty day", () => {
+    expect(totals([])).toEqual({
+      energyKcal: 0,
+      proteinMg: 0,
+      carbMg: 0,
+      fatMg: 0,
+      fiberMg: 0,
+      incomplete: { proteinMg: false, carbMg: false, fatMg: false, fiberMg: false },
+    });
+  });
+});
 
 describe("defaultMealFor", () => {
   it("suggests the meal by the time of day", () => {

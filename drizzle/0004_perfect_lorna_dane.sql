@@ -44,6 +44,7 @@ CREATE TABLE `food_entry` (
 	`catalog_food_id` text,
 	`custom_food_id` text,
 	`name` text NOT NULL,
+	`portion_id` text,
 	`portion_label` text NOT NULL,
 	`quantity_milli` integer NOT NULL,
 	`grams` integer,

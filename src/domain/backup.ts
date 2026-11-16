@@ -157,6 +157,7 @@ const foodEntrySchema = z
     catalogFoodId: z.string().max(80).regex(CATALOG_FOOD_ID, "Not a food list id").nullable(),
     customFoodId: id.nullable(),
     name: trimmedLength(1, 80),
+    portionId: z.string().max(40).regex(CATALOG_FOOD_ID, "Not a portion id").nullable(),
     portionLabel: trimmedLength(1, 40),
     quantityMilli: z.number().int().min(MIN_QUANTITY_MILLI).max(MAX_QUANTITY_MILLI),
     grams: z.number().int().min(0).max(100_000).nullable(),

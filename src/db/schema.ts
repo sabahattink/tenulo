@@ -254,6 +254,8 @@ export const foodEntries = sqliteTable(
     catalogFoodId: text("catalog_food_id"),
     customFoodId: text("custom_food_id").references(() => customFoods.id, { onDelete: "set null" }),
     name: text("name").notNull(),
+    /** Portion id in the bundled food list (null for custom foods), to offer the same portion next time. */
+    portionId: text("portion_id"),
     portionLabel: text("portion_label").notNull(),
     quantityMilli: integer("quantity_milli").notNull(),
     grams: integer("grams"),
