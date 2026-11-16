@@ -4,6 +4,7 @@ import { AppState } from "react-native";
 import { Launch, type LaunchInfo } from "../../modules/tenulo-native";
 import { parseLocalDate } from "@/domain/date";
 import { injectionStatus } from "@/domain/injection";
+import { useI18n } from "@/i18n/provider";
 import { startBilling, useIsPro } from "@/platform/billing";
 import { INJECTION_REMINDER_ID, WEIGH_IN_REMINDER_ID, applyReminders } from "@/platform/reminders";
 import { syncHealthConnect } from "./health-sync";
@@ -31,9 +32,9 @@ function route(info: LaunchInfo): void {
 }
 
 /**
- * Keeps the device in step with the log: reminder alarms follow settings and the injection log,
- * Health Connect is read when the app comes to the foreground, Pro is checked with Play, and
- * launches from Health Connect or a reminder open the right screen.
+ * Keeps the device in step with the log: reminder alarms follow settings, the language and the
+ * injection log, Health Connect is read when the app comes to the foreground, Pro is checked with
+ * Play, and launches from Health Connect or a reminder open the right screen.
  */
 export function useAppSync(): void {
   const settings = useSettings();
@@ -42,6 +43,8 @@ export function useAppSync(): void {
   const steps = usePlanSteps(medication?.id);
   const isPro = useIsPro();
   const now = useToday();
+  // One object per language, so this changes only when the language does.
+  const texts = useI18n().t.reminders;
 
   const nextDue = injectionStatus(
     history.map((i) => ({ date: parseLocalDate(i.localDate), site: i.site, doseMcg: i.doseMcg })),
@@ -57,14 +60,17 @@ export function useAppSync(): void {
 
   useEffect(() => {
     if (settings === undefined) return;
-    applyReminders({
-      injectionEnabled: injectionEnabled && hasMedication,
-      injectionMinute,
-      nextDue,
-      weighInEnabled,
-      weighInMinute,
-    });
-  }, [settings, injectionEnabled, injectionMinute, weighInEnabled, weighInMinute, nextDue, hasMedication]);
+    applyReminders(
+      {
+        injectionEnabled: injectionEnabled && hasMedication,
+        injectionMinute,
+        nextDue,
+        weighInEnabled,
+        weighInMinute,
+      },
+      texts,
+    );
+  }, [settings, injectionEnabled, injectionMinute, weighInEnabled, weighInMinute, nextDue, hasMedication, texts]);
 
   const healthConnect = (settings?.healthConnectEnabled ?? false) && isPro;
   useEffect(() => {

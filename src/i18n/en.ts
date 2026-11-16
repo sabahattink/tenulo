@@ -10,6 +10,7 @@ import type { ReportPeriod } from "../domain/report";
 import type { Severity, SideEffectType } from "../domain/side-effect";
 import type { WeightUnit } from "../domain/weight";
 import type { ProCheck } from "../platform/billing";
+import type { ReminderTexts } from "../platform/reminders";
 import type { TimelineFilter } from "../ui/timeline";
 import type { BackupRecord, RestoreCountKey } from "./records";
 
@@ -567,7 +568,7 @@ export const en = {
     channelDescription: "Injection and weigh-in reminders you set in Tenulo",
     /** All a locked screen shows: what a reminder is about is health data. */
     lockedTitle: "Tenulo reminder",
-  },
+  } satisfies ReminderTexts,
   backup: {
     notABackup: "This file is not a Tenulo backup.",
     newerVersion: "This backup was made by a newer version of Tenulo. Update Tenulo, then try again.",
