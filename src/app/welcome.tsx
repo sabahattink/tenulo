@@ -10,10 +10,17 @@ import { Illustration, type IllustrationName } from "@/ui/Illustration";
 import { Button, Label, Segmented } from "@/ui/kit";
 import { type Theme, radius, space, type, useTheme } from "@/ui/theme";
 
-/** Each page is named by its illustration; its words are `t.welcome.pages[name]`. */
-type Page = Extract<IllustrationName, keyof Messages["welcome"]["pages"]>;
+/**
+ * Each page is named by its illustration; its words are `t.welcome.pages[name]`, and for the daily
+ * log page (`food`) `t.daily.welcomePage`.
+ */
+type Page = Extract<IllustrationName, keyof Messages["welcome"]["pages"]> | "food";
 
-const PAGES: readonly Page[] = ["trend", "plan", "private"];
+const PAGES: readonly Page[] = ["trend", "plan", "food", "private"];
+
+function pageText(t: Messages, page: Page): { readonly title: string; readonly body: string } {
+  return page === "food" ? t.daily.welcomePage : t.welcome.pages[page];
+}
 
 const LAST = PAGES.length - 1;
 
@@ -23,7 +30,7 @@ function deviceUnit(): WeightUnit {
 }
 
 /**
- * First launch, and again after "Delete all data": three pages, then the unit. Finishing sets
+ * First launch, and again after "Delete all data": four pages, then the unit. Finishing sets
  * settings.welcomed_at; the root layout's guard then opens Today.
  */
 export default function Welcome() {
@@ -78,7 +85,7 @@ export default function Welcome() {
           <View
             style={[styles.page, { width }]}
             accessible
-            accessibilityLabel={`${t.welcome.pages[item].title}. ${t.welcome.pages[item].body}`}
+            accessibilityLabel={`${pageText(t, item).title}. ${pageText(t, item).body}`}
           >
             <Animated.View
               style={{
@@ -97,8 +104,8 @@ export default function Welcome() {
               <Illustration name={item} theme={theme} size={art} />
             </Animated.View>
             <View style={styles.copy}>
-              <Text style={[type.title, styles.center, { color: theme.text }]}>{t.welcome.pages[item].title}</Text>
-              <Text style={[type.body, styles.center, { color: theme.muted }]}>{t.welcome.pages[item].body}</Text>
+              <Text style={[type.title, styles.center, { color: theme.text }]}>{pageText(t, item).title}</Text>
+              <Text style={[type.body, styles.center, { color: theme.muted }]}>{pageText(t, item).body}</Text>
             </View>
           </View>
         )}

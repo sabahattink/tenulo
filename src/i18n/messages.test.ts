@@ -40,6 +40,8 @@ const SAME_IN_BOTH = new Set([
   "calendar.monthTitle",
   "calendar.monthsShort.2",
   "calendar.monthsShort.4",
+  "daily.protein",
+  "exerciseLog.kinds.yoga",
 ]);
 
 describe("messages", () => {
