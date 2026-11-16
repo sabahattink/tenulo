@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { addDays, parseLocalDate as d } from "../domain/date";
 import { buildReport } from "../domain/report";
+import { PUBLISHER } from "./copy";
 import { escapeHtml, reportHtml } from "./report-html";
 
 const empty = buildReport({
@@ -49,6 +50,11 @@ describe("reportHtml", () => {
     expect(html).not.toContain("<img");
     expect(html).toContain("&lt;img src=x onerror=&quot;alert(1)&quot;&gt; &amp; Co");
     expect(html).toContain("&lt;b&gt;after&lt;/b&gt; dinner");
+  });
+
+  it("names Tenulo's publisher in the footer", () => {
+    const footer = /<footer>([\s\S]*?)<\/footer>/.exec(reportHtml(empty, "kg", created))?.[1] ?? "";
+    expect(footer).toContain(`Tenulo by ${PUBLISHER}`);
   });
 
   it("is self-contained: no external resources a renderer could fetch", () => {

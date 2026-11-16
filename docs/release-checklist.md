@@ -2,6 +2,15 @@
 
 Everything in code is done; these steps need the Play Console account owner.
 
+## 0. Developer account
+
+- Publish from the **Kalkan Software** Play Console account: the personal account whose developer
+  name is "Kalkan Software", the one Fazor uses. That name must match `PUBLISHER` in
+  `src/ui/copy.ts`; the account's developer contact is `support@kalkansoftware.com` and
+  `https://kalkansoftware.com`.
+- Create the app with package **`com.kalkansoftware.tenulo`** (`app.json`). A package name is
+  permanent once any build is uploaded, to any track.
+
 ## 1. Build
 
 ```bash

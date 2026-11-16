@@ -9,7 +9,7 @@
     "userInterfaceStyle": "automatic",
     "backgroundColor": "#F4F1EA",
     "android": {
-      "package": "com.sabahattinkalkan.tenulo",
+      "package": "com.kalkansoftware.tenulo",
       "versionCode": 1,
       "allowBackup": false,
       "permissions": ["android.permission.health.READ_WEIGHT"],

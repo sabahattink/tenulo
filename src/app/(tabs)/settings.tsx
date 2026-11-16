@@ -28,7 +28,7 @@ import {
 } from "@/platform/health";
 import { canNotify, remindersAvailable, requestNotificationPermission } from "@/platform/reminders";
 import { TimeStepper } from "@/ui/TimeStepper";
-import { backupProblem, healthSyncText, restoreSummaryText, syncedText } from "@/ui/copy";
+import { PUBLISHER, backupProblem, healthSyncText, restoreSummaryText, syncedText } from "@/ui/copy";
 import { Button, ListRow, ProBadge, ScreenTitle, Section, Segmented, SwitchRow } from "@/ui/kit";
 import { type Theme, radius, space, type, useTheme } from "@/ui/theme";
 
@@ -362,7 +362,7 @@ export default function SettingsScreen() {
             />
           </>
         )}
-        <ListRow theme={theme} title="Version" detail={`Tenulo ${Constants.expoConfig?.version ?? ""}`} last />
+        <ListRow theme={theme} title="Version" detail={`Tenulo ${Constants.expoConfig?.version ?? ""} · ${PUBLISHER}`} last />
       </Section>
 
       <Text style={[type.small, styles.disclaimer, { color: theme.muted }]}>

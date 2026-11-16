@@ -6,6 +6,9 @@ import type { InjectionSite } from "../domain/injection";
 import type { SideEffectType as SideEffectKind } from "../domain/side-effect";
 import { type WeightUnit, formatWeightChange } from "../domain/weight";
 
+/** Who publishes Tenulo: shown in Settings, on the Privacy screen and under the doctor report. */
+export const PUBLISHER = "Kalkan Software";
+
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 /** "18 Oct", or "18 Oct 2027" when the year differs from `today`'s. */
