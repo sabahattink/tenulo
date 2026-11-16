@@ -196,7 +196,7 @@ export const tr: Messages = {
     emptyBody:
       "Tartımların, enjeksiyonların, yan etkilerin, öğünlerin, su, ölçüm ve egzersiz kayıtların burada tek bir zaman çizelgesinde görünür, en yenisi en üstte.",
     emptyFiltered: "Bu türde henüz bir kayıt yok.",
-    longPressHint: "Bir öğüne dokunursan o gün açılır. Bir kaydı silmek için üzerine basılı tut.",
+    longPressHint: "Bir öğüne ya da günün suyuna dokunursan o gün açılır. Bir kaydı silmek için üzerine basılı tut.",
     deleteHint: "Silmek için basılı tut",
   },
   addWeight: {

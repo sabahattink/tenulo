@@ -194,7 +194,7 @@ export const en = {
     emptyTitle: "Your log starts here",
     emptyBody: "Weigh-ins, injections, side effects, meals, water, measurements and exercise appear here as one timeline, newest first.",
     emptyFiltered: "Nothing of this kind yet.",
-    longPressHint: "Tap a meal to open that day. Long press an entry to delete it.",
+    longPressHint: "Tap a meal or a day's water to open that day. Long press an entry to delete it.",
     deleteHint: "Long press to delete",
   },
   addWeight: {
