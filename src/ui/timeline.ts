@@ -1,7 +1,10 @@
 import { type LocalDate, toDayNumber } from "../domain/date";
 
-export type TimelineKind = "weight" | "injection" | "side-effect";
+/** Every kind of line in History, in the order the filters list them. */
+export const TIMELINE_KINDS = ["weight", "injection", "side-effect", "food", "water", "measurement", "exercise"] as const;
+export type TimelineKind = (typeof TIMELINE_KINDS)[number];
 export type TimelineFilter = "all" | TimelineKind;
+export const TIMELINE_FILTERS: readonly TimelineFilter[] = ["all", ...TIMELINE_KINDS];
 
 export interface TimelineItem {
   readonly kind: TimelineKind;
