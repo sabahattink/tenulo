@@ -13,6 +13,7 @@ import type { ProCheck } from "../platform/billing";
 import type { ReminderTexts } from "../platform/reminders";
 import type { TimelineFilter } from "../ui/timeline";
 import type { BackupRecord, RestoreCountKey } from "./records";
+import { todayEn } from "./messages/today";
 
 type Twelve = readonly [string, string, string, string, string, string, string, string, string, string, string, string];
 type Seven = readonly [string, string, string, string, string, string, string];
@@ -599,6 +600,7 @@ export const en = {
       exercises: countOf("exercises"),
     } satisfies Record<RestoreCountKey, (n: number) => string>,
   },
+  ...todayEn,
 };
 
 export type Messages = typeof en;

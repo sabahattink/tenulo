@@ -8,6 +8,7 @@
  */
 import type { Messages } from "./en";
 import type { BackupRecord, RestoreCountKey } from "./records";
+import { todayTr } from "./messages/today";
 
 /** "Sorun 4. tartımda." / "Sorun tartımlarda.": the locative is part of the word, so it is spelled out. */
 const BACKUP_PLACES: Record<BackupRecord, { readonly one: string; readonly all: string }> = {
@@ -586,4 +587,5 @@ export const tr: Messages = {
       exercises: countOf("exercises"),
     },
   },
+  ...todayTr,
 };
