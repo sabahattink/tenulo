@@ -7,6 +7,7 @@
  * After a number a Turkish noun stays singular ("3 gün", "12 tartım").
  */
 import type { Messages } from "./en";
+import { foodTr } from "./messages/food";
 import type { BackupRecord, RestoreCountKey } from "./records";
 
 /** "Sorun 4. tartımda." / "Sorun tartımlarda.": the locative is part of the word, so it is spelled out. */
@@ -83,6 +84,7 @@ export const tr: Messages = {
     everyDays: (n) => `${n} günde bir`,
   },
   list: { and: "ve" },
+  ...foodTr,
 
   common: {
     save: "Kaydet",
