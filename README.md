@@ -4,7 +4,7 @@ Private GLP-1 and weight log for Android. Local-first: no account, no analytics,
 
 - Publisher: Kalkan Software
 - Play package: `com.kalkansoftware.tenulo`
-- Privacy policy: https://sabahattinkalkan.com/tenulo/privacy/
+- Privacy policy: https://kalkansoftware.com/tenulo/privacy/ · support: support@kalkansoftware.com
 - Project rules (privacy invariants, medical boundaries, data rules): [AGENTS.md](AGENTS.md)
 - Decisions: [docs/adr](docs/adr) · Release steps: [docs/release-checklist.md](docs/release-checklist.md)
 

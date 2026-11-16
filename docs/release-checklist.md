@@ -10,6 +10,9 @@ Everything in code is done; these steps need the Play Console account owner.
   `https://kalkansoftware.com`.
 - Create the app with package **`com.kalkansoftware.tenulo`** (`app.json`). A package name is
   permanent once any build is uploaded, to any track.
+- The privacy policy the app links to (`PRIVACY_POLICY_URL` in `src/ui/copy.ts`) is live and
+  names Kalkan Software: `curl -sL -o /dev/null -w "%{http_code}" https://kalkansoftware.com/tenulo/privacy/`
+  prints `200`. Its source is the kalkansoftware.com site repo; change it there first, then here.
 
 ## 1. Build
 
@@ -54,7 +57,7 @@ Play Console → App content → Health apps / Health Connect permissions:
 
 - Permission: **Read Weight** only.
 - Purpose: show smart-scale and other apps' weight readings in the user's own log and trend.
-- Privacy policy URL: https://sabahattinkalkan.com/tenulo/privacy/ (it already describes this).
+- Privacy policy URL: https://kalkansoftware.com/tenulo/privacy/ (it already describes this).
 - Approval can take up to a week, plus 5–7 business days to propagate.
 
 ## 4. Data safety form
