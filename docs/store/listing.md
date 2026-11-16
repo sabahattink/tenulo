@@ -132,12 +132,14 @@ or pharmacist. Nutrition values are estimates.
 ## Phone screenshots (upload in this order)
 
 Made by `scripts/store_screens.py` from the release build with the sample backup restored, once
-per store language (the app follows the phone's language). Captions per language:
+per store language (the app follows the phone's language), from raw captures in
+`screenshots/raw/<lang>/` (`tr`, `en`). The 1.0 English set in `screenshots/` predates the daily log;
+replace it. Captions per language:
 
 | File | Turkish caption | English caption | Screen |
 | --- | --- | --- | --- |
-| `screenshots/01-today.png` | Günün tek bakışta | Your day at a glance | Today |
-| `screenshots/02-food.png` | Ne yediğin, kolayca | What you eat, made easy | Food diary |
-| `screenshots/03-trend.png` | Gürültü değil, trend | Your trend, not the noise | Progress |
-| `screenshots/04-injection.png` | Senin planın, senin bölgen | Your plan, your sites | Log injection |
-| `screenshots/05-private.png` | Her şey bu telefonda | It stays on this phone | Welcome, last page |
+| `screenshots/<lang>/01-today.png` | Günün tek bakışta | Your day at a glance | Today |
+| `screenshots/<lang>/02-food.png` | Ne yediğin, kolayca | What you eat, made easy | Food diary |
+| `screenshots/<lang>/03-trend.png` | Gürültü değil, trend | Your trend, not the noise | Progress |
+| `screenshots/<lang>/04-injection.png` | Senin planın, senin bölgen | Your plan, your sites | Log injection |
+| `screenshots/<lang>/05-private.png` | Her şey bu telefonda | It stays on this phone | Welcome, last page |
