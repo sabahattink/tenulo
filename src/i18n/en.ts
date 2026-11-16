@@ -504,7 +504,7 @@ export const en = {
       restoreFailedTitle: "Restore failed",
       restoreFailedBody: (detail: string) => `Nothing was changed. ${detail}`,
       deleteAllTitle: "Delete all data?",
-      deleteAllBody: "Every weigh-in, injection, note, reminder and setting on this phone will be erased. This cannot be undone.",
+      deleteAllBody: "Every weigh-in, injection, meal, glass of water, measurement, exercise, note, reminder and setting on this phone will be erased. This cannot be undone.",
       deleteEverything: "Delete everything",
       sureTitle: "Are you sure?",
       sureBody: "There is no copy anywhere else unless you made a backup.",

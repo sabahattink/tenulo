@@ -501,7 +501,7 @@ export const tr: Messages = {
       restoreFailedTitle: "Geri yükleme başarısız",
       restoreFailedBody: (detail) => `Hiçbir şey değiştirilmedi. ${detail}`,
       deleteAllTitle: "Tüm veriler silinsin mi?",
-      deleteAllBody: "Bu telefondaki her tartım, enjeksiyon, not, hatırlatıcı ve ayar silinecek. Bu işlem geri alınamaz.",
+      deleteAllBody: "Bu telefondaki her tartım, enjeksiyon, öğün, su, ölçüm, egzersiz, not, hatırlatıcı ve ayar silinecek. Bu işlem geri alınamaz.",
       deleteEverything: "Hepsini sil",
       sureTitle: "Emin misin?",
       sureBody: "Yedek almadıysan başka hiçbir yerde kopyası yok.",
