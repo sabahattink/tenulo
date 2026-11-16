@@ -32,8 +32,8 @@ export interface ReportSideEffect {
 export interface ReportFoodDay {
   readonly date: LocalDate;
   readonly energyKcal: number;
-  /** Protein of the entries that have a value. */
-  readonly proteinMg: number;
+  /** Protein of the entries that have a value; null when none of them has one. */
+  readonly proteinMg: number | null;
   /** Entries that day without a protein value (custom foods may leave it empty). */
   readonly proteinUnknown: number;
 }
@@ -118,7 +118,10 @@ export interface Report {
     readonly daysLogged: number;
     readonly energyKcalPerDay: number | undefined;
     readonly proteinMgPerDay: number | undefined;
-    /** Some entry had no protein value, so the protein average counts only the foods that had one. */
+    /**
+     * Some entry had no protein value, so the protein average counts only the foods that had one
+     * (and only the days with at least one such food).
+     */
     readonly proteinIncomplete: boolean;
   };
   readonly water: {
@@ -171,11 +174,13 @@ function perDay<T extends { readonly date: LocalDate }>(rows: readonly T[], valu
   return Math.round(rows.reduce((sum, r) => sum + value(r), 0) / days);
 }
 
+/** A day whose foods all lack a protein value counts for energy, not for protein. */
 function nutritionSection(days: readonly ReportFoodDay[]): Report["nutrition"] {
+  const withProtein = days.flatMap((d) => (d.proteinMg === null ? [] : [{ date: d.date, proteinMg: d.proteinMg }]));
   return {
     daysLogged: new Set(days.map((d) => d.date)).size,
     energyKcalPerDay: perDay(days, (d) => d.energyKcal),
-    proteinMgPerDay: perDay(days, (d) => d.proteinMg),
+    proteinMgPerDay: perDay(withProtein, (d) => d.proteinMg),
     proteinIncomplete: days.some((d) => d.proteinUnknown > 0),
   };
 }

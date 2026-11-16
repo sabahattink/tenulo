@@ -126,4 +126,19 @@ describe("weeklyComparison", () => {
     expect(r.waterMl).toEqual({ current: { perDay: 1500, daysLogged: 1 }, previous: { perDay: 1500, daysLogged: 2 } });
     expect(r.exercise).toEqual({ current: { sessions: 1, minutes: 40 }, previous: { sessions: 1, minutes: 25 } });
   });
+
+  it("leaves a day without any protein value out of the protein average, not out of energy", () => {
+    const r = weeklyComparison({
+      today,
+      food: [
+        { date: d("2026-11-16"), energyKcal: 1600, proteinMg: 80_000 },
+        { date: d("2026-11-15"), energyKcal: 1400, proteinMg: null },
+      ],
+      water: [],
+      exercise: [],
+    });
+    expect(r.energyKcal.current).toEqual({ perDay: 1500, daysLogged: 2 });
+    expect(r.proteinG.current).toEqual({ perDay: 80, daysLogged: 1 });
+    expect(r.proteinG.previous).toEqual({ perDay: undefined, daysLogged: 0 });
+  });
 });

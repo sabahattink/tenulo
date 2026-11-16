@@ -93,8 +93,11 @@ export interface WeeklyComparison {
 
 export interface WeeklyInput {
   readonly today: LocalDate;
-  /** Per-day food totals; protein in milligrams. */
-  readonly food: readonly { readonly date: LocalDate; readonly energyKcal: number; readonly proteinMg: number }[];
+  /**
+   * Per-day food totals; protein in milligrams, null on a day where no food had a protein value
+   * (such a day counts for energy but not for protein).
+   */
+  readonly food: readonly { readonly date: LocalDate; readonly energyKcal: number; readonly proteinMg: number | null }[];
   readonly water: readonly { readonly date: LocalDate; readonly amountMl: number }[];
   readonly exercise: readonly { readonly date: LocalDate; readonly durationMin: number }[];
 }
@@ -105,7 +108,7 @@ export function weeklyComparison(input: WeeklyInput): WeeklyComparison {
   const { current, previous } = weekWindows(input.today);
   const both = <T>(of: (w: DayWindow) => T): Comparison<T> => ({ current: of(current), previous: of(previous) });
   const energy = input.food.map((d) => ({ date: d.date, value: d.energyKcal }));
-  const protein = input.food.map((d) => ({ date: d.date, value: d.proteinMg }));
+  const protein = input.food.flatMap((d) => (d.proteinMg === null ? [] : [{ date: d.date, value: d.proteinMg }]));
   const water = input.water.map((d) => ({ date: d.date, value: d.amountMl }));
   return {
     current,

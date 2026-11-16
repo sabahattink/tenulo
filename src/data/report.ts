@@ -42,7 +42,8 @@ async function loadDailyLog(from: LocalDate, to: LocalDate) {
       .select({
         localDate: foodEntries.localDate,
         energyKcal: sql<number>`sum(${foodEntries.energyKcal})`.mapWith(Number),
-        proteinMg: sql<number>`coalesce(sum(${foodEntries.proteinMg}), 0)`.mapWith(Number),
+        // Null when no food that day has a protein value: such a day is left out of the protein average.
+        proteinMg: sql<number | null>`sum(${foodEntries.proteinMg})`,
         proteinUnknown: sql<number>`sum(case when ${foodEntries.proteinMg} is null then 1 else 0 end)`.mapWith(Number),
       })
       .from(foodEntries)

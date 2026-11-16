@@ -137,6 +137,17 @@ describe("buildReport", () => {
     expect(r.nutrition).toEqual({ daysLogged: 2, energyKcalPerDay: 1600, proteinMgPerDay: 75_000, proteinIncomplete: true });
   });
 
+  it("leaves a day without any protein value out of the protein average", () => {
+    const r = buildReport({
+      ...base,
+      foodDays: [
+        { date: d("2026-10-01"), energyKcal: 1500, proteinMg: 90_000, proteinUnknown: 0 },
+        { date: d("2026-10-02"), energyKcal: 1700, proteinMg: null, proteinUnknown: 4 },
+      ],
+    });
+    expect(r.nutrition).toEqual({ daysLogged: 2, energyKcalPerDay: 1600, proteinMgPerDay: 90_000, proteinIncomplete: true });
+  });
+
   it("averages water over the days with water logged", () => {
     const r = buildReport({
       ...base,

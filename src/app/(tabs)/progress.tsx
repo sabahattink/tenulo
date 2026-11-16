@@ -3,7 +3,7 @@ import { ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useMeasurements } from "@/data/body";
 import { useExerciseRange } from "@/data/exercise";
-import { useFoodTotals } from "@/data/food";
+import { useFoodDays } from "@/data/progress";
 import { useSettings, useWeightEntries } from "@/data/repo";
 import { useToday } from "@/data/use-today";
 import { useWaterTotals } from "@/data/water";
@@ -44,7 +44,7 @@ export default function Progress() {
   );
 
   const { current, previous } = weekWindows(now);
-  const food = useFoodTotals(previous.from, current.to);
+  const food = useFoodDays(previous.from, current.to);
   const water = useWaterTotals(previous.from, current.to);
   const exercise = useExerciseRange(previous.from, current.to);
   const week = useMemo(

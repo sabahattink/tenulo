@@ -66,6 +66,20 @@ export default function AddMeasurement() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | undefined>();
   const inputs = useRef<Partial<Record<MeasurementSite, TextInputInstance | null>>>({});
+  // One ref callback per site for the screen's lifetime, so React does not detach and re-attach
+  // every input on each keystroke.
+  const inputRefs = useMemo(
+    () =>
+      Object.fromEntries(
+        MEASUREMENT_SITES.map((site) => [
+          site,
+          (input: TextInputInstance | null) => {
+            inputs.current[site] = input;
+          },
+        ]),
+      ) as Record<MeasurementSite, (input: TextInputInstance | null) => void>,
+    [],
+  );
 
   const parsed = MEASUREMENT_SITES.map((site) => ({ site, result: parseLengthInput(texts[site], unit) }));
   const filled = parsed.flatMap((p) => (p.result.ok ? [{ site: p.site, lengthMm: p.result.mm }] : []));
@@ -75,6 +89,7 @@ export default function AddMeasurement() {
   const save = async () => {
     if (!canSave) return;
     setSaving(true);
+    setSaveError(undefined);
     try {
       await addMeasurements(filled, date);
       router.back();
@@ -106,10 +121,11 @@ export default function AddMeasurement() {
               error={errorText(result, unit, i18n)}
               last={latest.get(site)}
               isLast={index === MEASUREMENT_SITES.length - 1}
-              inputRef={(input) => {
-                inputs.current[site] = input;
+              inputRef={inputRefs[site]}
+              onChange={(text) => {
+                setSaveError(undefined);
+                setTexts((current) => ({ ...current, [site]: text }));
               }}
-              onChange={(text) => setTexts((current) => ({ ...current, [site]: text }))}
               onSubmit={() => next(index)}
             />
           ))}
