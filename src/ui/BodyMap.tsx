@@ -2,8 +2,8 @@ import { useState } from "react";
 import { type LayoutChangeEvent, Pressable, StyleSheet, Text, View } from "react-native";
 import Svg, { Circle, Ellipse, G, Path, Rect, Text as SvgText } from "react-native-svg";
 import type { InjectionSite } from "@/domain/injection";
+import { useI18n } from "@/i18n/provider";
 import { BODY_ZONES, VIEW_H, VIEW_W, ZONE_ORDER, siteTargets } from "./body-map-geometry";
-import { SITE_LABELS } from "./copy";
 import { type Theme, space } from "./theme";
 
 export function BodyMap({
@@ -19,6 +19,7 @@ export function BodyMap({
   longestAgoSite: InjectionSite | undefined;
   onSelect: (site: InjectionSite | null) => void;
 }) {
+  const { t } = useI18n();
   const [width, setWidth] = useState(0);
   const onLayout = (e: LayoutChangeEvent) => setWidth(Math.round(e.nativeEvent.layout.width));
   const height = width > 0 ? Math.round((width * VIEW_H) / VIEW_W) : 0;
@@ -65,10 +66,11 @@ export function BodyMap({
               );
             })}
             <SvgText x={14} y={24} fontSize={14} fontWeight="700" fill={theme.muted}>
-              R
+              {t.bodyMap.right}
             </SvgText>
-            <SvgText x={176} y={24} fontSize={14} fontWeight="700" fill={theme.muted}>
-              L
+            {/* Anchored at its end, so a word ("Sol") stays inside the picture as a letter does. */}
+            <SvgText x={185} y={24} fontSize={14} fontWeight="700" fill={theme.muted} textAnchor="end">
+              {t.bodyMap.left}
             </SvgText>
           </Svg>
         )}
@@ -77,13 +79,13 @@ export function BodyMap({
         {width > 0 &&
           siteTargets(scale).map(({ site: s, left, top, width: w, height: h }) => {
             const isSelected = s === selected;
-            const tag = s === lastSite ? ", last time" : s === longestAgoSite ? ", used longest ago" : "";
+            const tag = s === lastSite ? t.bodyMap.lastTimeTag : s === longestAgoSite ? t.bodyMap.longestAgoTag : "";
             return (
               <Pressable
                 key={s}
                 accessibilityRole="radio"
                 accessibilityState={{ selected: isSelected }}
-                accessibilityLabel={`${SITE_LABELS[s]}${tag}`}
+                accessibilityLabel={`${t.sites[s]}${tag}`}
                 onPress={() => onSelect(isSelected ? null : s)}
                 style={{ position: "absolute", left, top, width: w, height: h }}
               />
@@ -92,13 +94,11 @@ export function BodyMap({
       </View>
 
       <View style={styles.side}>
-        <Text style={[styles.selected, { color: theme.text }]}>{selected ? SITE_LABELS[selected] : "Tap where you injected"}</Text>
-        <Legend theme={theme} swatch={{ backgroundColor: theme.accent }} label="Selected" />
-        <Legend theme={theme} swatch={{ borderColor: theme.text, borderWidth: 1.5 }} label="Used longest ago" />
-        <Legend theme={theme} swatch={{ backgroundColor: theme.reading }} label="Last time" />
-        <Text style={[styles.note, { color: theme.muted }]}>
-          Front view: your left side is on the right of the picture.
-        </Text>
+        <Text style={[styles.selected, { color: theme.text }]}>{selected ? t.sites[selected] : t.bodyMap.prompt}</Text>
+        <Legend theme={theme} swatch={{ backgroundColor: theme.accent }} label={t.bodyMap.selected} />
+        <Legend theme={theme} swatch={{ borderColor: theme.text, borderWidth: 1.5 }} label={t.bodyMap.longestAgo} />
+        <Legend theme={theme} swatch={{ backgroundColor: theme.reading }} label={t.bodyMap.lastTime} />
+        <Text style={[styles.note, { color: theme.muted }]}>{t.bodyMap.frontView}</Text>
       </View>
     </View>
   );

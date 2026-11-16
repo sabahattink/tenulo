@@ -7,12 +7,14 @@ import { parseLocalDate } from "@/domain/date";
 import { type InjectionSite, injectionStatus } from "@/domain/injection";
 import { parseDoseInput } from "@/domain/parse";
 import { DayPicker } from "@/ui/DayPicker";
+import { useI18n } from "@/i18n/provider";
 import { BodyMap } from "@/ui/BodyMap";
 import { Button, Label, useScrollEndPadding } from "@/ui/kit";
 import { radius, space, useTheme } from "@/ui/theme";
 
 export default function LogInjection() {
   const theme = useTheme();
+  const { t, f } = useI18n();
   const endPadding = useScrollEndPadding();
   const now = useToday();
   const medication = useActiveMedication();
@@ -34,7 +36,7 @@ export default function LogInjection() {
   const [error, setError] = useState<string | undefined>();
 
   const expected = status.expectedDoseMcg;
-  const doseText = typedDose ?? (expected === undefined ? "" : String(expected / 1000));
+  const doseText = typedDose ?? (expected === undefined ? "" : f.doseNumber(expected));
 
   const dose = parseDoseInput(doseText);
 
@@ -45,7 +47,7 @@ export default function LogInjection() {
       await logInjection({ medicationId: medication.id, doseMcg: dose.mcg, site, date, note });
       router.back();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not save");
+      setError(e instanceof Error ? e.message : t.common.couldNotSave);
       setSaving(false);
     }
   };
@@ -53,7 +55,7 @@ export default function LogInjection() {
   if (!medication) {
     return (
       <View style={[styles.center, { backgroundColor: theme.background }]}>
-        <Text style={{ color: theme.text, fontSize: 16 }}>Add your medication first.</Text>
+        <Text style={{ color: theme.text, fontSize: 16 }}>{t.common.addMedicationFirst}</Text>
       </View>
     );
   }
@@ -62,22 +64,20 @@ export default function LogInjection() {
     <ScrollView style={{ backgroundColor: theme.background }} contentContainerStyle={[styles.content, { paddingBottom: endPadding }]} keyboardShouldPersistTaps="handled">
       <Text style={[styles.medication, { color: theme.text }]}>{medication.name}</Text>
 
-      <Label theme={theme}>Dose (mg)</Label>
+      <Label theme={theme}>{t.logInjection.dose}</Label>
       <TextInput
         value={doseText}
         onChangeText={setDoseText}
         keyboardType="decimal-pad"
         maxLength={6}
-        accessibilityLabel="Dose in milligrams"
+        accessibilityLabel={t.logInjection.doseLabel}
         style={[styles.input, { color: theme.text, borderColor: dose.ok ? theme.border : theme.danger, backgroundColor: theme.card }]}
       />
       {status.plan !== undefined && (
-        <Text style={[styles.hint, { color: theme.muted }]}>
-          Prefilled from your plan. Change it if you took a different dose.
-        </Text>
+        <Text style={[styles.hint, { color: theme.muted }]}>{t.logInjection.prefilled}</Text>
       )}
 
-      <Label theme={theme}>Site</Label>
+      <Label theme={theme}>{t.logInjection.site}</Label>
       <BodyMap
         theme={theme}
         selected={site}
@@ -86,22 +86,22 @@ export default function LogInjection() {
         onSelect={setSite}
       />
 
-      <Label theme={theme}>Day</Label>
+      <Label theme={theme}>{t.common.day}</Label>
       <DayPicker theme={theme} value={date} today={now} onChange={setDate} />
 
-      <Label theme={theme}>Note (optional)</Label>
+      <Label theme={theme}>{t.common.noteOptional}</Label>
       <TextInput
         value={note}
         onChangeText={setNote}
         maxLength={200}
-        placeholder="Anything you want to remember"
+        placeholder={t.logInjection.notePlaceholder}
         placeholderTextColor={theme.muted}
         style={[styles.input, styles.note, { color: theme.text, borderColor: theme.border, backgroundColor: theme.card }]}
       />
       {error && <Text style={{ color: theme.danger }}>{error}</Text>}
 
       <View style={styles.save}>
-        <Button theme={theme} label={saving ? "Saving…" : "Save injection"} onPress={() => void save()} disabled={!dose.ok || saving} />
+        <Button theme={theme} label={saving ? t.common.saving : t.logInjection.save} onPress={() => void save()} disabled={!dose.ok || saving} />
       </View>
     </ScrollView>
   );

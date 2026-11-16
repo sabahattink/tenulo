@@ -3,14 +3,14 @@ import { StyleSheet, Text, View } from "react-native";
 import { useActiveMedication, useInjections, usePlanSteps } from "@/data/injections";
 import { type LocalDate, parseLocalDate } from "@/domain/date";
 import { cycleProgress, injectionStatus } from "@/domain/injection";
-import { formatDose } from "@/domain/parse";
+import { useI18n } from "@/i18n/provider";
 import { ProgressRing } from "./ProgressRing";
-import { SITE_LABELS, dueText, intervalText, relativeDay } from "./copy";
 import { Icon } from "./icons";
 import { Button, Card } from "./kit";
 import { type Theme, space, type } from "./theme";
 
 export function InjectionCard({ theme, today }: { theme: Theme; today: LocalDate }) {
+  const { t, f } = useI18n();
   const medication = useActiveMedication();
   const history = useInjections(medication?.id);
   const steps = usePlanSteps(medication?.id);
@@ -23,13 +23,11 @@ export function InjectionCard({ theme, today }: { theme: Theme; today: LocalDate
             <Icon name="pen" color={theme.accent} />
           </View>
           <View style={styles.flex}>
-            <Text style={[type.heading, { color: theme.text }]}>Injections</Text>
-            <Text style={[type.small, { color: theme.muted }]}>
-              Your shots, your own dose schedule and where you injected, next to your weight trend.
-            </Text>
+            <Text style={[type.heading, { color: theme.text }]}>{t.injectionCard.title}</Text>
+            <Text style={[type.small, { color: theme.muted }]}>{t.injectionCard.emptyBody}</Text>
           </View>
         </View>
-        <Button theme={theme} kind="quiet" icon="plus" label="Add your medication" onPress={() => router.push("/setup-medication")} />
+        <Button theme={theme} kind="quiet" icon="plus" label={t.injectionCard.addMedication} onPress={() => router.push("/setup-medication")} />
       </Card>
     );
   }
@@ -51,17 +49,17 @@ export function InjectionCard({ theme, today }: { theme: Theme; today: LocalDate
             {medication.name}
           </Text>
           <Text style={[type.heading, { color: overdue ? theme.warn : theme.text }]}>
-            {dueText(status.daysUntilDue, status.nextDue, today)}
+            {f.due(status.daysUntilDue, status.nextDue, today)}
           </Text>
           {status.plan !== undefined && (
             <Text style={[type.small, { color: theme.muted }]}>
-              Your plan: {formatDose(status.plan.step.doseMcg)} {intervalText(status.plan.step.intervalDays)}
+              {t.injectionCard.plan(f.planStep(status.plan.step.doseMcg, status.plan.step.intervalDays))}
             </Text>
           )}
           {status.lastDate !== undefined && (
             <Text style={[type.small, { color: theme.muted }]}>
-              Last: {relativeDay(status.lastDate, today)}
-              {status.lastSite ? ` · ${SITE_LABELS[status.lastSite]}` : ""}
+              {t.injectionCard.last(f.relativeDay(status.lastDate, today))}
+              {status.lastSite ? ` · ${t.sites[status.lastSite]}` : ""}
             </Text>
           )}
         </View>
@@ -74,16 +72,16 @@ export function InjectionCard({ theme, today }: { theme: Theme; today: LocalDate
             track={theme.surfaceAlt}
           >
             <Text style={[styles.ringDay, { color: theme.text }]}>{ring.day}</Text>
-            <Text style={[styles.ringOf, { color: theme.muted }]}>of {status.intervalDays}</Text>
+            <Text style={[styles.ringOf, { color: theme.muted }]}>{t.injectionCard.ringOf(status.intervalDays)}</Text>
           </ProgressRing>
         )}
       </View>
       <View style={styles.actions}>
         <View style={styles.flex}>
-          <Button theme={theme} icon="plus" label="Injection" onPress={() => router.push("/log-injection")} />
+          <Button theme={theme} icon="plus" label={t.injectionCard.logInjection} onPress={() => router.push("/log-injection")} />
         </View>
         <View style={styles.flex}>
-          <Button theme={theme} kind="quiet" label="Side effect" onPress={() => router.push("/log-side-effect")} />
+          <Button theme={theme} kind="quiet" label={t.injectionCard.logSideEffect} onPress={() => router.push("/log-side-effect")} />
         </View>
       </View>
     </Card>

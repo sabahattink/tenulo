@@ -5,10 +5,8 @@ import { deleteInjection, deleteSideEffect, useAllInjections, useSideEffects } f
 import { deleteWeight, useSettings, useWeightEntries } from "@/data/repo";
 import { useToday } from "@/data/use-today";
 import { type LocalDate, parseLocalDate } from "@/domain/date";
-import { formatDose } from "@/domain/parse";
 import { isSeverity } from "@/domain/side-effect";
-import { formatWeight } from "@/domain/weight";
-import { SEVERITY_LABELS, SIDE_EFFECT_LABELS, SITE_LABELS, monthTitle, relativeDay } from "@/ui/copy";
+import { useI18n } from "@/i18n/provider";
 import { Illustration } from "@/ui/Illustration";
 import { Icon, type IconName } from "@/ui/icons";
 import { Chip, ScreenTitle } from "@/ui/kit";
@@ -28,15 +26,11 @@ interface MonthSection {
   readonly rows: readonly Row[];
 }
 
-const FILTERS: readonly { value: TimelineFilter; label: string }[] = [
-  { value: "all", label: "All" },
-  { value: "weight", label: "Weight" },
-  { value: "injection", label: "Injections" },
-  { value: "side-effect", label: "Side effects" },
-];
+const FILTERS: readonly TimelineFilter[] = ["all", "weight", "injection", "side-effect"];
 
 export default function History() {
   const theme = useTheme();
+  const { t, f } = useI18n();
   const insets = useSafeAreaInsets();
   const now = useToday();
   const unit = useSettings()?.weightUnit ?? "kg";
@@ -53,8 +47,8 @@ export default function History() {
           id: w.id,
           date: parseLocalDate(w.localDate),
           at: w.measuredAt,
-          title: formatWeight(w.weightG, unit),
-          detail: w.source === "health_connect" ? "From Health Connect" : "Weigh-in",
+          title: f.weight(w.weightG, unit),
+          detail: w.source === "health_connect" ? t.history.fromHealthConnect : t.history.weighIn,
           icon: "scale",
         }),
       ),
@@ -64,8 +58,8 @@ export default function History() {
           id: s.id,
           date: parseLocalDate(s.localDate),
           at: s.takenAt,
-          title: `Injection · ${formatDose(s.doseMcg)}`,
-          detail: [s.site ? SITE_LABELS[s.site] : "Site not recorded", s.note].filter(Boolean).join(" · "),
+          title: t.history.injection(f.dose(s.doseMcg)),
+          detail: [s.site ? t.sites[s.site] : t.history.siteNotRecorded, s.note].filter(Boolean).join(" · "),
           icon: "pen",
         }),
       ),
@@ -75,20 +69,20 @@ export default function History() {
           id: e.id,
           date: parseLocalDate(e.localDate),
           at: e.createdAt,
-          title: SIDE_EFFECT_LABELS[e.type],
-          detail: [isSeverity(e.severity) ? SEVERITY_LABELS[e.severity] : "", e.note].filter(Boolean).join(" · "),
+          title: t.sideEffects[e.type],
+          detail: [isSeverity(e.severity) ? t.severity[e.severity] : "", e.note].filter(Boolean).join(" · "),
           icon: "drop",
         }),
       ),
     ];
     return timeline(rows, filter).map((s): MonthSection => ({ month: s.month, rows: s.items }));
-  }, [weights, shots, effects, filter, unit]);
+  }, [weights, shots, effects, filter, unit, t, f]);
 
   const confirmDelete = (row: Row) =>
-    Alert.alert("Delete this entry?", `${row.title} · ${relativeDay(row.date, now)}`, [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert(t.history.deleteTitle, `${row.title} · ${f.relativeDay(row.date, now)}`, [
+      { text: t.common.cancel, style: "cancel" },
       {
-        text: "Delete",
+        text: t.common.delete,
         style: "destructive",
         onPress: () =>
           void (row.kind === "weight" ? deleteWeight(row.id) : row.kind === "injection" ? deleteInjection(row.id) : deleteSideEffect(row.id)),
@@ -107,10 +101,10 @@ export default function History() {
       contentContainerStyle={[styles.content, { paddingTop: insets.top + space.l }]}
       ListHeaderComponent={
         <View style={styles.header}>
-          <ScreenTitle theme={theme} title="History" />
+          <ScreenTitle theme={theme} title={t.history.title} />
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters} accessibilityRole="radiogroup">
-            {FILTERS.map((f) => (
-              <Chip key={f.value} theme={theme} label={f.label} selected={filter === f.value} onPress={() => setFilter(f.value)} />
+            {FILTERS.map((value) => (
+              <Chip key={value} theme={theme} label={t.history.filters[value]} selected={filter === value} onPress={() => setFilter(value)} />
             ))}
           </ScrollView>
         </View>
@@ -118,7 +112,7 @@ export default function History() {
       renderItem={({ item: section }) => (
         <View style={styles.section}>
           <Text style={[type.caption, styles.month, { color: theme.muted }]}>
-            {monthTitle(parseLocalDate(`${section.month}-01`))}
+            {f.upper(f.monthTitle(parseLocalDate(`${section.month}-01`)))}
           </Text>
           <View style={[styles.group, { backgroundColor: theme.card, borderColor: theme.border }]}>
             {section.rows.map((row, i) => (
@@ -139,22 +133,20 @@ export default function History() {
           {filter === "all" ? (
             <>
               <Illustration name="journal" theme={theme} size={220} />
-              <Text style={[type.heading, { color: theme.text }]}>Your log starts here</Text>
-              <Text style={[type.body, { color: theme.muted, textAlign: "center" }]}>
-                Weigh-ins, injections and side effects appear here as one timeline, newest first.
-              </Text>
+              <Text style={[type.heading, { color: theme.text }]}>{t.history.emptyTitle}</Text>
+              <Text style={[type.body, { color: theme.muted, textAlign: "center" }]}>{t.history.emptyBody}</Text>
             </>
           ) : (
             <>
               <Icon name="calendar" color={theme.muted} size={32} />
-              <Text style={[type.body, { color: theme.muted, textAlign: "center" }]}>Nothing of this kind yet.</Text>
+              <Text style={[type.body, { color: theme.muted, textAlign: "center" }]}>{t.history.emptyFiltered}</Text>
             </>
           )}
         </View>
       }
       ListFooterComponent={
         sections.length > 0 ? (
-          <Text style={[type.small, styles.hint, { color: theme.muted }]}>Long press an entry to delete it.</Text>
+          <Text style={[type.small, styles.hint, { color: theme.muted }]}>{t.history.longPressHint}</Text>
         ) : undefined
       }
     />
@@ -174,16 +166,17 @@ function TimelineRow({
   last: boolean;
   onLongPress: () => void;
 }) {
+  const { t, f } = useI18n();
   const tint = row.kind === "side-effect" ? theme.warn : theme.accent;
   return (
     <Pressable
       onLongPress={onLongPress}
-      accessibilityHint="Long press to delete"
-      accessibilityActions={[{ name: "delete", label: "Delete" }]}
+      accessibilityHint={t.history.deleteHint}
+      accessibilityActions={[{ name: "delete", label: t.common.delete }]}
       onAccessibilityAction={(e) => {
         if (e.nativeEvent.actionName === "delete") onLongPress();
       }}
-      accessibilityLabel={`${row.title}, ${row.detail}, ${relativeDay(row.date, now)}`}
+      accessibilityLabel={`${row.title}, ${row.detail}, ${f.relativeDay(row.date, now)}`}
       style={({ pressed }) => [
         styles.row,
         !last && { borderBottomColor: theme.border, borderBottomWidth: StyleSheet.hairlineWidth },
@@ -201,7 +194,7 @@ function TimelineRow({
           </Text>
         )}
       </View>
-      <Text style={[type.small, { color: theme.muted }]}>{relativeDay(row.date, now)}</Text>
+      <Text style={[type.small, { color: theme.muted }]}>{f.relativeDay(row.date, now)}</Text>
     </Pressable>
   );
 }

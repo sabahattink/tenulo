@@ -7,15 +7,16 @@ import { useSettings, useWeightEntries } from "@/data/repo";
 import { useToday } from "@/data/use-today";
 import { type LocalDate, parseLocalDate } from "@/domain/date";
 import { type WeightSummary, goalProgress, summarizeWeights } from "@/domain/summary";
-import { type WeightUnit, formatWeight, formatWeightChange, weightNumber } from "@/domain/weight";
+import type { WeightUnit } from "@/domain/weight";
+import { useI18n } from "@/i18n/provider";
 import { InjectionCard } from "@/ui/InjectionCard";
 import { TrendChart } from "@/ui/TrendChart";
-import { forecastText, longWeekday, relativeDayInline } from "@/ui/copy";
 import { Button, Card, Label, ScreenTitle } from "@/ui/kit";
 import { type Theme, radius, space, type, useTheme } from "@/ui/theme";
 
 export default function Today() {
   const theme = useTheme();
+  const { t, f } = useI18n();
   const insets = useSafeAreaInsets();
   const settings = useSettings();
   const entries = useWeightEntries();
@@ -38,7 +39,7 @@ export default function Today() {
       style={{ backgroundColor: theme.background }}
       contentContainerStyle={[styles.content, { paddingTop: insets.top + space.l }]}
     >
-      <ScreenTitle theme={theme} eyebrow={longWeekday(now)} title="Today" />
+      <ScreenTitle theme={theme} eyebrow={f.longWeekday(now)} title={t.today.title} />
       {summary === undefined ? (
         <EmptyWeight theme={theme} />
       ) : (
@@ -50,9 +51,7 @@ export default function Today() {
           <TrendChart trend={summary.trend} goalG={goalG} unit={unit} theme={theme} today={now} />
         </Card>
       )}
-      <Text style={[type.small, styles.footnote, { color: theme.muted }]}>
-        Tenulo is a personal log. It does not give medical advice. Everything stays on this phone.
-      </Text>
+      <Text style={[type.small, styles.footnote, { color: theme.muted }]}>{t.today.footnote}</Text>
     </ScrollView>
   );
 }
@@ -70,29 +69,34 @@ function WeightHero({
   goalG: number | null;
   now: LocalDate;
 }) {
+  const { t, f } = useI18n();
   const first = summary.trend[0];
   const progress = first === undefined ? undefined : goalProgress(Math.round(first.trendG), summary.currentTrendG, goalG);
   const toGoal = goalG === null ? undefined : Math.abs(summary.currentTrendG - goalG);
   return (
     <Card theme={theme} style={styles.hero}>
       <View style={styles.heroHead}>
-        <Label theme={theme}>Your trend</Label>
-        <Text style={[type.small, { color: theme.muted }]}>Weighed {relativeDayInline(summary.latestDate, now)}</Text>
+        <Label theme={theme}>{t.today.yourTrend}</Label>
+        <Text style={[type.small, { color: theme.muted }]}>{t.today.weighed(f.relativeDayInline(summary.latestDate, now))}</Text>
       </View>
       <View style={styles.headlineRow}>
-        <Text style={[type.display, { color: theme.text }]} accessibilityLabel={formatWeight(summary.currentTrendG, unit)}>
-          {weightNumber(summary.currentTrendG, unit)}
+        <Text style={[type.display, { color: theme.text }]} accessibilityLabel={f.weight(summary.currentTrendG, unit)}>
+          {f.weightNumber(summary.currentTrendG, unit)}
         </Text>
         <Text style={[styles.unit, { color: theme.muted }]}>{unit}</Text>
       </View>
       <View style={styles.chips}>
-        <Stat theme={theme} label="7 days" value={summary.weekChangeG === undefined ? "–" : formatWeightChange(summary.weekChangeG, unit)} />
         <Stat
           theme={theme}
-          label="Since start"
-          value={summary.trend.length < 2 ? "–" : formatWeightChange(summary.totalChangeG, unit)}
+          label={t.today.sevenDays}
+          value={summary.weekChangeG === undefined ? t.common.noValue : f.weightChange(summary.weekChangeG, unit)}
         />
-        <Stat theme={theme} label="Last reading" value={formatWeight(summary.latestG, unit)} />
+        <Stat
+          theme={theme}
+          label={t.today.sinceStart}
+          value={summary.trend.length < 2 ? t.common.noValue : f.weightChange(summary.totalChangeG, unit)}
+        />
+        <Stat theme={theme} label={t.today.lastReading} value={f.weight(summary.latestG, unit)} />
       </View>
       {progress !== undefined && toGoal !== undefined && goalG !== null && (
         <View style={styles.goal}>
@@ -100,15 +104,15 @@ function WeightHero({
             <View style={[styles.fill, { backgroundColor: theme.accent, width: `${Math.round(progress * 100)}%` }]} />
           </View>
           <Text style={[type.small, { color: theme.muted }]}>
-            {toGoal < 100 ? "At your goal" : `${formatWeight(toGoal, unit)} to your goal of ${formatWeight(goalG, unit)}`}
+            {toGoal < 100 ? t.today.atGoal : t.today.toGoal(f.weight(toGoal, unit), f.weight(goalG, unit))}
           </Text>
         </View>
       )}
-      <Text style={[type.body, { color: theme.text }]}>{forecastText(summary.forecast, unit, now)}</Text>
+      <Text style={[type.body, { color: theme.text }]}>{f.forecast(summary.forecast, unit, now)}</Text>
       <Button
         theme={theme}
         icon="plus"
-        label={summary.daysSinceLatest === 0 ? "Log another weigh-in" : "Log today's weight"}
+        label={summary.daysSinceLatest === 0 ? t.today.logAnother : t.today.logToday}
         onPress={() => router.push("/add-weight")}
       />
     </Card>
@@ -116,9 +120,10 @@ function WeightHero({
 }
 
 function Stat({ theme, label, value }: { theme: Theme; label: string; value: string }) {
+  const { f } = useI18n();
   return (
     <View style={[styles.stat, { backgroundColor: theme.surfaceAlt }]}>
-      <Text style={[styles.statLabel, { color: theme.muted }]}>{label}</Text>
+      <Text style={[styles.statLabel, { color: theme.muted }]}>{f.upper(label)}</Text>
       <Text style={[type.number, { color: theme.text }]}>{value}</Text>
     </View>
   );
@@ -126,6 +131,7 @@ function Stat({ theme, label, value }: { theme: Theme; label: string; value: str
 
 /** First run: what the trend is, drawn rather than explained. */
 function EmptyWeight({ theme }: { theme: Theme }) {
+  const { t } = useI18n();
   return (
     <Card theme={theme} style={styles.hero}>
       <Svg width="100%" height={96} viewBox="0 0 320 96" accessibilityElementsHidden importantForAccessibility="no">
@@ -134,12 +140,9 @@ function EmptyWeight({ theme }: { theme: Theme }) {
         ))}
         <Path d="M20 26 C 90 34, 150 44, 200 56 S 280 70, 300 74" stroke={theme.trend} strokeWidth={4} fill="none" strokeLinecap="round" />
       </Svg>
-      <Text style={[type.heading, { color: theme.text }]}>Your trend starts with one weigh-in</Text>
-      <Text style={[type.body, { color: theme.muted }]}>
-        Daily weight jumps around with water and salt. Tenulo smooths it into a trend line, so you can see the direction
-        you are really heading.
-      </Text>
-      <Button theme={theme} icon="plus" label="Log your weight" onPress={() => router.push("/add-weight")} />
+      <Text style={[type.heading, { color: theme.text }]}>{t.today.emptyTitle}</Text>
+      <Text style={[type.body, { color: theme.muted }]}>{t.today.emptyBody}</Text>
+      <Button theme={theme} icon="plus" label={t.today.logWeight} onPress={() => router.push("/add-weight")} />
     </Card>
   );
 }
@@ -152,7 +155,8 @@ const styles = StyleSheet.create({
   unit: { fontSize: 22, fontWeight: "600" },
   chips: { flexDirection: "row", gap: space.s },
   stat: { flex: 1, borderRadius: radius.m, paddingVertical: space.s, paddingHorizontal: space.m, gap: 2 },
-  statLabel: { fontSize: 11, fontWeight: "600", letterSpacing: 0.4, textTransform: "uppercase" },
+  // Upper-cased in JS with the language's rules (see type.caption in theme.ts).
+  statLabel: { fontSize: 11, fontWeight: "600", letterSpacing: 0.4 },
   goal: { gap: space.xs },
   track: { height: 8, borderRadius: 4, overflow: "hidden" },
   fill: { height: 8, borderRadius: 4 },

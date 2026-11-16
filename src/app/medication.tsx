@@ -5,15 +5,16 @@ import { deletePlanStep, renameMedication, upsertPlanStep, useActiveMedication, 
 import { useToday } from "@/data/use-today";
 import { parseLocalDate, toDayNumber } from "@/domain/date";
 import { planPosition } from "@/domain/injection";
-import { formatDose, parseDoseInput } from "@/domain/parse";
+import { parseDoseInput } from "@/domain/parse";
+import { useI18n } from "@/i18n/provider";
 import { DayPicker } from "@/ui/DayPicker";
-import { intervalText, longDate } from "@/ui/copy";
 import { Button, Card, Label, useScrollEndPadding } from "@/ui/kit";
 import { radius, space, type, useTheme } from "@/ui/theme";
 
 /** The user's own plan, shown back to them; and the medication's name. Tenulo never edits either. */
 export default function MedicationScreen() {
   const theme = useTheme();
+  const { t, f } = useI18n();
   const endPadding = useScrollEndPadding();
   const now = useToday();
   const medication = useActiveMedication();
@@ -27,8 +28,8 @@ export default function MedicationScreen() {
   if (!medication) {
     return (
       <View style={[styles.center, { backgroundColor: theme.background }]}>
-        <Text style={[type.body, { color: theme.text }]}>Add your medication first.</Text>
-        <Button theme={theme} label="Add medication" onPress={() => router.replace("/setup-medication")} />
+        <Text style={[type.body, { color: theme.text }]}>{t.common.addMedicationFirst}</Text>
+        <Button theme={theme} label={t.medication.addMedication} onPress={() => router.replace("/setup-medication")} />
       </View>
     );
   }
@@ -42,7 +43,7 @@ export default function MedicationScreen() {
     const interval = current?.step.intervalDays ?? sorted.at(-1)?.intervalDays ?? 7;
     void upsertPlanStep({ medicationId: medication.id, startDate: stepDate, doseMcg: stepParsed.mcg, intervalDays: interval })
       .then(() => setStepDose(""))
-      .catch((e: unknown) => Alert.alert("Could not add the step", e instanceof Error ? e.message : ""));
+      .catch((e: unknown) => Alert.alert(t.medication.couldNotAdd, e instanceof Error ? e.message : ""));
   };
 
   const field = [styles.input, { color: theme.text, backgroundColor: theme.surfaceAlt }];
@@ -50,26 +51,25 @@ export default function MedicationScreen() {
   return (
     <ScrollView style={{ backgroundColor: theme.background }} contentContainerStyle={[styles.content, { paddingBottom: endPadding }]} keyboardShouldPersistTaps="handled">
       <Card theme={theme}>
-        <Label theme={theme}>Your plan</Label>
-        <Text style={[type.small, { color: theme.muted }]}>
-          The doses your prescriber set and when each starts. Tenulo shows this back to you; it never changes it on its own.
-        </Text>
+        <Label theme={theme}>{t.medication.yourPlan}</Label>
+        <Text style={[type.small, { color: theme.muted }]}>{t.medication.planIntro}</Text>
         <View style={styles.timeline}>
           {sorted.map((s, i) => {
             const remove = () =>
-              Alert.alert("Remove this step?", `${formatDose(s.doseMcg)} from ${longDate(parseLocalDate(s.startDate))}`, [
-                { text: "Cancel", style: "cancel" },
-                { text: "Remove", style: "destructive", onPress: () => void deletePlanStep(s.id) },
+              Alert.alert(t.medication.removeTitle, t.medication.removeBody(f.dose(s.doseMcg), f.longDate(parseLocalDate(s.startDate))), [
+                { text: t.common.cancel, style: "cancel" },
+                { text: t.medication.remove, style: "destructive", onPress: () => void deletePlanStep(s.id) },
               ]);
             const isCurrent = current?.step.startDate === s.startDate;
             const isFuture = toDayNumber(parseLocalDate(s.startDate)) > toDayNumber(now);
             const dotColor = isCurrent ? theme.accent : isFuture ? theme.card : theme.reading;
+            const startDate = f.longDate(parseLocalDate(s.startDate));
             return (
               <Pressable
                 key={s.id}
                 onLongPress={steps.length > 1 ? remove : undefined}
-                accessibilityHint={steps.length > 1 ? "Long press to remove this step" : undefined}
-                accessibilityActions={steps.length > 1 ? [{ name: "delete", label: "Remove step" }] : undefined}
+                accessibilityHint={steps.length > 1 ? t.medication.removeHint : undefined}
+                accessibilityActions={steps.length > 1 ? [{ name: "delete", label: t.medication.removeAction }] : undefined}
                 onAccessibilityAction={(e) => {
                   if (e.nativeEvent.actionName === "delete") remove();
                 }}
@@ -80,12 +80,13 @@ export default function MedicationScreen() {
                   {i < sorted.length - 1 && <View style={[styles.line, { backgroundColor: theme.border }]} />}
                 </View>
                 <View style={styles.stepText}>
-                  <Text style={[type.bodyStrong, { color: theme.text }]}>
-                    {formatDose(s.doseMcg)} {intervalText(s.intervalDays)}
-                  </Text>
+                  <Text style={[type.bodyStrong, { color: theme.text }]}>{f.planStep(s.doseMcg, s.intervalDays)}</Text>
                   <Text style={[type.small, { color: isCurrent ? theme.accent : theme.muted }]}>
-                    {isCurrent && current ? `Now · period ${current.period} · ` : isFuture ? "Planned · " : ""}from{" "}
-                    {longDate(parseLocalDate(s.startDate))}
+                    {isCurrent && current
+                      ? t.medication.current(current.period, startDate)
+                      : isFuture
+                        ? t.medication.planned(startDate)
+                        : t.medication.started(startDate)}
                   </Text>
                 </View>
               </Pressable>
@@ -95,40 +96,40 @@ export default function MedicationScreen() {
       </Card>
 
       <Card theme={theme}>
-        <Label theme={theme}>Add a dose change</Label>
-        <Text style={[type.small, { color: theme.muted }]}>Only as your prescriber told you. It starts on the day you pick.</Text>
+        <Label theme={theme}>{t.medication.addChange}</Label>
+        <Text style={[type.small, { color: theme.muted }]}>{t.medication.addChangeIntro}</Text>
         <TextInput
           value={stepDose}
           onChangeText={setStepDose}
           keyboardType="decimal-pad"
           maxLength={6}
-          placeholder="New dose in mg"
+          placeholder={t.medication.newDosePlaceholder}
           placeholderTextColor={theme.muted}
-          accessibilityLabel="New dose in milligrams"
+          accessibilityLabel={t.medication.newDoseLabel}
           style={field}
         />
         <DayPicker theme={theme} value={stepDate} today={now} onChange={setStepDate} maxDaysBack={365} maxDaysAhead={90} />
-        <Button theme={theme} kind="quiet" icon="plus" label="Add to plan" onPress={addStep} disabled={!stepParsed.ok} />
+        <Button theme={theme} kind="quiet" icon="plus" label={t.medication.addToPlan} onPress={addStep} disabled={!stepParsed.ok} />
       </Card>
 
       <Card theme={theme}>
-        <Label theme={theme}>Medication name</Label>
+        <Label theme={theme}>{t.common.medicationName}</Label>
         <TextInput
           value={name ?? medication.name}
           onChangeText={setName}
           maxLength={60}
           style={field}
-          accessibilityLabel="Medication name"
+          accessibilityLabel={t.common.medicationName}
         />
         <Button
           theme={theme}
           kind="quiet"
-          label="Save name"
+          label={t.medication.saveName}
           disabled={name === undefined || name.trim() === "" || name.trim() === medication.name}
           onPress={() =>
             renameMedication(medication.id, name ?? medication.name)
               .then(() => setName(undefined))
-              .catch((e: unknown) => Alert.alert("Could not rename", e instanceof Error ? e.message : ""))
+              .catch((e: unknown) => Alert.alert(t.medication.couldNotRename, e instanceof Error ? e.message : ""))
           }
         />
       </Card>

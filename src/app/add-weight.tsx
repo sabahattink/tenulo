@@ -4,21 +4,28 @@ import { KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, View } fro
 import { addWeight, useSettings, useWeightEntries } from "@/data/repo";
 import { useToday } from "@/data/use-today";
 import { type ParseWeightResult, parseWeightInput } from "@/domain/parse";
-import { weightNumber } from "@/domain/weight";
+import type { WeightUnit } from "@/domain/weight";
+import type { I18n } from "@/i18n";
+import { useI18n } from "@/i18n/provider";
 import { DayPicker } from "@/ui/DayPicker";
 import { Button, Label } from "@/ui/kit";
 import { radius, space, type, useTheme } from "@/ui/theme";
 
 const MAX_DAYS_BACK = 60;
 
-function errorText(r: ParseWeightResult, unit: string): string | undefined {
+/** A typical reading in each unit, for the placeholder and the "not a number" hint. */
+const EXAMPLE_G: Record<WeightUnit, number> = { kg: 82_400, lb: 82_373 };
+
+function errorText(r: ParseWeightResult, unit: WeightUnit, { t, f }: I18n): string | undefined {
   if (r.ok || r.reason === "empty") return undefined;
-  if (r.reason === "not-a-number") return "Enter a number like 82.4";
-  return unit === "kg" ? "That doesn't look like a body weight in kg" : "That doesn't look like a body weight in lb";
+  if (r.reason === "not-a-number") return t.addWeight.notANumber(f.weightNumber(EXAMPLE_G.kg, "kg"));
+  return t.addWeight.implausible(unit);
 }
 
 export default function AddWeight() {
   const theme = useTheme();
+  const i18n = useI18n();
+  const { t, f } = i18n;
   const settings = useSettings();
   const entries = useWeightEntries();
   const unit = settings?.weightUnit ?? "kg";
@@ -31,7 +38,7 @@ export default function AddWeight() {
   const [saveError, setSaveError] = useState<string | undefined>();
 
   const parsed = parseWeightInput(text, unit);
-  const message = errorText(parsed, unit);
+  const message = errorText(parsed, unit, i18n);
 
   const save = async () => {
     if (!parsed.ok || saving) return;
@@ -40,7 +47,7 @@ export default function AddWeight() {
       await addWeight(parsed.grams, date);
       router.back();
     } catch (e) {
-      setSaveError(e instanceof Error ? e.message : "Could not save");
+      setSaveError(e instanceof Error ? e.message : t.common.couldNotSave);
       setSaving(false);
     }
   };
@@ -51,7 +58,7 @@ export default function AddWeight() {
       style={[styles.screen, { backgroundColor: theme.background }]}
     >
       <View style={styles.body}>
-        <Label theme={theme}>Weight</Label>
+        <Label theme={theme}>{t.addWeight.weight}</Label>
         <View
           style={[
             styles.inputRow,
@@ -65,9 +72,9 @@ export default function AddWeight() {
             keyboardType="decimal-pad"
             autoFocus
             maxLength={6}
-            placeholder={last ? weightNumber(last.weightG, unit) : unit === "kg" ? "82.4" : "181.6"}
+            placeholder={f.weightNumber(last ? last.weightG : EXAMPLE_G[unit], unit)}
             placeholderTextColor={theme.reading}
-            accessibilityLabel={`Weight in ${unit}`}
+            accessibilityLabel={t.addWeight.weightIn(unit)}
             style={[styles.input, { color: theme.text }]}
           />
           <Text style={[styles.unit, { color: theme.muted }]}>{unit}</Text>
@@ -76,15 +83,13 @@ export default function AddWeight() {
           {message ?? saveError ?? " "}
         </Text>
 
-        <Label theme={theme}>Day</Label>
+        <Label theme={theme}>{t.common.day}</Label>
         <DayPicker theme={theme} value={date} today={now} onChange={setDate} maxDaysBack={MAX_DAYS_BACK} />
 
         <View style={styles.save}>
-          <Button theme={theme} label={saving ? "Saving…" : "Save"} onPress={() => void save()} disabled={!parsed.ok || saving} />
+          <Button theme={theme} label={saving ? t.common.saving : t.common.save} onPress={() => void save()} disabled={!parsed.ok || saving} />
         </View>
-        <Text style={[type.small, styles.hint, { color: theme.muted }]}>
-          Weigh at the same time each day, ideally after waking. One reading a day is plenty.
-        </Text>
+        <Text style={[type.small, styles.hint, { color: theme.muted }]}>{t.addWeight.hint}</Text>
       </View>
     </KeyboardAvoidingView>
   );

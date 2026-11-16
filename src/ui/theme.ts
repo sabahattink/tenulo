@@ -64,7 +64,13 @@ export function useTheme(): Theme {
 export const space = { xs: 4, s: 8, m: 12, l: 16, xl: 24, xxl: 32 } as const;
 export const radius = { s: 8, m: 14, l: 22, pill: 999 } as const;
 
-/** Type scale. Numbers use tabular figures so values do not jump as they change. */
+/**
+ * Type scale. Numbers use tabular figures so values do not jump as they change.
+ *
+ * `caption` text is upper-cased by the caller with `f.upper` (src/i18n), not with textTransform:
+ * Android upper-cases in the phone's locale, which writes English "i" as "İ" on a Turkish phone
+ * and Turkish "i" as "I" on an English one.
+ */
 export const type = {
   display: { fontSize: 60, lineHeight: 64, fontWeight: "700", letterSpacing: -1.5, fontVariant: ["tabular-nums"] },
   title: { fontSize: 28, lineHeight: 34, fontWeight: "700", letterSpacing: -0.4 },
@@ -72,6 +78,6 @@ export const type = {
   body: { fontSize: 16, lineHeight: 23 },
   bodyStrong: { fontSize: 16, lineHeight: 22, fontWeight: "600" },
   small: { fontSize: 14, lineHeight: 20 },
-  caption: { fontSize: 12, lineHeight: 16, fontWeight: "600", letterSpacing: 0.7, textTransform: "uppercase" },
+  caption: { fontSize: 12, lineHeight: 16, fontWeight: "600", letterSpacing: 0.7 },
   number: { fontSize: 16, fontWeight: "600", fontVariant: ["tabular-nums"] },
 } as const satisfies Record<string, TextStyle>;

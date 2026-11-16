@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { type LocalDate, addDays, diffDays } from "@/domain/date";
-import { relativeDay } from "./copy";
+import { useI18n } from "@/i18n/provider";
 import { type Theme, space } from "./theme";
 
 /** Steps one day at a time between `maxDaysBack` days ago and `maxDaysAhead` days ahead (default: today). */
@@ -19,14 +19,15 @@ export function DayPicker({
   maxDaysBack?: number;
   maxDaysAhead?: number;
 }) {
+  const { t, f } = useI18n();
   const back = diffDays(value, today);
   return (
     <View style={styles.row}>
-      <Step theme={theme} label="‹" a11y="Previous day" disabled={back >= maxDaysBack} onPress={() => onChange(addDays(value, -1))} />
+      <Step theme={theme} label="‹" a11y={t.dayPicker.previous} disabled={back >= maxDaysBack} onPress={() => onChange(addDays(value, -1))} />
       <Text style={[styles.text, { color: theme.text }]} accessibilityLiveRegion="polite">
-        {relativeDay(value, today)}
+        {f.relativeDay(value, today)}
       </Text>
-      <Step theme={theme} label="›" a11y="Next day" disabled={back <= -maxDaysAhead} onPress={() => onChange(addDays(value, 1))} />
+      <Step theme={theme} label="›" a11y={t.dayPicker.next} disabled={back <= -maxDaysAhead} onPress={() => onChange(addDays(value, 1))} />
     </View>
   );
 }

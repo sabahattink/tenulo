@@ -18,12 +18,12 @@ import { today } from "./repo";
  * Writes the backup to the app's cache and opens the share sheet. The user chooses where it goes
  * (Drive, email, a USB stick); Tenulo itself sends it nowhere.
  */
-export async function exportBackup(): Promise<void> {
+export async function exportBackup(dialogTitle: string): Promise<void> {
   const backup = createBackup(readBackupData(db), Date.now(), Constants.expoConfig?.version ?? "unknown");
   const file = new File(Paths.cache, backupFileName(today()));
   file.create({ overwrite: true });
   await file.write(serializeBackup(backup));
-  await Sharing.shareAsync(file.uri, { mimeType: "application/json", dialogTitle: "Save your Tenulo backup" });
+  await Sharing.shareAsync(file.uri, { mimeType: "application/json", dialogTitle });
 }
 
 export type PickResult = { readonly canceled: true } | ({ readonly canceled: false } & ParseBackupResult);
