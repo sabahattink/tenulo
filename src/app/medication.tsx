@@ -55,15 +55,15 @@ export default function MedicationScreen() {
         <Text style={[type.small, { color: theme.muted }]}>{t.medication.planIntro}</Text>
         <View style={styles.timeline}>
           {sorted.map((s, i) => {
+            const startDate = f.longDate(parseLocalDate(s.startDate));
             const remove = () =>
-              Alert.alert(t.medication.removeTitle, t.medication.removeBody(f.dose(s.doseMcg), f.longDate(parseLocalDate(s.startDate))), [
+              Alert.alert(t.medication.removeTitle, t.medication.removeBody(f.dose(s.doseMcg), startDate), [
                 { text: t.common.cancel, style: "cancel" },
                 { text: t.medication.remove, style: "destructive", onPress: () => void deletePlanStep(s.id) },
               ]);
             const isCurrent = current?.step.startDate === s.startDate;
             const isFuture = toDayNumber(parseLocalDate(s.startDate)) > toDayNumber(now);
             const dotColor = isCurrent ? theme.accent : isFuture ? theme.card : theme.reading;
-            const startDate = f.longDate(parseLocalDate(s.startDate));
             return (
               <Pressable
                 key={s.id}

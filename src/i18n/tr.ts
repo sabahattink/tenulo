@@ -125,7 +125,7 @@ export const tr: Messages = {
     weighed: (when) => `Son tartım: ${when}`,
     sevenDays: "7 gün",
     sinceStart: "Başlangıçtan beri",
-    lastReading: "Son tartım",
+    lastReading: "Son ölçüm",
     atGoal: "Hedefindesin",
     toGoal: (amount, goal) => `${goal} hedefine ${amount} kaldı`,
     logAnother: "Bir tartım daha kaydet",
@@ -238,7 +238,7 @@ export const tr: Messages = {
     what: "Ne fark ettin?",
     howStrong: "Sana göre ne kadar yoğun?",
     howStrongLabel: "Ne kadar yoğun",
-    notePlaceholder: "örn. ağır bir yemekten sonra",
+    notePlaceholder: "örn. büyük bir öğünden sonra",
     safety:
       "Bir belirti şiddetliyse ya da seni endişelendiriyorsa doktoruna veya acil servise başvur. Tenulo yalnızca kayıt tutar.",
   },
@@ -278,7 +278,7 @@ export const tr: Messages = {
     since: "Bu doza başladığın gün",
   },
   privacy: {
-    intro: "Tenulo, kilon ve GLP-1 ilacın için özel bir kayıttır. Bunun pratikte ne anlama geldiği aşağıda.",
+    intro: "Tenulo, kilon ve GLP-1 ilacın için özel bir kayıttır. Bunun pratikte ne anlama geldiğini aşağıda bulabilirsin.",
     points: {
       device: {
         title: "Yalnızca bu telefonda",
@@ -302,7 +302,7 @@ export const tr: Messages = {
       },
       deletion: {
         title: "İstediğin zaman sil",
-        body: "Tek tek kayıtları Geçmiş'ten, hepsini Ayarlar'dan silebilirsin. Tenulo'yu kaldırınca tüm verileri de silinir.",
+        body: "Tek tek kayıtları Geçmiş'ten, hepsini Ayarlar'dan silebilirsin. Tenulo'yu kaldırdığında tüm verileri de silinir.",
       },
     },
     readPolicy: "Gizlilik politikasının tamamını oku",
@@ -327,7 +327,7 @@ export const tr: Messages = {
     },
     restoreResult: {
       owned: { title: "Tenulo Pro geri yüklendi", body: "Satın alma işlemin Google Play tarafından onaylandı. Teşekkürler." },
-      pending: { title: "Satın alma beklemede", body: "Google Play ödemeni onaylar onaylamaz Pro açılır." },
+      pending: { title: "Satın alma beklemede", body: "Google Play ödemeni onaylar onaylamaz Pro etkinleşir." },
       "not-owned": {
         title: "Satın alma bulunamadı",
         body: "Google Play'de bu telefondaki Google hesabına ait bir Tenulo Pro satın alma işlemi yok. Başka bir hesapla aldıysan Play Store'da o hesaba geç ve tekrar dene.",
@@ -339,13 +339,13 @@ export const tr: Messages = {
       },
     },
     pendingTitle: "Satın alma beklemede",
-    pendingBody: "Google Play ödemeni onaylar onaylamaz Pro açılır.",
+    pendingBody: "Google Play ödemeni onaylar onaylamaz Pro etkinleşir.",
     failedTitle: "Satın alma tamamlanamadı",
     failedBody: (code) => (code === undefined ? undefined : PURCHASE_ERRORS[code]) ?? "Lütfen daha sonra tekrar dene.",
-    unlocked: "Pro açık. Tenulo'yu desteklediğin için teşekkürler.",
+    unlocked: "Pro etkin. Tenulo'yu desteklediğin için teşekkürler.",
     opening: "Google Play açılıyor…",
-    unlockFor: (price) => `Pro'yu aç · ${price}`,
-    unlock: "Pro'yu aç",
+    unlockFor: (price) => `Pro'yu al · ${price}`,
+    unlock: "Pro'yu al",
     restore: "Satın almayı geri yükle",
     pendingNote: "Satın alma işlemin Google Play'de beklemede.",
     unavailableNote: "Satın alma, Tenulo'nun Google Play'den yüklenen sürümünde yapılabilir.",
@@ -353,7 +353,7 @@ export const tr: Messages = {
   },
   report: {
     periods: { 30: "30 gün", 90: "90 gün", 180: "6 ay", all: "Tümü" },
-    proOnly: "Doktor raporu Tenulo Pro'nun bir parçası.",
+    proOnly: "Doktor raporu Tenulo Pro'ya dahildir.",
     intro: "Kaydettiklerinin doktorun ya da eczacın için bir özeti. Bu telefonda oluşturulur; nereye göndereceğini sen seçersin.",
     periodLabel: "Rapor dönemi",
     couldNotRead: "Kayıtların okunamadı",
@@ -421,7 +421,7 @@ export const tr: Messages = {
     language: {
       title: "Dil / Language",
       system: "Telefonun dili",
-      footer: "Telefonun dili seçiliyken telefonun Türkçeyse Tenulo Türkçe, değilse İngilizce görünür.",
+      footer: "Telefonun dili, telefonunun ayarını izler: Türkçeyse Türkçe, değilse İngilizce.",
     },
     weight: "Kilo",
     weightUnit: "Kilo birimi",
@@ -436,7 +436,7 @@ export const tr: Messages = {
     },
     reminders: {
       title: "Hatırlatıcılar",
-      footer: "Seçtiğin saatte bu telefon gösterir. Enjeksiyon hatırlatıcısı kendi doz planını izler.",
+      footer: "Hatırlatıcıları seçtiğin saatte bu telefon gösterir. Enjeksiyon hatırlatıcısı kendi doz planını izler.",
       footerUnavailable: "Hatırlatıcılar yüklü uygulamada çalışır; bu sürümde kullanılamaz.",
       injection: "Enjeksiyon günü",
       injectionDetail: "Planına göre sıradaki iğnenin gününde",
@@ -508,15 +508,15 @@ export const tr: Messages = {
       title: "Hakkında",
       privacy: "Gizlilik",
       privacyDetail: "Hesap yok, sunucu yok, takip yok",
-      proDetail: "Açık. Tenulo'yu desteklediğin için teşekkürler.",
-      devUnlock: "Pro'yu aç (geliştirme sürümü)",
+      proDetail: "Etkin. Tenulo'yu desteklediğin için teşekkürler.",
+      devUnlock: "Pro'yu etkinleştir (geliştirme sürümü)",
       devUnlockDetail: "Yayın sürümlerinde yok",
       devSample: "Örnek veri yükle (geliştirme sürümü)",
       devSampleDetail: "Uygulamayı denemek için dokuz haftalık uydurma kayıt",
       version: "Sürüm",
     },
     proBanner: {
-      pending: "Satın alma işlemin Google Play'de beklemede. Onaylanır onaylanmaz Pro açılır.",
+      pending: "Satın alma işlemin Google Play'de beklemede. Onaylanır onaylanmaz Pro etkinleşir.",
       pitch: "Doktorun için PDF rapor ve Health Connect eşitlemesi. Tek seferlik satın alma, abonelik yok.",
     },
     disclaimer:
