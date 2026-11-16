@@ -30,7 +30,7 @@ export const progressEn = {
     measured: (when: string) => `Measured ${when}`,
     openReadings: "Opens every reading of this site",
     week: {
-      title: "Last 7 days",
+      title: "Weekly comparison",
       current: "Last 7 days",
       previous: "7 days before",
       energy: "Energy, daily average",
@@ -68,6 +68,8 @@ export const progressEn = {
     save: "Save measurements",
     hint: "Measure at the same spot each time, with the tape snug but not tight.",
     readings: (n: number) => plural(n, "reading", "readings"),
+    /** `change` is signed ("−0.5 cm"). */
+    fromPrevious: (change: string) => `${change} from the reading before`,
     noReadings: "No readings for this site yet.",
     deleteTitle: "Delete this reading?",
     deleteHint: "Long press a reading to delete it.",
@@ -140,7 +142,7 @@ export const progressTr: ProgressMessages = {
     measured: (when) => `Ölçüm: ${when}`,
     openReadings: "Bu bölgenin tüm ölçümlerini açar",
     week: {
-      title: "Son 7 gün",
+      title: "Haftalık karşılaştırma",
       current: "Son 7 gün",
       previous: "Önceki 7 gün",
       energy: "Enerji, günlük ortalama",
@@ -178,6 +180,7 @@ export const progressTr: ProgressMessages = {
     save: "Ölçümleri kaydet",
     hint: "Her seferinde aynı yerden ölç; mezura sıkmadan tene otursun.",
     readings: (n) => `${n} ölçüm`,
+    fromPrevious: (change) => `bir önceki ölçüme göre ${change}`,
     noReadings: "Bu bölge için henüz ölçüm yok.",
     deleteTitle: "Bu ölçüm silinsin mi?",
     deleteHint: "Bir ölçümü silmek için üzerine basılı tut.",

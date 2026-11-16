@@ -24,7 +24,12 @@ export type IconName =
   | "chevron"
   | "trash"
   | "shield"
-  | "calendar";
+  | "calendar"
+  | "progress"
+  | "tape"
+  | "meal"
+  | "glass"
+  | "stopwatch";
 
 const PATHS: Record<IconName, string[]> = {
   today: ["M3.5 15.5c3-0.2 4.6-6 8-6s4.6 4 9 3.6", "M3.5 20h17"],
@@ -46,6 +51,11 @@ const PATHS: Record<IconName, string[]> = {
   trash: ["M5 7h14", "M9.5 7V5h5v2", "M7 7l0.8 12.2a1 1 0 0 0 1 0.8h6.4a1 1 0 0 0 1-0.8L17 7"],
   shield: ["M12 3.5l7 2.8v5.2c0 4.3-3 7.6-7 9-4-1.4-7-4.7-7-9V6.3z", "M9 12l2.2 2.2L15.5 10"],
   calendar: ["M5 6h14a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1z", "M4 10h16", "M8.5 4v4", "M15.5 4v4"],
+  progress: ["M4 20h16", "M7 16.5v-4", "M12 16.5V6.5", "M17 16.5v-7"],
+  tape: ["M4.5 8h15a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-15a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z", "M7.5 8v3", "M11 8v2", "M14.5 8v3", "M18 8v2"],
+  meal: ["M7 3.5v6a2 2 0 0 0 4 0v-6", "M9 11.5v9", "M16.5 20.5v-17c-2 1.2-3 3.8-3 7.5h3"],
+  glass: ["M6 4h12l-1.4 15.2a1 1 0 0 1-1 0.8H8.4a1 1 0 0 1-1-0.8z", "M6.7 10.5h10.6"],
+  stopwatch: ["M12 20.5a7 7 0 1 0 0-14 7 7 0 0 0 0 14z", "M12 10v3.5l2.2 1.5", "M10 3.5h4", "M18 7l1.2-1.2"],
 };
 
 export function Icon({ name, color, size = 24 }: { name: IconName; color: ColorValue; size?: number }) {

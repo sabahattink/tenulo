@@ -100,6 +100,8 @@ function Navigator({ theme, welcomed }: { theme: Theme; welcomed: boolean }) {
           <Stack.Screen name="pro" options={{ title: t.screens.pro, ...modal }} />
           <Stack.Screen name="medication" options={{ title: t.screens.medication }} />
           <Stack.Screen name="privacy" options={{ title: t.screens.privacy }} />
+          <Stack.Screen name="add-measurement" options={{ title: t.measure.addTitle, ...modal }} />
+          <Stack.Screen name="measurements" options={{ title: t.measure.readingsTitle }} />
         </Stack.Protected>
         <Stack.Protected guard={!welcomed}>
           <Stack.Screen name="welcome" options={{ headerShown: false, animation: "fade" }} />

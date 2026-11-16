@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { parseLocalDate as d } from "../../domain/date";
 import type { ChartBox } from "../chart-geometry";
-import { sparkline } from "./sparkline";
+import { sparkline } from "./sparkline-geometry";
 
 const box: ChartBox = { width: 120, height: 40, padLeft: 4, padRight: 4, padTop: 4, padBottom: 4 };
 
