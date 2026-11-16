@@ -2,6 +2,7 @@
  * The small rules behind the water and exercise screens: how amounts are typed, stepped and
  * shown. Pure TypeScript (no React Native), so it is unit-tested like the domain.
  */
+import { type LocalDate, localDateOf } from "../../domain/date";
 import { MAX_DURATION_MIN, MAX_EXERCISE_KCAL } from "../../domain/exercise";
 import { type ParseWholeNumberResult, parseWholeNumber } from "../../domain/goals";
 import { MAX_WATER_ENTRY_ML } from "../../domain/water";
@@ -62,4 +63,12 @@ export function parseWaterMl(input: string): ParseWholeNumberResult {
 export function minuteOfDayAt(instantMs: number): number {
   const at = new Date(instantMs);
   return at.getHours() * 60 + at.getMinutes();
+}
+
+/**
+ * When an entry for `date` was logged, as a minute of the day; undefined when it was logged on
+ * another day (added afterwards for yesterday, say), where the clock time would mislead.
+ */
+export function loggedMinuteOn(instantMs: number, date: LocalDate): number | undefined {
+  return localDateOf(new Date(instantMs)) === date ? minuteOfDayAt(instantMs) : undefined;
 }

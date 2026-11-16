@@ -51,7 +51,11 @@ export default function LogExercise() {
   // Under the energy field: why a typed value is refused, or the live estimate while it is empty.
   let energyNote: ReactNode = null;
   if (!kcal.ok) {
-    energyNote = <Text style={[type.small, { color: theme.danger }]}>{t.exerciseLog.energyInvalid(f.integer(MAX_EXERCISE_KCAL))}</Text>;
+    energyNote = (
+      <Text style={[type.small, { color: theme.danger }]} accessibilityLiveRegion="polite">
+        {t.exerciseLog.energyInvalid(f.integer(MAX_EXERCISE_KCAL))}
+      </Text>
+    );
   } else if (kcal.value === null && kind !== undefined && duration.ok) {
     const estimate = exerciseEnergy({ kind, intensity, durationMin: duration.value, energyKcal: null }, latestWeightG);
     energyNote =
@@ -147,9 +151,7 @@ export default function LogExercise() {
         accessibilityLabel={t.exerciseLog.energyLabel}
         style={[styles.input, { color: theme.text, borderColor: kcal.ok ? theme.border : theme.danger, backgroundColor: theme.card }]}
       />
-      <View style={styles.estimate} accessibilityLiveRegion="polite">
-        {energyNote}
-      </View>
+      <View style={styles.estimate}>{energyNote}</View>
 
       <Label theme={theme}>{t.common.day}</Label>
       <View style={styles.block}>
@@ -169,6 +171,7 @@ export default function LogExercise() {
       {saveError !== undefined && <Text style={[type.small, { color: theme.danger }]}>{saveError}</Text>}
 
       <View style={styles.save}>
+        {kind === undefined && <Text style={[type.small, styles.center, { color: theme.muted }]}>{t.exerciseLog.pickKind}</Text>}
         <Button theme={theme} label={saving ? t.common.saving : t.exerciseLog.save} onPress={() => void save()} disabled={!canSave} />
       </View>
     </ScrollView>
@@ -244,5 +247,6 @@ const styles = StyleSheet.create({
   input: { borderWidth: 1.5, borderRadius: radius.m, paddingHorizontal: space.m, minHeight: 52, fontSize: 16 },
   estimate: { gap: 2, minHeight: 24, marginBottom: space.l, marginTop: space.xs },
   tabular: { fontVariant: ["tabular-nums"] },
-  save: { marginTop: space.l },
+  save: { marginTop: space.l, gap: space.s },
+  center: { textAlign: "center" },
 });

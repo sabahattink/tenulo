@@ -13,7 +13,7 @@ import { ProgressRing } from "@/ui/ProgressRing";
 import { Icon } from "@/ui/icons";
 import { Button, Card, Label, useScrollEndPadding } from "@/ui/kit";
 import { radius, space, type, useTheme } from "@/ui/theme";
-import { WATER_CHIPS_ML, formatLitres, minuteOfDayAt, parseWaterMl } from "@/ui/today/amounts";
+import { WATER_CHIPS_ML, formatLitres, loggedMinuteOn, parseWaterMl } from "@/ui/today/amounts";
 import { dateFromParam } from "@/ui/today/params";
 import { routes } from "@/ui/today/routes";
 import { UNITS, mlText } from "@/ui/today/texts";
@@ -46,8 +46,8 @@ export default function Water() {
     Keyboard.dismiss();
   };
 
-  const confirmDelete = (entry: WaterEntry, time: string) =>
-    Alert.alert(t.waterLog.deleteTitle, `${mlText(i18n, entry.amountMl)} · ${time}`, [
+  const confirmDelete = (entry: WaterEntry, time: string | undefined) =>
+    Alert.alert(t.waterLog.deleteTitle, [mlText(i18n, entry.amountMl), time ?? f.relativeDay(date, today)].join(" · "), [
       { text: t.common.cancel, style: "cancel" },
       { text: t.common.delete, style: "destructive", onPress: () => actions.remove(entry.id) },
     ]);
@@ -152,7 +152,8 @@ export default function Water() {
       ) : (
         <View style={[styles.group, { backgroundColor: theme.card, borderColor: theme.border }]}>
           {[...entries].reverse().map((entry, i) => {
-            const time = f.time(minuteOfDayAt(entry.loggedAt));
+            const minute = loggedMinuteOn(entry.loggedAt, date);
+            const time = minute === undefined ? undefined : f.time(minute);
             const amount = mlText(i18n, entry.amountMl);
             return (
               <View
@@ -162,13 +163,17 @@ export default function Water() {
                 <View style={[styles.rowIcon, { backgroundColor: theme.accentSoft }]}>
                   <Icon name="drop" color={theme.accent} size={20} />
                 </View>
-                <View style={styles.rowText} accessible accessibilityLabel={t.waterLog.entryLabel(amount, time)}>
+                <View
+                  style={styles.rowText}
+                  accessible
+                  accessibilityLabel={time === undefined ? amount : t.waterLog.entryLabel(amount, time)}
+                >
                   <Text style={[type.bodyStrong, styles.tabular, { color: theme.text }]}>{amount}</Text>
-                  <Text style={[type.small, styles.tabular, { color: theme.muted }]}>{time}</Text>
+                  {time !== undefined && <Text style={[type.small, styles.tabular, { color: theme.muted }]}>{time}</Text>}
                 </View>
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel={t.waterLog.deleteEntry(amount, time)}
+                  accessibilityLabel={time === undefined ? t.waterLog.deleteAmount(amount) : t.waterLog.deleteEntry(amount, time)}
                   onPress={() => confirmDelete(entry, time)}
                   hitSlop={space.xs}
                   style={({ pressed }) => [styles.delete, { opacity: pressed ? 0.6 : 1 }]}

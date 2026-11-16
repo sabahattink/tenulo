@@ -25,6 +25,7 @@ export function DayCard({
   date,
   servingMl,
   canUndo,
+  goalsKnown,
   water,
 }: {
   theme: Theme;
@@ -32,6 +33,8 @@ export function DayCard({
   date: LocalDate;
   servingMl: number;
   canUndo: boolean;
+  /** False while settings are still being read, so "Set a goal" does not flash for users who have goals. */
+  goalsKnown: boolean;
   water: WaterActions;
 }) {
   const i18n = useI18n();
@@ -41,7 +44,7 @@ export function DayCard({
   const size = Math.min(RING_MAX, Math.floor((width - space.l * 4 - space.s * 2) / 3));
   const goals = RING_KINDS.map((k) => rings[k].goal);
   const anyGoal = goals.some((g) => g !== null);
-  const missingGoal = goals.some((g) => g === null);
+  const missingGoal = goalsKnown && goals.some((g) => g === null);
 
   const open = (kind: RingKind) => router.push(kind === "water" ? routes.water(date) : routes.food());
 

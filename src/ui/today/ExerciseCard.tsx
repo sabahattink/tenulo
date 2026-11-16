@@ -87,6 +87,7 @@ export function ExerciseCard({
               </Pressable>
             );
           })}
+          <Text style={[type.small, styles.hint, { color: theme.muted }]}>{t.daily.longPressHint}</Text>
         </View>
       )}
       <Button theme={theme} kind="quiet" icon="plus" label={t.daily.addExercise} onPress={() => router.push(routes.logExercise(date))} />
@@ -101,4 +102,5 @@ const styles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", gap: space.m, minHeight: 64, paddingVertical: space.m },
   icon: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center" },
   text: { flex: 1, gap: 2 },
+  hint: { paddingTop: space.xs },
 });

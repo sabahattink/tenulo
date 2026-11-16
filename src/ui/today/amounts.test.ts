@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
+import { parseLocalDate } from "../../domain/date";
 import { MAX_DURATION_MIN } from "../../domain/exercise";
 import {
   DURATION_STEP_MIN,
   WATER_CHIPS_ML,
   formatLitres,
+  loggedMinuteOn,
   minuteOfDayAt,
   parseDuration,
   parseOptionalKcal,
@@ -108,6 +110,16 @@ describe("parseWaterMl", () => {
 
   it("offers only amounts it would accept as quick chips", () => {
     for (const ml of WATER_CHIPS_ML) expect(parseWaterMl(String(ml))).toEqual({ ok: true, value: ml });
+  });
+});
+
+describe("loggedMinuteOn", () => {
+  it("is the clock time when the entry was logged on its own day", () => {
+    expect(loggedMinuteOn(new Date(2026, 10, 17, 8, 30).getTime(), parseLocalDate("2026-11-17"))).toBe(8 * 60 + 30);
+  });
+
+  it("is undefined for an entry added on a later day, whose clock time says nothing about its day", () => {
+    expect(loggedMinuteOn(new Date(2026, 10, 18, 8, 30).getTime(), parseLocalDate("2026-11-17"))).toBeUndefined();
   });
 });
 

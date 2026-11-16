@@ -73,7 +73,15 @@ export default function Today() {
       contentContainerStyle={[styles.content, { paddingTop: insets.top + space.l }]}
     >
       <ScreenTitle theme={theme} eyebrow={f.longWeekday(now)} title={t.today.title} />
-      <DayCard theme={theme} rings={rings} date={now} servingMl={servingMl} canUndo={water.length > 0} water={waterActions} />
+      <DayCard
+        theme={theme}
+        rings={rings}
+        date={now}
+        servingMl={servingMl}
+        canUndo={water.length > 0}
+        goalsKnown={settings !== undefined}
+        water={waterActions}
+      />
       <QuickActions theme={theme} date={now} servingMl={servingMl} water={waterActions} />
       {summary !== undefined ? (
         <WeightCard theme={theme} summary={summary} unit={unit} goalG={goalG} now={now} />

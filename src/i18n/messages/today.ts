@@ -43,6 +43,7 @@ export const todayEn = {
     estimate: (energy: string) => `≈ ${energy} (estimate)`,
     deleteExercise: "Delete this exercise?",
     deleteHint: "Long press to delete",
+    longPressHint: "Long press an entry to delete it.",
     firstRunTitle: "Your day, in one place",
     firstRunBody: "Start with a weigh-in or your first meal. Water, measurements and exercise are one tap away.",
     firstMeal: "Log your first meal",
@@ -66,6 +67,7 @@ export const todayEn = {
     empty: "No water logged on this day.",
     entryLabel: (amount: string, time: string) => `${amount} at ${time}`,
     deleteEntry: (amount: string, time: string) => `Delete ${amount} at ${time}`,
+    deleteAmount: (amount: string) => `Delete ${amount}`,
     deleteTitle: "Delete this entry?",
   },
   exerciseLog: {
@@ -99,6 +101,7 @@ export const todayEn = {
       "Estimated from the activity, its duration and your latest weight. It is not saved; type your own number to keep one.",
     noEstimate: "Log your weight to see an estimate here.",
     notePlaceholder: "e.g. uphill, with a friend",
+    pickKind: "Pick what you did to save it.",
     save: "Save exercise",
   },
 };
@@ -139,6 +142,7 @@ export const todayTr: TodayMessages = {
     estimate: (energy) => `≈ ${energy} (tahmini)`,
     deleteExercise: "Bu egzersiz silinsin mi?",
     deleteHint: "Silmek için basılı tut",
+    longPressHint: "Silmek için bir kaydın üzerine basılı tut.",
     firstRunTitle: "Günün, tek bir yerde",
     firstRunBody: "Bir tartımla ya da ilk öğününle başla. Su, ölçüler ve egzersiz bir dokunuş uzağında.",
     firstMeal: "İlk öğününü kaydet",
@@ -162,6 +166,7 @@ export const todayTr: TodayMessages = {
     empty: "Bu tarihte su kaydı yok.",
     entryLabel: (amount, time) => `${time}, ${amount}`,
     deleteEntry: (amount, time) => `${time} saatindeki ${amount} kaydını sil`,
+    deleteAmount: (amount) => `${amount} kaydını sil`,
     deleteTitle: "Bu kayıt silinsin mi?",
   },
   exerciseLog: {
@@ -195,6 +200,7 @@ export const todayTr: TodayMessages = {
       "Etkinliğe, süresine ve son tartımına göre tahmin edilir. Kaydedilmez; saklamak istersen kendi sayını yaz.",
     noEstimate: "Burada bir tahmin görmek için kilonu kaydet.",
     notePlaceholder: "örn. yokuş yukarı, bir arkadaşımla",
+    pickKind: "Kaydetmek için ne yaptığını seç.",
     save: "Egzersizi kaydet",
   },
 };
