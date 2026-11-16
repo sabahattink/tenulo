@@ -8,6 +8,9 @@ import { type WeightUnit, formatWeightChange } from "../domain/weight";
 
 /** Who publishes Tenulo: shown in Settings, on the Privacy screen and under the doctor report. */
 export const PUBLISHER = "Kalkan Software";
+/** The public privacy policy the Privacy screen opens; Play Console and Health Connect use the same URL. */
+export const PRIVACY_POLICY_URL = "https://kalkansoftware.com/tenulo/privacy/";
+export const SUPPORT_EMAIL = "support@kalkansoftware.com";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 

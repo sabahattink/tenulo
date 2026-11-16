@@ -1,11 +1,10 @@
 import { Linking, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
-import { PUBLISHER } from "@/ui/copy";
+import { PRIVACY_POLICY_URL, PUBLISHER, SUPPORT_EMAIL } from "@/ui/copy";
 import { Illustration } from "@/ui/Illustration";
 import { Icon, type IconName } from "@/ui/icons";
 import { Button, useScrollEndPadding } from "@/ui/kit";
 import { type Theme, space, type, useTheme } from "@/ui/theme";
 
-const PRIVACY_URL = "https://sabahattinkalkan.com/tenulo/privacy/";
 
 const POINTS: readonly { icon: IconName; title: string; body: string }[] = [
   {
@@ -56,9 +55,9 @@ export default function PrivacyScreen() {
       {POINTS.map((p) => (
         <Point key={p.title} theme={theme} {...p} />
       ))}
-      <Button theme={theme} kind="secondary" label="Read the full privacy policy" onPress={() => void Linking.openURL(PRIVACY_URL)} />
+      <Button theme={theme} kind="secondary" label="Read the full privacy policy" onPress={() => void Linking.openURL(PRIVACY_POLICY_URL)} />
       <Text style={[type.small, { color: theme.muted }]}>
-        Tenulo is made by {PUBLISHER}. Questions: hello@sabahattinkalkan.com. Tenulo is meant for adults 18 and over. It is a personal log, not medical
+        Tenulo is made by {PUBLISHER}. Questions: {SUPPORT_EMAIL}. Tenulo is meant for adults 18 and over. It is a personal log, not medical
         advice, and it does not recommend medications or doses.
       </Text>
     </ScrollView>

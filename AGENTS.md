@@ -42,7 +42,7 @@ Docs: https://docs.expo.dev/eas/index.md
 
 ## Tenulo — project rules
 
-Tenulo is a local-first GLP-1 and weight log for Android (`com.kalkansoftware.tenulo`). These rules are promises made in the Play Store data-safety form and in the public privacy policy at https://sabahattinkalkan.com/tenulo/privacy/. Breaking one makes those statements false, so treat them as hard constraints.
+Tenulo is a local-first GLP-1 and weight log for Android (`com.kalkansoftware.tenulo`). These rules are promises made in the Play Store data-safety form and in the public privacy policy at https://kalkansoftware.com/tenulo/privacy/. Breaking one makes those statements false, so treat them as hard constraints.
 
 ### Privacy invariants
 
