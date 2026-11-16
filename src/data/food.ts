@@ -1,9 +1,9 @@
-import { and, asc, desc, eq, gte, lte, sql } from "drizzle-orm";
+import { and, asc, desc, eq } from "drizzle-orm";
 import { useLiveQuery } from "drizzle-orm/expo-sqlite";
 import { db } from "@/db/client";
 import { customFoods, foodEntries } from "@/db/schema";
 import { CATALOG_FOOD_ID } from "@/domain/backup";
-import type { LocalDate } from "@/domain/date";
+import { type LocalDate, isLocalDate } from "@/domain/date";
 import {
   MAX_ENTRY_KCAL,
   MAX_NUTRIENT_MG,
@@ -80,29 +80,6 @@ export function useRecentFoodEntries(): readonly FoodEntry[] {
   return data;
 }
 
-export interface FoodDayTotal {
-  readonly localDate: string;
-  readonly energyKcal: number;
-  readonly proteinMg: number;
-}
-
-/** Energy and protein per day between two dates (inclusive), for weekly averages. */
-export function useFoodTotals(from: LocalDate, to: LocalDate): readonly FoodDayTotal[] {
-  const { data } = useLiveQuery(
-    db
-      .select({
-        localDate: foodEntries.localDate,
-        energyKcal: sql<number>`sum(${foodEntries.energyKcal})`.mapWith(Number),
-        proteinMg: sql<number>`coalesce(sum(${foodEntries.proteinMg}), 0)`.mapWith(Number),
-      })
-      .from(foodEntries)
-      .where(and(gte(foodEntries.localDate, from), lte(foodEntries.localDate, to)))
-      .groupBy(foodEntries.localDate)
-      .orderBy(asc(foodEntries.localDate)),
-    [from, to],
-  );
-  return data;
-}
 
 export async function addFoodEntry(entry: NewFoodEntry, now: Date = new Date()): Promise<string> {
   assertEntry(entry);
@@ -151,6 +128,8 @@ export async function deleteFoodEntry(id: string): Promise<void> {
 
 /** Copies every entry of one meal on `from` to the same meal on `to`, as new entries. */
 export async function copyMeal(from: LocalDate, to: LocalDate, meal: Meal, now: Date = new Date()): Promise<number> {
+  if (!isLocalDate(from) || !isLocalDate(to)) throw new RangeError("Not a calendar date");
+  if (!MEALS.includes(meal)) throw new RangeError("Unknown meal: " + meal);
   const rows = await db
     .select()
     .from(foodEntries)

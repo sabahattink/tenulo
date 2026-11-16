@@ -282,10 +282,15 @@ export function editPortions(entry: StoredEntry, source: EntrySource, locale: Fo
 export type EntryChange = Omit<StoredEntry, "catalogFoodId" | "customFoodId">;
 
 /**
- * The entry with a new portion and amount. With the same portion and amount it is the entry as
- * logged (moving it to another meal never rewrites its values); otherwise it is recomputed from its
- * food when that is still there, or scaled from what was logged. The logged label stays when the
- * portion does, so a Turkish entry keeps "adet" after the app was switched to English.
+ * The entry with a new portion and amount, always derived from what was logged, so editing an old
+ * entry never pulls in values the food list or a custom food has today (history is not rewritten):
+ * - same portion and amount: the entry as logged (moving it to another meal changes nothing);
+ * - same portion, new amount: the logged values scaled by the amount;
+ * - another portion of a list food: grams from the list's portion, the logged values scaled by
+ *   weight;
+ * - otherwise (no known weight to scale by): recomputed from the food, the only option left.
+ * The logged label stays when the portion does, so a Turkish entry keeps "adet" after the app was
+ * switched to English.
  */
 export function editedEntry(
   entry: StoredEntry,
@@ -307,8 +312,20 @@ export function editedEntry(
       fiberMg: entry.fiberMg,
     };
   }
+  if (portion.id === entry.portionId) {
+    return {
+      portionId: entry.portionId,
+      portionLabel: entry.portionLabel,
+      quantityMilli,
+      grams: scaled(entry.grams, entry.quantityMilli, quantityMilli),
+      ...scaleNutrients(entry, entry.quantityMilli, quantityMilli),
+    };
+  }
   if (source.kind === "catalog" || source.kind === "custom") {
     const s = snapshotFor(source, portion, quantityMilli, locale);
+    if (s.grams !== null && entry.grams !== null && entry.grams > 0) {
+      return { portionId: s.portionId, portionLabel: s.portionLabel, quantityMilli, grams: s.grams, ...scaleNutrients(entry, entry.grams, s.grams) };
+    }
     const portionLabel = s.portionId === entry.portionId && source.kind === "catalog" ? entry.portionLabel : s.portionLabel;
     return {
       portionId: s.portionId,

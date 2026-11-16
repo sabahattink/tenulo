@@ -129,8 +129,10 @@ const sideEffectSchema = z.object({
   ...timestamps,
 });
 
+/** SQLite's trim(): spaces only, so the backup accepts exactly what the database CHECKs accept. */
+const sqliteTrim = (s: string) => s.replace(/^ +| +$/g, "");
 const trimmedLength = (min: number, max: number) =>
-  z.string().refine((s) => s.trim().length >= min && s.trim().length <= max, `Must be ${min}-${max} characters`);
+  z.string().refine((s) => sqliteTrim(s).length >= min && sqliteTrim(s).length <= max, `Must be ${min}-${max} characters`);
 
 const customFoodSchema = z.object({
   id,

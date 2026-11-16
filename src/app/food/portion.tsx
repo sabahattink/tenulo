@@ -10,12 +10,10 @@ import type { Meal } from "@/domain/food-log";
 import { findCatalogFood } from "@/domain/foods/catalog";
 import { useI18n } from "@/i18n/provider";
 import { PortionEditor, useAmountInput } from "@/ui/food/PortionEditor";
-import { type Param, dateParam, mealParam, minuteOfDay, quantityParam, single } from "@/ui/food/params";
+import { ADD_FLOW_DEPTH, type Param, dateParam, mealParam, minuteOfDay, quantityParam, single } from "@/ui/food/params";
 import { Button, Label, useScrollEndPadding } from "@/ui/kit";
 import { type Theme, space, type, useTheme } from "@/ui/theme";
 
-/** The add flow's two screens (search, then this one) close together after saving. */
-const ADD_FLOW_DEPTH = 2;
 
 /** `/food/portion?source=catalog|custom&id=&portion=&qty=&meal=&date=`: the portion step. */
 export default function PortionScreen() {

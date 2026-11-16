@@ -6,14 +6,12 @@ import { useToday } from "@/data/use-today";
 import { quickAddSnapshot } from "@/domain/food-entry";
 import { useI18n } from "@/i18n/provider";
 import { ENTRY_KCAL, MAX_ENTRY_NAME, type QuickAddField, type QuickAddForm, parseQuickAddForm } from "@/ui/food/forms";
-import { type Param, dateParam, mealParam, minuteOfDay } from "@/ui/food/params";
+import { ADD_FLOW_DEPTH, type Param, dateParam, mealParam, minuteOfDay } from "@/ui/food/params";
 import { Field, type FieldKind, MealChips, problemText } from "@/ui/food/parts";
 import { GRAM, KCAL } from "@/ui/food/units";
 import { Button, Label, useScrollEndPadding } from "@/ui/kit";
 import { space, type, useTheme } from "@/ui/theme";
 
-/** The add flow's two screens (search, then this one) close together after saving. */
-const ADD_FLOW_DEPTH = 2;
 
 const KINDS: Readonly<Record<QuickAddField, FieldKind>> = {
   name: { kind: "text", max: MAX_ENTRY_NAME },

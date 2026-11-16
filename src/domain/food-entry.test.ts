@@ -287,7 +287,7 @@ describe("editing a logged entry", () => {
     expect(sourceOfEntry({ ...stored, catalogFoodId: null, customFoodId: null, portionId: null }, find, [])).toEqual({ kind: "snapshot" });
   });
 
-  it("recomputes a catalog entry from the list, keeping the logged label for the same portion", () => {
+  it("scales a catalog entry by amount or weight, keeping the logged label for the same portion", () => {
     const source = sourceOfEntry(stored, find, []);
     const portions = editPortions(stored, source, "en");
     expect(editedEntry(stored, source, portions[0]!, 3000, "en")).toEqual({
@@ -321,11 +321,32 @@ describe("editing a logged entry", () => {
     });
   });
 
-  it("recomputes a custom-food entry from the food as it is now", () => {
+  it("scales a custom-food entry from what was logged, never from the food as edited since", () => {
+    // The custom food now says something else (no carbs, other energy); the entry keeps its own values.
     const entry = { ...stored, catalogFoodId: null, customFoodId: soup.id, portionId: null, portionLabel: "kase" };
     const source = sourceOfEntry(entry, find, [soup]);
     const [serving] = editPortions(entry, source, "tr");
-    expect(editedEntry(entry, source, serving!, 3000, "tr")).toMatchObject({ portionId: null, portionLabel: "kase", grams: 750, energyKcal: 543, carbMg: null });
+    expect(editedEntry(entry, source, serving!, 3000, "tr")).toEqual({
+      portionId: null,
+      portionLabel: "kase",
+      quantityMilli: 3000,
+      grams: 150,
+      energyKcal: 233, // 155 x 3/2 = 232.5
+      proteinMg: 18_870,
+      carbMg: 1_680,
+      fatMg: 15_915,
+      fiberMg: 0,
+    });
+  });
+
+  it("scales a catalog entry from what was logged, even when the list's values changed since", () => {
+    const entry = { ...stored, energyKcal: 200, proteinMg: 10_000 };
+    const source = sourceOfEntry(entry, find, []);
+    const portions = editPortions(entry, source, "en");
+    // Same portion, 2 -> 3 pieces: x 1.5.
+    expect(editedEntry(entry, source, portions[0]!, 3000, "en")).toMatchObject({ grams: 150, energyKcal: 300, proteinMg: 15_000 });
+    // Another portion, 100 g -> 80 g: x 0.8.
+    expect(editedEntry(entry, source, portions[2]!, 80_000, "en")).toMatchObject({ portionId: "g", grams: 80, energyKcal: 160, proteinMg: 8_000 });
   });
 
   it("scales the logged values when the food is gone", () => {

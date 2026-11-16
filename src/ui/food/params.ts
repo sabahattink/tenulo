@@ -36,3 +36,6 @@ export function quantityParam(value: Param): number | undefined {
 export function minuteOfDay(now: Date): number {
   return now.getHours() * 60 + now.getMinutes();
 }
+
+/** The add flow's two screens (search, then the portion step or quick add) close together after saving. */
+export const ADD_FLOW_DEPTH = 2;
