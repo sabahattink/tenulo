@@ -42,6 +42,7 @@ const SAME_IN_BOTH = new Set([
   "calendar.monthsShort.4",
   "daily.protein",
   "exerciseLog.kinds.yoga",
+  "food.nutrients.protein",
 ]);
 
 describe("messages", () => {

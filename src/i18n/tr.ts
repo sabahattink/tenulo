@@ -7,6 +7,7 @@
  * After a number a Turkish noun stays singular ("3 gün", "12 tartım").
  */
 import type { Messages } from "./en";
+import { foodTr } from "./messages/food";
 import type { BackupRecord, RestoreCountKey } from "./records";
 import { todayTr } from "./messages/today";
 
@@ -84,6 +85,7 @@ export const tr: Messages = {
     everyDays: (n) => `${n} günde bir`,
   },
   list: { and: "ve" },
+  ...foodTr,
 
   common: {
     save: "Kaydet",

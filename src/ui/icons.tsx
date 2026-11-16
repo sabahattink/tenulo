@@ -37,7 +37,10 @@ export type IconName =
   | "swim"
   | "dumbbell"
   | "yoga"
-  | "ball";
+  | "ball"
+  | "food"
+  | "target"
+  | "search";
 
 const PATHS: Record<IconName, string[]> = {
   today: ["M3.5 15.5c3-0.2 4.6-6 8-6s4.6 4 9 3.6", "M3.5 20h17"],
@@ -86,6 +89,9 @@ const PATHS: Record<IconName, string[]> = {
   dumbbell: ["M8 12h8", "M5.5 8.5v7", "M8 7v10", "M16 7v10", "M18.5 8.5v7", "M3.5 12h2", "M18.5 12h2"],
   yoga: ["M10.3 5a1.7 1.7 0 1 0 3.4 0a1.7 1.7 0 1 0-3.4 0", "M12 8.5v5", "M7 14l5-4.5 5 4.5", "M5 17.5c2.5-2 4.5-3 7-3s4.5 1 7 3", "M8 18.5h8"],
   ball: ["M4 12a8 8 0 1 0 16 0a8 8 0 1 0-16 0", "M5.2 7.8c2.9 1.9 2.9 6.5 0 8.4", "M18.8 7.8c-2.9 1.9-2.9 6.5 0 8.4"],
+  food: ["M5.5 3.5V8a2.5 2.5 0 0 0 5 0V3.5", "M8 3.5v17", "M17.5 20.5v-17c-2 1.5-3.2 4.2-3.2 8h3.2"],
+  target: ["M3.5 12a8.5 8.5 0 1 0 17 0a8.5 8.5 0 1 0-17 0", "M7.5 12a4.5 4.5 0 1 0 9 0a4.5 4.5 0 1 0-9 0", "M12 12h0.01"],
+  search: ["M4.5 10.5a6 6 0 1 0 12 0a6 6 0 1 0-12 0", "M15 15l5 5"],
 };
 
 export function Icon({ name, color, size = 24 }: { name: IconName; color: ColorValue; size?: number }) {

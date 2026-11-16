@@ -12,6 +12,7 @@ import type { WeightUnit } from "../domain/weight";
 import type { ProCheck } from "../platform/billing";
 import type { ReminderTexts } from "../platform/reminders";
 import type { TimelineFilter } from "../ui/timeline";
+import { foodEn } from "./messages/food";
 import type { BackupRecord, RestoreCountKey } from "./records";
 import { todayEn } from "./messages/today";
 
@@ -83,6 +84,7 @@ export const en = {
     everyDays: (n: number) => `every ${n} days`,
   },
   list: { and: "and" },
+  ...foodEn,
 
   common: {
     save: "Save",
