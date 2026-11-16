@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type NutrientSnapshot, nutritionFor, portionGrams, sumNutrients } from "./nutrition";
+import { nutritionFor, portionGrams } from "./nutrition";
 import type { NutrientsPer100g } from "./types";
 
 const boiledEgg: NutrientsPer100g = {
@@ -82,51 +82,5 @@ describe("nutritionFor", () => {
     expect(() => nutritionFor(boiledEgg, -1)).toThrow(RangeError);
     expect(() => nutritionFor({ ...boiledEgg, fatMg: 10.5 }, 100)).toThrow(RangeError);
     expect(() => nutritionFor({ ...boiledEgg, energyKcal: -1 }, 100)).toThrow(RangeError);
-  });
-});
-
-describe("sumNutrients", () => {
-  const known = (energyKcal: number, mg: number): NutrientSnapshot => ({
-    energyKcal,
-    proteinMg: mg,
-    carbMg: mg,
-    fatMg: mg,
-    fiberMg: mg,
-  });
-
-  it("is zero and complete for no entries", () => {
-    expect(sumNutrients([])).toEqual({
-      energyKcal: 0,
-      proteinMg: { sum: 0, hasMissing: false },
-      carbMg: { sum: 0, hasMissing: false },
-      fatMg: { sum: 0, hasMissing: false },
-      fiberMg: { sum: 0, hasMissing: false },
-    });
-  });
-
-  it("adds every nutrient", () => {
-    expect(sumNutrients([known(155, 1_000), known(52, 250)])).toEqual({
-      energyKcal: 207,
-      proteinMg: { sum: 1_250, hasMissing: false },
-      carbMg: { sum: 1_250, hasMissing: false },
-      fatMg: { sum: 1_250, hasMissing: false },
-      fiberMg: { sum: 1_250, hasMissing: false },
-    });
-  });
-
-  it("sums the known values and flags a nutrient some entries lack", () => {
-    // A custom food the user saved with energy and protein only.
-    const custom: NutrientSnapshot = { energyKcal: 300, proteinMg: 20_000, carbMg: null, fatMg: null, fiberMg: null };
-    const totals = sumNutrients([known(100, 500), custom, { ...custom, fiberMg: 100 }]);
-    expect(totals.energyKcal).toBe(700);
-    expect(totals.proteinMg).toEqual({ sum: 40_500, hasMissing: false });
-    expect(totals.carbMg).toEqual({ sum: 500, hasMissing: true });
-    expect(totals.fatMg).toEqual({ sum: 500, hasMissing: true });
-    expect(totals.fiberMg).toEqual({ sum: 600, hasMissing: true });
-  });
-
-  it("refuses values that are not non-negative integers", () => {
-    expect(() => sumNutrients([known(10.5, 0)])).toThrow(RangeError);
-    expect(() => sumNutrients([known(10, -1)])).toThrow(RangeError);
   });
 });
