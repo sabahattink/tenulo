@@ -3,7 +3,9 @@
  * a range or a value the user logged; nothing is interpreted or judged.
  */
 import { type LocalDate, addDays, diffDays, toDayNumber } from "./date";
+import { EXERCISE_KINDS, type ExerciseKind } from "./exercise";
 import { INJECTION_SITES, type InjectionSite, type PlanStep } from "./injection";
+import { type MeasurementPoint, type MeasurementSite, siteSummaries } from "./measurement";
 import { SIDE_EFFECT_TYPES, type Severity, type SideEffectType } from "./side-effect";
 import { type TrendPoint, type WeightReading, smoothedTrend } from "./trend";
 
@@ -26,6 +28,28 @@ export interface ReportSideEffect {
   readonly note: string | null;
 }
 
+/** What was eaten on one day, added up from the entries the user logged. */
+export interface ReportFoodDay {
+  readonly date: LocalDate;
+  readonly energyKcal: number;
+  /** Protein of the entries that have a value. */
+  readonly proteinMg: number;
+  /** Entries that day without a protein value (custom foods may leave it empty). */
+  readonly proteinUnknown: number;
+}
+
+export interface ReportWaterDay {
+  readonly date: LocalDate;
+  readonly amountMl: number;
+}
+
+/** Only what the user logged; Tenulo's energy estimates are left out of the report. */
+export interface ReportExercise {
+  readonly date: LocalDate;
+  readonly kind: ExerciseKind;
+  readonly durationMin: number;
+}
+
 export interface ReportInput {
   readonly from: LocalDate;
   readonly to: LocalDate;
@@ -35,6 +59,25 @@ export interface ReportInput {
   readonly planSteps: readonly PlanStep[];
   readonly injections: readonly ReportInjection[];
   readonly sideEffects: readonly ReportSideEffect[];
+  /** One row per day with food logged (several rows of a day are added together). */
+  readonly foodDays: readonly ReportFoodDay[];
+  readonly waterDays: readonly ReportWaterDay[];
+  readonly measurements: readonly MeasurementPoint[];
+  readonly exercises: readonly ReportExercise[];
+}
+
+export interface LengthReading {
+  readonly date: LocalDate;
+  readonly lengthMm: number;
+}
+
+export interface MeasurementRow {
+  readonly site: MeasurementSite;
+  readonly first: LengthReading;
+  readonly last: LengthReading;
+  readonly readings: number;
+  /** Last minus first; undefined with one reading. */
+  readonly changeMm: number | undefined;
 }
 
 export interface WeightSection {
@@ -70,6 +113,26 @@ export interface Report {
     readonly byType: readonly { readonly type: SideEffectType; readonly count: number; readonly strongest: Severity }[];
     readonly rows: readonly ReportSideEffect[];
   };
+  /** Averages are per day with food logged, rounded to whole kcal and milligrams. */
+  readonly nutrition: {
+    readonly daysLogged: number;
+    readonly energyKcalPerDay: number | undefined;
+    readonly proteinMgPerDay: number | undefined;
+    /** Some entry had no protein value, so the protein average counts only the foods that had one. */
+    readonly proteinIncomplete: boolean;
+  };
+  readonly water: {
+    readonly daysLogged: number;
+    readonly mlPerDay: number | undefined;
+  };
+  /** First and last reading of each measured site within the period, in body order. */
+  readonly measurements: readonly MeasurementRow[];
+  readonly exercise: {
+    readonly sessions: number;
+    readonly minutes: number;
+    /** Most minutes first. */
+    readonly byKind: readonly { readonly kind: ExerciseKind; readonly sessions: number; readonly minutes: number }[];
+  };
 }
 
 /** First day of a report ending `to`. "all" starts at the earliest record, if there is one. */
@@ -94,6 +157,63 @@ export function buildReport(input: ReportInput): Report {
       .sort((a, b) => toDayNumber(a.startDate) - toDayNumber(b.startDate)),
     injections: injectionSection(input.injections.filter((i) => inPeriod(i.date))),
     sideEffects: sideEffectSection(input.sideEffects.filter((e) => inPeriod(e.date))),
+    nutrition: nutritionSection(input.foodDays.filter((d) => inPeriod(d.date))),
+    water: waterSection(input.waterDays.filter((d) => inPeriod(d.date))),
+    measurements: measurementSection(input.measurements.filter((m) => inPeriod(m.date))),
+    exercise: exerciseSection(input.exercises.filter((e) => inPeriod(e.date))),
+  };
+}
+
+/** Sum of the day's values over the number of distinct days, rounded; undefined without days. */
+function perDay<T extends { readonly date: LocalDate }>(rows: readonly T[], value: (row: T) => number): number | undefined {
+  const days = new Set(rows.map((r) => r.date)).size;
+  if (days === 0) return undefined;
+  return Math.round(rows.reduce((sum, r) => sum + value(r), 0) / days);
+}
+
+function nutritionSection(days: readonly ReportFoodDay[]): Report["nutrition"] {
+  return {
+    daysLogged: new Set(days.map((d) => d.date)).size,
+    energyKcalPerDay: perDay(days, (d) => d.energyKcal),
+    proteinMgPerDay: perDay(days, (d) => d.proteinMg),
+    proteinIncomplete: days.some((d) => d.proteinUnknown > 0),
+  };
+}
+
+function waterSection(days: readonly ReportWaterDay[]): Report["water"] {
+  return { daysLogged: new Set(days.map((d) => d.date)).size, mlPerDay: perDay(days, (d) => d.amountMl) };
+}
+
+function measurementSection(points: readonly MeasurementPoint[]): Report["measurements"] {
+  return siteSummaries(points).flatMap((s) => {
+    const first = s.points[0];
+    const last = s.points.at(-1);
+    if (first === undefined || last === undefined) return [];
+    return [
+      {
+        site: s.site,
+        first: { date: first.date, lengthMm: first.lengthMm },
+        last: { date: last.date, lengthMm: last.lengthMm },
+        readings: s.points.length,
+        changeMm: s.changeMm,
+      },
+    ];
+  });
+}
+
+function exerciseSection(sessions: readonly ReportExercise[]): Report["exercise"] {
+  const kinds = new Map<ExerciseKind, { sessions: number; minutes: number }>();
+  for (const s of sessions) {
+    const k = kinds.get(s.kind) ?? { sessions: 0, minutes: 0 };
+    kinds.set(s.kind, { sessions: k.sessions + 1, minutes: k.minutes + s.durationMin });
+  }
+  const order = (k: ExerciseKind) => EXERCISE_KINDS.indexOf(k);
+  return {
+    sessions: sessions.length,
+    minutes: sessions.reduce((sum, s) => sum + s.durationMin, 0),
+    byKind: [...kinds.entries()]
+      .map(([kind, k]) => ({ kind, ...k }))
+      .sort((a, b) => b.minutes - a.minutes || order(a.kind) - order(b.kind)),
   };
 }
 

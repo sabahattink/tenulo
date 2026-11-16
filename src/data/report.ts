@@ -1,9 +1,20 @@
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq, gte, lte, min, sql } from "drizzle-orm";
 import { File, Paths } from "expo-file-system";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
 import { db } from "@/db/client";
-import { injections, medications, planSteps, settings, sideEffects, weightEntries } from "@/db/schema";
+import {
+  exerciseEntries,
+  foodEntries,
+  injections,
+  measurementEntries,
+  medications,
+  planSteps,
+  settings,
+  sideEffects,
+  waterEntries,
+  weightEntries,
+} from "@/db/schema";
 import { type LocalDate, parseLocalDate, toDayNumber } from "@/domain/date";
 import { type Report, type ReportPeriod, buildReport, reportStart } from "@/domain/report";
 import { isSeverity } from "@/domain/side-effect";
@@ -12,6 +23,62 @@ import { reportHtml } from "@/ui/report-html";
 
 /** A4 in PostScript points (72 per inch), the page size doctors print on outside North America. */
 const A4 = { width: 595, height: 842 };
+
+/** The first day anything was logged in the daily-log tables, for an "all" report. */
+async function earliestDailyLog(): Promise<LocalDate[]> {
+  const firsts = await Promise.all([
+    db.select({ date: min(foodEntries.localDate) }).from(foodEntries),
+    db.select({ date: min(waterEntries.localDate) }).from(waterEntries),
+    db.select({ date: min(measurementEntries.localDate) }).from(measurementEntries),
+    db.select({ date: min(exerciseEntries.localDate) }).from(exerciseEntries),
+  ]);
+  return firsts.flatMap(([row]) => (row?.date == null ? [] : [parseLocalDate(row.date)]));
+}
+
+/** Food, water, measurements and exercise between two dates (inclusive), summed per day where that is all the report needs. */
+async function loadDailyLog(from: LocalDate, to: LocalDate) {
+  const [food, water, measurements, exercises] = await Promise.all([
+    db
+      .select({
+        localDate: foodEntries.localDate,
+        energyKcal: sql<number>`sum(${foodEntries.energyKcal})`.mapWith(Number),
+        proteinMg: sql<number>`coalesce(sum(${foodEntries.proteinMg}), 0)`.mapWith(Number),
+        proteinUnknown: sql<number>`sum(case when ${foodEntries.proteinMg} is null then 1 else 0 end)`.mapWith(Number),
+      })
+      .from(foodEntries)
+      .where(and(gte(foodEntries.localDate, from), lte(foodEntries.localDate, to)))
+      .groupBy(foodEntries.localDate),
+    db
+      .select({ localDate: waterEntries.localDate, amountMl: sql<number>`sum(${waterEntries.amountMl})`.mapWith(Number) })
+      .from(waterEntries)
+      .where(and(gte(waterEntries.localDate, from), lte(waterEntries.localDate, to)))
+      .groupBy(waterEntries.localDate),
+    db
+      .select()
+      .from(measurementEntries)
+      .where(and(gte(measurementEntries.localDate, from), lte(measurementEntries.localDate, to))),
+    db
+      .select({ localDate: exerciseEntries.localDate, kind: exerciseEntries.kind, durationMin: exerciseEntries.durationMin })
+      .from(exerciseEntries)
+      .where(and(gte(exerciseEntries.localDate, from), lte(exerciseEntries.localDate, to))),
+  ]);
+  return {
+    foodDays: food.map((f) => ({
+      date: parseLocalDate(f.localDate),
+      energyKcal: f.energyKcal,
+      proteinMg: f.proteinMg,
+      proteinUnknown: f.proteinUnknown,
+    })),
+    waterDays: water.map((w) => ({ date: parseLocalDate(w.localDate), amountMl: w.amountMl })),
+    measurements: measurements.map((m) => ({
+      site: m.site,
+      date: parseLocalDate(m.localDate),
+      measuredAt: m.measuredAt,
+      lengthMm: m.lengthMm,
+    })),
+    exercises: exercises.map((x) => ({ date: parseLocalDate(x.localDate), kind: x.kind, durationMin: x.durationMin })),
+  };
+}
 
 /** Collects the records for a report ending today. */
 export async function loadReport(period: ReportPeriod, to: LocalDate): Promise<Report> {
@@ -31,11 +98,16 @@ export async function loadReport(period: ReportPeriod, to: LocalDate): Promise<R
     medication === undefined ? [] : await db.select().from(planSteps).where(eq(planSteps.medicationId, medication.id));
   const effects = await db.select().from(sideEffects);
 
-  const dates = [...weights.map((w) => w.date), ...shots.map((s) => parseLocalDate(s.localDate))];
+  const dates = [
+    ...weights.map((w) => w.date),
+    ...shots.map((s) => parseLocalDate(s.localDate)),
+    ...(period === "all" ? await earliestDailyLog() : []),
+  ];
   const earliest = dates.sort((a, b) => toDayNumber(a) - toDayNumber(b))[0];
+  const from = reportStart(period, to, earliest);
 
   return buildReport({
-    from: reportStart(period, to, earliest),
+    from,
     to,
     weights,
     medicationName: medication?.name,
@@ -46,6 +118,7 @@ export async function loadReport(period: ReportPeriod, to: LocalDate): Promise<R
         ? [{ date: parseLocalDate(e.localDate), type: e.type, severity: e.severity, note: e.note }]
         : [],
     ),
+    ...(await loadDailyLog(from, to)),
   });
 }
 

@@ -6,11 +6,15 @@
  * upper-case labels are upper-cased here with that language's rules rather than by CSS.
  */
 import type { LocalDate } from "../domain/date";
+import { lengthUnitFor } from "../domain/measurement";
 import type { Report } from "../domain/report";
 import { type WeightUnit, fromGrams } from "../domain/weight";
 import type { I18n } from "../i18n";
 import { chartGeometry } from "./chart-geometry";
 import { PUBLISHER } from "./copy";
+import { formatLength, formatLengthChange } from "./progress/length";
+
+const MG_PER_G = 1000;
 
 /** Print palette: the light theme, which prints well in color and in grey. */
 const INK = "#1E2320";
@@ -54,8 +58,12 @@ export function reportHtml(report: Report, unit: WeightUnit, created: LocalDate,
 </header>
 ${summary(report, unit, i18n)}
 ${weightBlock(report, unit, i18n)}
+${measurementBlock(report, unit, i18n)}
 ${medicationBlock(report, i18n)}
 ${sideEffectBlock(report, i18n)}
+${nutritionBlock(report, i18n)}
+${waterBlock(report, i18n)}
+${exerciseBlock(report, i18n)}
 <footer>
   ${e(t.reportPdf.footer(f.longDate(created), PUBLISHER))}
 </footer>
@@ -196,6 +204,96 @@ function sideEffectBlock(r: Report, i18n: I18n): string {
     s.rows.map((x) => [f.longDate(x.date), t.sideEffects[x.type], t.severity[x.severity], x.note ?? ""]),
   )}
   <p class="note">${e(t.reportPdf.ratingsNote)}</p>
+</section>`;
+}
+
+/** Label and value pairs, two to a row, like the weight facts. */
+function factsTable(pairs: readonly (readonly [label: string, value: string])[]): string {
+  const rows: string[] = [];
+  for (let i = 0; i < pairs.length; i += 2) {
+    const cells = pairs
+      .slice(i, i + 2)
+      .map(([label, value]) => `<th>${e(label)}</th><td>${e(value)}</td>`)
+      .join("");
+    rows.push(`<tr>${cells}</tr>`);
+  }
+  return `<table class="facts">${rows.join("")}</table>`;
+}
+
+/*
+ * The daily-log sections. Each appears only when the period has records of its kind: these logs are
+ * optional, and a page of empty sections would hide the ones that matter.
+ */
+
+function measurementBlock(r: Report, unit: WeightUnit, i18n: I18n): string {
+  const { t, f } = i18n;
+  if (r.measurements.length === 0) return "";
+  const lengthUnit = lengthUnitFor(unit);
+  const reading = (mm: number, date: LocalDate) => `${formatLength(f, mm, lengthUnit)} · ${f.longDate(date)}`;
+  return `<section>
+  <h2>${e(t.reportLog.pdf.measurements)}</h2>
+  ${listTable(
+    i18n,
+    [t.reportPdf.site, t.reportLog.pdf.first, t.reportLog.pdf.last, t.reportPdf.change],
+    r.measurements.map((m) => [
+      t.measure.sites[m.site],
+      reading(m.first.lengthMm, m.first.date),
+      m.readings > 1 ? reading(m.last.lengthMm, m.last.date) : t.common.noValue,
+      m.changeMm === undefined ? t.common.noValue : formatLengthChange(f, m.changeMm, lengthUnit),
+    ]),
+  )}
+</section>`;
+}
+
+function nutritionBlock(r: Report, { t, f }: I18n): string {
+  const n = r.nutrition;
+  if (n.daysLogged === 0) return "";
+  const pdf = t.reportLog.pdf;
+  const kcal = n.energyKcalPerDay === undefined ? t.common.noValue : `${f.integer(n.energyKcalPerDay)} kcal`;
+  const protein = n.proteinMgPerDay === undefined ? t.common.noValue : `${f.integer(n.proteinMgPerDay / MG_PER_G)} g`;
+  const incomplete = n.proteinIncomplete ? ` ${pdf.proteinIncomplete}` : "";
+  return `<section>
+  <h2>${e(pdf.nutrition)}</h2>
+  ${factsTable([
+    [t.reportLog.foodDays, pdf.ofDays(f.integer(n.daysLogged), f.integer(r.days))],
+    [pdf.energyPerDay, kcal],
+    [pdf.proteinPerDay, protein],
+  ])}
+  <p class="note">${e(`${pdf.nutritionNote}${incomplete}`)}</p>
+</section>`;
+}
+
+function waterBlock(r: Report, { t, f }: I18n): string {
+  const w = r.water;
+  if (w.daysLogged === 0) return "";
+  const pdf = t.reportLog.pdf;
+  return `<section>
+  <h2>${e(pdf.water)}</h2>
+  ${factsTable([
+    [t.reportLog.waterDays, pdf.ofDays(f.integer(w.daysLogged), f.integer(r.days))],
+    [pdf.waterPerDay, w.mlPerDay === undefined ? t.common.noValue : `${f.integer(w.mlPerDay)} ml`],
+  ])}
+</section>`;
+}
+
+function exerciseBlock(r: Report, i18n: I18n): string {
+  const { t, f } = i18n;
+  const x = r.exercise;
+  if (x.sessions === 0) return "";
+  const pdf = t.reportLog.pdf;
+  const minutes = (n: number) => t.historyLog.minutes(f.integer(n));
+  return `<section>
+  <h2>${e(pdf.exercise)}</h2>
+  ${factsTable([
+    [pdf.sessions, f.integer(x.sessions)],
+    [pdf.totalTime, minutes(x.minutes)],
+  ])}
+  ${listTable(
+    i18n,
+    [t.reportPdf.type, pdf.sessions, pdf.totalTime],
+    x.byKind.map((k) => [t.historyLog.exerciseKinds[k.kind], f.integer(k.sessions), minutes(k.minutes)]),
+  )}
+  <p class="note">${e(pdf.exerciseNote)}</p>
 </section>`;
 }
 

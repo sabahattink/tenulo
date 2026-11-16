@@ -92,6 +92,19 @@ export default function ReportScreen() {
             <Fact theme={theme} label={t.report.injections} value={f.integer(report.injections.count)} />
             <Fact theme={theme} label={t.report.sideEffects} value={f.integer(report.sideEffects.total)} />
             <Fact theme={theme} label={t.report.medication} value={report.medicationName ?? t.report.notSetUp} />
+            {/* The daily-log sections are in the PDF only when the period has them; so is their preview. */}
+            {report.nutrition.daysLogged > 0 && (
+              <Fact theme={theme} label={t.reportLog.foodDays} value={f.integer(report.nutrition.daysLogged)} />
+            )}
+            {report.water.daysLogged > 0 && (
+              <Fact theme={theme} label={t.reportLog.waterDays} value={f.integer(report.water.daysLogged)} />
+            )}
+            {report.measurements.length > 0 && (
+              <Fact theme={theme} label={t.reportLog.measuredSites} value={f.integer(report.measurements.length)} />
+            )}
+            {report.exercise.sessions > 0 && (
+              <Fact theme={theme} label={t.reportLog.exerciseSessions} value={f.integer(report.exercise.sessions)} />
+            )}
           </View>
         </Card>
       )}
