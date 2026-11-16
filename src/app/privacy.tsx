@@ -1,47 +1,25 @@
 import { Linking, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import type { Messages } from "@/i18n";
+import { useI18n } from "@/i18n/provider";
 import { PRIVACY_POLICY_URL, PUBLISHER, SUPPORT_EMAIL } from "@/ui/copy";
 import { Illustration } from "@/ui/Illustration";
 import { Icon, type IconName } from "@/ui/icons";
 import { Button, useScrollEndPadding } from "@/ui/kit";
 import { type Theme, space, type, useTheme } from "@/ui/theme";
 
-
-const POINTS: readonly { icon: IconName; title: string; body: string }[] = [
-  {
-    icon: "lock",
-    title: "On this phone only",
-    body: "Your weigh-ins, injections, side effects and notes are stored in Tenulo's own database on this phone. There is no account and no Tenulo server.",
-  },
-  {
-    icon: "heart",
-    title: "Health Connect: read-only, weight only",
-    body: "With your permission, Tenulo reads weight records to show smart-scale readings in your log. It never writes to Health Connect, and the data is used only for your weight history and trend inside the app.",
-  },
-  {
-    icon: "bell",
-    title: "Reminders are local",
-    body: "Injection and weigh-in reminders are scheduled by Android on this phone. No reminder passes through a server.",
-  },
-  {
-    icon: "upload",
-    title: "You decide what leaves",
-    body: "A PDF report or a backup file is created on this phone and goes only where you send it. Android cloud backup is turned off for Tenulo.",
-  },
-  {
-    icon: "shield",
-    title: "No tracking",
-    body: "No analytics, ads or crash reporting. Google Play Billing confirms a Pro purchase; Tenulo never sees your name or payment details.",
-  },
-  {
-    icon: "trash",
-    title: "Delete any time",
-    body: "Delete single entries from History, or everything from Settings. Uninstalling Tenulo removes all of its data.",
-  },
+const POINTS: readonly { key: keyof Messages["privacy"]["points"]; icon: IconName }[] = [
+  { key: "device", icon: "lock" },
+  { key: "healthConnect", icon: "heart" },
+  { key: "reminders", icon: "bell" },
+  { key: "exports", icon: "upload" },
+  { key: "tracking", icon: "shield" },
+  { key: "deletion", icon: "trash" },
 ];
 
 /** Also the screen Health Connect opens when the user asks why Tenulo wants access. */
 export default function PrivacyScreen() {
   const theme = useTheme();
+  const { t } = useI18n();
   const endPadding = useScrollEndPadding();
   const { width } = useWindowDimensions();
   return (
@@ -49,17 +27,12 @@ export default function PrivacyScreen() {
       <View style={styles.art}>
         <Illustration name="private" theme={theme} size={Math.min(width - space.xl * 2, 260)} />
       </View>
-      <Text style={[type.body, { color: theme.text }]}>
-        Tenulo is a private log for your weight and your GLP-1 medication. Here is what that means in practice.
-      </Text>
+      <Text style={[type.body, { color: theme.text }]}>{t.privacy.intro}</Text>
       {POINTS.map((p) => (
-        <Point key={p.title} theme={theme} {...p} />
+        <Point key={p.key} theme={theme} icon={p.icon} {...t.privacy.points[p.key]} />
       ))}
-      <Button theme={theme} kind="secondary" label="Read the full privacy policy" onPress={() => void Linking.openURL(PRIVACY_POLICY_URL)} />
-      <Text style={[type.small, { color: theme.muted }]}>
-        Tenulo is made by {PUBLISHER}. Questions: {SUPPORT_EMAIL}. Tenulo is meant for adults 18 and over. It is a personal log, not medical
-        advice, and it does not recommend medications or doses.
-      </Text>
+      <Button theme={theme} kind="secondary" label={t.privacy.readPolicy} onPress={() => void Linking.openURL(PRIVACY_POLICY_URL)} />
+      <Text style={[type.small, { color: theme.muted }]}>{t.privacy.footer(PUBLISHER, SUPPORT_EMAIL)}</Text>
     </ScrollView>
   );
 }

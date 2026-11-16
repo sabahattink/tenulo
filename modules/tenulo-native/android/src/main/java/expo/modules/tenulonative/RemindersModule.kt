@@ -48,6 +48,10 @@ class RemindersModule : Module() {
       ReminderScheduler.schedule(context, Reminder(id, title, body, atMs = null, dailyMinute = minute))
     }
 
+    Function("setTexts") { channelName: String, channelDescription: String, lockedTitle: String ->
+      ReminderScheduler.setTexts(context, channelName, channelDescription, lockedTitle)
+    }
+
     Function("cancel") { id: String -> ReminderScheduler.cancel(context, id) }
 
     Function("cancelAll") { ReminderScheduler.cancelAll(context) }

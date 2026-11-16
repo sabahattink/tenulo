@@ -2,47 +2,28 @@ import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { Alert, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import type { StoreProduct } from "../../modules/tenulo-native";
-import { type ProCheck, billingAvailable, buyPro, proProduct, refreshPro, useIsPro, useProState } from "@/platform/billing";
+import type { Messages } from "@/i18n";
+import { useI18n } from "@/i18n/provider";
+import { billingAvailable, buyPro, proProduct, refreshPro, useIsPro, useProState } from "@/platform/billing";
 import { Illustration } from "@/ui/Illustration";
 import { Icon, type IconName } from "@/ui/icons";
 import { Button, useScrollEndPadding } from "@/ui/kit";
 import { type Theme, radius, space, type, useTheme } from "@/ui/theme";
 
-const FEATURES: readonly { icon: IconName; title: string; body: string }[] = [
-  {
-    icon: "report",
-    title: "Doctor report",
-    body: "Your trend, injections, plan and side effects for any period, as a clean PDF you can print or send.",
-  },
-  {
-    icon: "heart",
-    title: "Health Connect",
-    body: "Readings from your smart scale appear in your log automatically. Read-only; nothing is written back.",
-  },
-  {
-    icon: "shield",
-    title: "Still private",
-    body: "No account, no subscription, no tracking. Google Play confirms the purchase; Tenulo never learns who you are.",
-  },
+const FEATURES: readonly { key: keyof Messages["pro"]["features"]; icon: IconName }[] = [
+  { key: "report", icon: "report" },
+  { key: "healthConnect", icon: "heart" },
+  { key: "private", icon: "shield" },
 ];
 
-/** What "Restore purchase" tells the user for each answer from Play. */
-const RESTORE_RESULT: Record<ProCheck, { readonly title: string; readonly body: string }> = {
-  owned: { title: "Tenulo Pro restored", body: "Your purchase is confirmed by Google Play. Thank you." },
-  pending: { title: "Purchase pending", body: "Pro unlocks as soon as Google Play confirms your payment." },
-  "not-owned": {
-    title: "No purchase found",
-    body: "Google Play has no Tenulo Pro purchase for the Google account on this phone. If you bought it with another account, switch to it in the Play Store and try again.",
-  },
-  failed: { title: "Could not reach Google Play", body: "Check your connection and try again." },
-  unavailable: {
-    title: "Purchases are not available here",
-    body: "Purchases work in the version of Tenulo installed from Google Play.",
-  },
-};
+/** The error code the billing module rejected with ("E_NO_PRODUCT", "E_BILLING_12"), if any. */
+function errorCode(e: unknown): string | undefined {
+  return typeof e === "object" && e !== null && "code" in e && typeof e.code === "string" ? e.code : undefined;
+}
 
 export default function ProScreen() {
   const theme = useTheme();
+  const { t } = useI18n();
   const endPadding = useScrollEndPadding();
   const { width } = useWindowDimensions();
   const isPro = useIsPro();
@@ -66,10 +47,10 @@ export default function ProScreen() {
       const outcome = await buyPro();
       if (outcome === "purchased") router.back();
       else if (outcome === "pending") {
-        Alert.alert("Purchase pending", "Pro unlocks as soon as Google Play confirms your payment.");
+        Alert.alert(t.pro.pendingTitle, t.pro.pendingBody);
       }
     } catch (e) {
-      Alert.alert("Purchase did not go through", e instanceof Error ? e.message : "Please try again later.");
+      Alert.alert(t.pro.failedTitle, t.pro.failedBody(errorCode(e), e instanceof Error ? e.message : undefined));
     } finally {
       setBusy(false);
     }
@@ -78,7 +59,7 @@ export default function ProScreen() {
   const restore = async () => {
     setBusy(true);
     try {
-      const { title, body } = RESTORE_RESULT[await refreshPro()];
+      const { title, body } = t.pro.restoreResult[await refreshPro()];
       Alert.alert(title, body);
     } finally {
       setBusy(false);
@@ -93,37 +74,29 @@ export default function ProScreen() {
       <View style={styles.hero}>
         <Illustration name="report" theme={theme} size={Math.min(width - space.xl * 2, 300)} />
         <Text style={[type.title, styles.center, { color: theme.text }]}>Tenulo Pro</Text>
-        <Text style={[type.body, styles.center, { color: theme.muted }]}>
-          One purchase. Yours on every phone signed in to your Google account.
-        </Text>
+        <Text style={[type.body, styles.center, { color: theme.muted }]}>{t.pro.tagline}</Text>
       </View>
 
       {FEATURES.map((f) => (
-        <Feature key={f.title} theme={theme} {...f} />
+        <Feature key={f.key} theme={theme} icon={f.icon} {...t.pro.features[f.key]} />
       ))}
 
       {isPro ? (
         <View style={[styles.owned, { backgroundColor: theme.accentSoft }]}>
           <Icon name="check" color={theme.accent} />
-          <Text style={[type.bodyStrong, styles.flex, { color: theme.text }]}>
-            Pro is unlocked. Thank you for supporting Tenulo.
-          </Text>
+          <Text style={[type.bodyStrong, styles.flex, { color: theme.text }]}>{t.pro.unlocked}</Text>
         </View>
       ) : (
         <View style={styles.actions}>
           <Button
             theme={theme}
-            label={busy ? "Opening Google Play…" : price ? `Unlock Pro · ${price}` : "Unlock Pro"}
+            label={busy ? t.pro.opening : price ? t.pro.unlockFor(price) : t.pro.unlock}
             onPress={() => void buy()}
             disabled={!available || busy || pending}
           />
-          <Button theme={theme} kind="secondary" label="Restore purchase" onPress={() => void restore()} disabled={busy} />
+          <Button theme={theme} kind="secondary" label={t.pro.restore} onPress={() => void restore()} disabled={busy} />
           <Text style={[type.small, styles.note, { color: theme.muted }]}>
-            {pending
-              ? "Your purchase is pending with Google Play."
-              : !available
-                ? "Purchases are available in the version of Tenulo installed from Google Play."
-                : "Paid once through Google Play. Refunds follow Google Play policy."}
+            {pending ? t.pro.pendingNote : !available ? t.pro.unavailableNote : t.pro.paidOnce}
           </Text>
         </View>
       )}

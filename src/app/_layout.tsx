@@ -4,9 +4,10 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View, useColorScheme } from "react-native";
 import migrations from "../../drizzle/migrations";
-import { ensureSettings, finishPendingPurge, readWelcomed, useSettings } from "@/data/repo";
+import { type StartState, ensureSettings, finishPendingPurge, readStartState, useSettings } from "@/data/repo";
 import { useAppSync } from "@/data/use-app-sync";
 import { db } from "@/db/client";
+import { I18nProvider, useI18n } from "@/i18n/provider";
 import { setNavigationBarLight } from "@/platform/system-bars";
 import { Button } from "@/ui/kit";
 import { type Theme, useTheme } from "@/ui/theme";
@@ -14,12 +15,14 @@ import { type Theme, useTheme } from "@/ui/theme";
 export default function RootLayout() {
   const theme = useTheme();
   const scheme = useColorScheme();
+  // Before the database is open there is no saved language: these screens follow the phone.
+  const { t } = useI18n();
   const { success, error } = useMigrations(db, migrations);
 
   useEffect(() => {
     setNavigationBarLight(scheme !== "dark");
   }, [scheme]);
-  const [welcomed, setWelcomed] = useState<boolean | undefined>();
+  const [start, setStart] = useState<StartState | undefined>();
   const [setupError, setSetupError] = useState<Error | undefined>();
 
   useEffect(() => {
@@ -29,9 +32,9 @@ export default function RootLayout() {
         // Finishes a "Delete all data" that could not clear the database files last time. If it
         // fails again the marker stays, and the next start retries.
         finishPendingPurge();
-        return readWelcomed();
+        return readStartState();
       })
-      .then(setWelcomed)
+      .then(setStart)
       .catch((e: unknown) => setSetupError(e instanceof Error ? e : new Error(String(e))));
   }, [success]);
 
@@ -40,13 +43,13 @@ export default function RootLayout() {
     // Never continue on a half-migrated database: show the failure instead of guessing.
     return (
       <View style={[styles.center, { backgroundColor: theme.background }]}>
-        <Text style={[styles.title, { color: theme.text }]}>Tenulo could not open its data</Text>
+        <Text style={[styles.title, { color: theme.text }]}>{t.root.couldNotOpen}</Text>
         <Text style={[styles.detail, { color: theme.muted }]}>{failure.message}</Text>
       </View>
     );
   }
 
-  if (welcomed === undefined) {
+  if (start === undefined) {
     return (
       <View style={[styles.center, { backgroundColor: theme.background }]}>
         <ActivityIndicator color={theme.accent} />
@@ -54,15 +57,25 @@ export default function RootLayout() {
     );
   }
 
-  return <App theme={theme} initiallyWelcomed={welcomed} />;
+  return <App theme={theme} start={start} />;
 }
 
 /** Mounted only once the database is migrated, so its live queries are safe. */
-function App({ theme, initiallyWelcomed }: { theme: Theme; initiallyWelcomed: boolean }) {
-  useAppSync();
+function App({ theme, start }: { theme: Theme; start: StartState }) {
   const settings = useSettings();
-  // The live query is empty for its first render; the value read at start covers that moment.
-  const welcomed = settings === undefined ? initiallyWelcomed : settings.welcomedAt !== null;
+  // The live query is empty for its first render; the values read at start cover that moment.
+  const welcomed = settings === undefined ? start.welcomed : settings.welcomedAt !== null;
+  return (
+    <I18nProvider preference={settings?.language ?? start.language}>
+      <Navigator theme={theme} welcomed={welcomed} />
+    </I18nProvider>
+  );
+}
+
+/** Inside the language provider, so screen titles and reminder texts follow the user's choice. */
+function Navigator({ theme, welcomed }: { theme: Theme; welcomed: boolean }) {
+  useAppSync();
+  const { t } = useI18n();
   const modal = { presentation: "modal" } as const;
   return (
     <>
@@ -79,14 +92,14 @@ function App({ theme, initiallyWelcomed }: { theme: Theme; initiallyWelcomed: bo
         {/* Finishing the welcome screens, or "Delete all data", flips the guards and the router follows. */}
         <Stack.Protected guard={welcomed}>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="add-weight" options={{ title: "Log weight", ...modal }} />
-          <Stack.Screen name="setup-medication" options={{ title: "Your medication", ...modal }} />
-          <Stack.Screen name="log-injection" options={{ title: "Log injection", ...modal }} />
-          <Stack.Screen name="log-side-effect" options={{ title: "Log side effect", ...modal }} />
-          <Stack.Screen name="report" options={{ title: "Doctor report", ...modal }} />
-          <Stack.Screen name="pro" options={{ title: "Tenulo Pro", ...modal }} />
-          <Stack.Screen name="medication" options={{ title: "Medication & plan" }} />
-          <Stack.Screen name="privacy" options={{ title: "Privacy" }} />
+          <Stack.Screen name="add-weight" options={{ title: t.screens.addWeight, ...modal }} />
+          <Stack.Screen name="setup-medication" options={{ title: t.screens.setupMedication, ...modal }} />
+          <Stack.Screen name="log-injection" options={{ title: t.screens.logInjection, ...modal }} />
+          <Stack.Screen name="log-side-effect" options={{ title: t.screens.logSideEffect, ...modal }} />
+          <Stack.Screen name="report" options={{ title: t.screens.report, ...modal }} />
+          <Stack.Screen name="pro" options={{ title: t.screens.pro, ...modal }} />
+          <Stack.Screen name="medication" options={{ title: t.screens.medication }} />
+          <Stack.Screen name="privacy" options={{ title: t.screens.privacy }} />
         </Stack.Protected>
         <Stack.Protected guard={!welcomed}>
           <Stack.Screen name="welcome" options={{ headerShown: false, animation: "fade" }} />
@@ -99,16 +112,18 @@ function App({ theme, initiallyWelcomed }: { theme: Theme; initiallyWelcomed: bo
 /**
  * Expo Router wraps this layout, and so the whole app, in this boundary. A render error (for
  * example a record that no longer parses) shows this screen instead of closing the app. Nothing is
- * reported anywhere: Tenulo sends no data off the phone.
+ * reported anywhere: Tenulo sends no data off the phone. It sits outside the language provider, so
+ * it speaks the phone's language.
  */
 export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
   const theme = useTheme();
+  const { t } = useI18n();
   return (
     <View style={[styles.center, { backgroundColor: theme.background }]}>
-      <Text style={[styles.title, { color: theme.text }]}>Something went wrong in Tenulo</Text>
+      <Text style={[styles.title, { color: theme.text }]}>{t.root.crashed}</Text>
       <Text style={[styles.detail, { color: theme.muted }]}>{error.message}</Text>
       <View style={styles.retry}>
-        <Button theme={theme} label="Try again" onPress={() => void retry()} />
+        <Button theme={theme} label={t.root.tryAgain} onPress={() => void retry()} />
       </View>
     </View>
   );

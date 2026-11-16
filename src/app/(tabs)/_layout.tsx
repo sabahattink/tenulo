@@ -1,17 +1,20 @@
 import { Tabs } from "expo-router/tabs";
 import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import type { Messages } from "@/i18n";
+import { useI18n } from "@/i18n/provider";
 import { Icon, type IconName } from "@/ui/icons";
 import { useTheme } from "@/ui/theme";
 
-const TABS: readonly { name: string; title: string; icon: IconName }[] = [
-  { name: "index", title: "Today", icon: "today" },
-  { name: "history", title: "History", icon: "history" },
-  { name: "settings", title: "Settings", icon: "settings" },
+const TABS: readonly { name: string; title: keyof Messages["tabs"]; icon: IconName }[] = [
+  { name: "index", title: "today", icon: "today" },
+  { name: "history", title: "history", icon: "history" },
+  { name: "settings", title: "settings", icon: "settings" },
 ];
 
 export default function TabsLayout() {
   const theme = useTheme();
+  const { t } = useI18n();
   const insets = useSafeAreaInsets();
   return (
     <View style={styles.fill}>
@@ -26,11 +29,11 @@ export default function TabsLayout() {
           tabBarHideOnKeyboard: true,
         }}
       >
-        {TABS.map((t) => (
+        {TABS.map((tab) => (
           <Tabs.Screen
-            key={t.name}
-            name={t.name}
-            options={{ title: t.title, tabBarIcon: ({ color }) => <Icon name={t.icon} color={color} size={24} /> }}
+            key={tab.name}
+            name={tab.name}
+            options={{ title: t.tabs[tab.title], tabBarIcon: ({ color }) => <Icon name={tab.icon} color={color} size={24} /> }}
           />
         ))}
       </Tabs>

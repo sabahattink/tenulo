@@ -4,13 +4,14 @@ import { ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { type SideEffectType, injectionBefore, logSideEffect, useActiveMedication } from "@/data/injections";
 import { useToday } from "@/data/use-today";
 import { SEVERITIES, SIDE_EFFECT_TYPES } from "@/domain/side-effect";
+import { useI18n } from "@/i18n/provider";
 import { DayPicker } from "@/ui/DayPicker";
-import { SEVERITY_LABELS, SIDE_EFFECT_LABELS } from "@/ui/copy";
 import { Button, Chip, Label, Segmented, useScrollEndPadding } from "@/ui/kit";
 import { radius, space, useTheme } from "@/ui/theme";
 
 export default function LogSideEffect() {
   const theme = useTheme();
+  const { t } = useI18n();
   const endPadding = useScrollEndPadding();
   const now = useToday();
   const medication = useActiveMedication();
@@ -29,50 +30,48 @@ export default function LogSideEffect() {
       await logSideEffect({ type, severity, date, injectionId, note });
       router.back();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not save");
+      setError(e instanceof Error ? e.message : t.common.couldNotSave);
       setSaving(false);
     }
   };
 
   return (
     <ScrollView style={{ backgroundColor: theme.background }} contentContainerStyle={[styles.content, { paddingBottom: endPadding }]} keyboardShouldPersistTaps="handled">
-      <Label theme={theme}>What did you notice?</Label>
+      <Label theme={theme}>{t.logSideEffect.what}</Label>
       <View style={styles.chips} accessibilityRole="radiogroup">
-        {SIDE_EFFECT_TYPES.map((t) => (
-          <Chip key={t} theme={theme} label={SIDE_EFFECT_LABELS[t]} selected={t === type} onPress={() => setType(t)} />
+        {SIDE_EFFECT_TYPES.map((kind) => (
+          <Chip key={kind} theme={theme} label={t.sideEffects[kind]} selected={kind === type} onPress={() => setType(kind)} />
         ))}
       </View>
 
-      <Label theme={theme}>How strong, for you?</Label>
+      <Label theme={theme}>{t.logSideEffect.howStrong}</Label>
       <View style={styles.segment}>
         <Segmented
           theme={theme}
-          label="How strong"
-          options={SEVERITIES.map((s) => ({ value: s, label: SEVERITY_LABELS[s] }))}
+          label={t.logSideEffect.howStrongLabel}
+          options={SEVERITIES.map((s) => ({ value: s, label: t.severity[s] }))}
           value={severity}
           onChange={setSeverity}
         />
       </View>
 
-      <Label theme={theme}>Day</Label>
+      <Label theme={theme}>{t.common.day}</Label>
       <DayPicker theme={theme} value={date} today={now} onChange={setDate} />
 
-      <Label theme={theme}>Note (optional)</Label>
+      <Label theme={theme}>{t.common.noteOptional}</Label>
       <TextInput
         value={note}
         onChangeText={setNote}
         maxLength={200}
-        placeholder="e.g. after a large meal"
+        placeholder={t.logSideEffect.notePlaceholder}
         placeholderTextColor={theme.muted}
         style={[styles.input, { color: theme.text, borderColor: theme.border, backgroundColor: theme.card }]}
       />
       {error && <Text style={{ color: theme.danger }}>{error}</Text>}
 
-      <Text style={[styles.safety, { color: theme.muted }]}>
-        If a symptom is severe or worrying, contact your doctor or local emergency services. Tenulo only keeps a record.
-      </Text>
+      <Text style={[styles.safety, { color: theme.muted }]}>{t.logSideEffect.safety}</Text>
 
-      <Button theme={theme} label={saving ? "Saving…" : "Save"} onPress={() => void save()} disabled={type === undefined || saving} />
+      <Button theme={theme} label={saving ? t.common.saving : t.common.save} onPress={() => void save()} disabled={type === undefined || saving} />
     </ScrollView>
   );
 }

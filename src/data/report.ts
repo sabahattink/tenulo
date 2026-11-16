@@ -7,6 +7,7 @@ import { injections, medications, planSteps, settings, sideEffects, weightEntrie
 import { type LocalDate, parseLocalDate, toDayNumber } from "@/domain/date";
 import { type Report, type ReportPeriod, buildReport, reportStart } from "@/domain/report";
 import { isSeverity } from "@/domain/side-effect";
+import type { I18n } from "@/i18n";
 import { reportHtml } from "@/ui/report-html";
 
 /** A4 in PostScript points (72 per inch), the page size doctors print on outside North America. */
@@ -52,14 +53,14 @@ export async function loadReport(period: ReportPeriod, to: LocalDate): Promise<R
  * Renders the report to a PDF on the device and opens the share sheet. The page is printed by
  * Android's own WebView from a self-contained HTML string; nothing is fetched.
  */
-export async function shareReportPdf(report: Report, created: LocalDate): Promise<void> {
+export async function shareReportPdf(report: Report, created: LocalDate, i18n: I18n): Promise<void> {
   const [s] = await db.select().from(settings).limit(1);
-  const html = reportHtml(report, s?.weightUnit ?? "kg", created);
+  const html = reportHtml(report, s?.weightUnit ?? "kg", created, i18n);
   const { uri } = await Print.printToFileAsync({ html, width: A4.width, height: A4.height });
   // Give the file a readable name; printToFileAsync picks a random one.
   const printed = new File(uri);
   const named = new File(Paths.cache, `tenulo-report-${report.from}-to-${report.to}.pdf`);
   if (named.exists) named.delete();
   await printed.move(named);
-  await Sharing.shareAsync(named.uri, { mimeType: "application/pdf", dialogTitle: "Share your Tenulo report" });
+  await Sharing.shareAsync(named.uri, { mimeType: "application/pdf", dialogTitle: i18n.t.report.shareTitle });
 }

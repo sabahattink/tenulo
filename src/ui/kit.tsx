@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Pressable, StyleSheet, Switch, Text, View, type ViewStyle } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useI18n } from "@/i18n/provider";
 import { Icon, type IconName } from "./icons";
 import { type Theme, radius, space, type } from "./theme";
 
@@ -55,8 +56,10 @@ export function Button({
   );
 }
 
-export function Label({ theme, children }: { theme: Theme; children: ReactNode }) {
-  return <Text style={[type.caption, { color: theme.muted }]}>{children}</Text>;
+/** A small caption, upper-cased with the active language's rules. */
+export function Label({ theme, children }: { theme: Theme; children: string }) {
+  const { f } = useI18n();
+  return <Text style={[type.caption, { color: theme.muted }]}>{f.upper(children)}</Text>;
 }
 
 /** Large page title with an optional line above it (e.g. today's date). */

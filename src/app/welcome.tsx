@@ -2,40 +2,24 @@ import { useRef, useState } from "react";
 import { Alert, Animated, type FlatList, Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { finishWelcome } from "@/data/repo";
-import { type WeightUnit, defaultWeightUnit } from "@/domain/weight";
+import { WEIGHT_UNITS, type WeightUnit, defaultWeightUnit } from "@/domain/weight";
+import type { Messages } from "@/i18n";
+import { deviceLocale } from "@/i18n/device";
+import { useI18n } from "@/i18n/provider";
 import { Illustration, type IllustrationName } from "@/ui/Illustration";
 import { Button, Label, Segmented } from "@/ui/kit";
 import { type Theme, radius, space, type, useTheme } from "@/ui/theme";
 
-type Page = { illustration: IllustrationName; title: string; body: string };
+/** Each page is named by its illustration; its words are `t.welcome.pages[name]`. */
+type Page = Extract<IllustrationName, keyof Messages["welcome"]["pages"]>;
 
-const PAGES: readonly Page[] = [
-  {
-    illustration: "trend",
-    title: "Your trend, not the noise",
-    body: "Daily weight jumps around with water and salt. Tenulo draws the calm line underneath, so you can see where you are really heading.",
-  },
-  {
-    illustration: "plan",
-    title: "Your plan, shown back to you",
-    body: "Enter the dose schedule from your prescription. Tenulo shows which week you are in and when the next injection is due. It never suggests a medication or a dose.",
-  },
-  {
-    illustration: "private",
-    title: "It stays on this phone",
-    body: "No account, no analytics, no ads. Your records leave this phone only when you export them yourself.",
-  },
-];
+const PAGES: readonly Page[] = ["trend", "plan", "private"];
 
 const LAST = PAGES.length - 1;
 
 /** The unit the phone's region most likely uses; the user still chooses. */
 function deviceUnit(): WeightUnit {
-  try {
-    return defaultWeightUnit(Intl.DateTimeFormat().resolvedOptions().locale);
-  } catch {
-    return "kg";
-  }
+  return defaultWeightUnit(deviceLocale());
 }
 
 /**
@@ -44,6 +28,7 @@ function deviceUnit(): WeightUnit {
  */
 export default function Welcome() {
   const theme = useTheme();
+  const { t } = useI18n();
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
   const [page, setPage] = useState(0);
@@ -59,7 +44,7 @@ export default function Welcome() {
     setSaving(true);
     finishWelcome(unit).catch((e: unknown) => {
       setSaving(false);
-      Alert.alert("That did not work", e instanceof Error ? e.message : "Please try again.");
+      Alert.alert(t.common.didNotWork, e instanceof Error ? e.message : t.common.tryAgain);
     });
   };
 
@@ -69,7 +54,7 @@ export default function Welcome() {
         <Text style={[styles.wordmark, { color: theme.accent }]}>Tenulo</Text>
         {page < LAST && (
           <Pressable accessibilityRole="button" onPress={() => goTo(LAST)} hitSlop={12} style={styles.skip}>
-            <Text style={[type.bodyStrong, { color: theme.muted }]}>Skip</Text>
+            <Text style={[type.bodyStrong, { color: theme.muted }]}>{t.welcome.skip}</Text>
           </Pressable>
         )}
       </View>
@@ -77,7 +62,7 @@ export default function Welcome() {
       <Animated.FlatList
         ref={scroller}
         data={PAGES}
-        keyExtractor={(p) => p.illustration}
+        keyExtractor={(p) => p}
         horizontal
         pagingEnabled
         bounces={false}
@@ -90,7 +75,11 @@ export default function Welcome() {
         })}
         scrollEventThrottle={16}
         renderItem={({ item, index }) => (
-          <View style={[styles.page, { width }]} accessible accessibilityLabel={`${item.title}. ${item.body}`}>
+          <View
+            style={[styles.page, { width }]}
+            accessible
+            accessibilityLabel={`${t.welcome.pages[item].title}. ${t.welcome.pages[item].body}`}
+          >
             <Animated.View
               style={{
                 transform: [
@@ -105,11 +94,11 @@ export default function Welcome() {
                 ],
               }}
             >
-              <Illustration name={item.illustration} theme={theme} size={art} />
+              <Illustration name={item} theme={theme} size={art} />
             </Animated.View>
             <View style={styles.copy}>
-              <Text style={[type.title, styles.center, { color: theme.text }]}>{item.title}</Text>
-              <Text style={[type.body, styles.center, { color: theme.muted }]}>{item.body}</Text>
+              <Text style={[type.title, styles.center, { color: theme.text }]}>{t.welcome.pages[item].title}</Text>
+              <Text style={[type.body, styles.center, { color: theme.muted }]}>{t.welcome.pages[item].body}</Text>
             </View>
           </View>
         )}
@@ -119,27 +108,24 @@ export default function Welcome() {
         <Dots theme={theme} scrollX={scrollX} width={width} />
         {page === LAST && (
           <View style={styles.unit}>
-            <Label theme={theme}>I weigh myself in</Label>
+            <Label theme={theme}>{t.welcome.unit}</Label>
             <Segmented
               theme={theme}
-              label="Weight unit"
+              label={t.settings.weightUnit}
               value={unit}
               onChange={setUnit}
-              options={[
-                { value: "kg", label: "Kilograms" },
-                { value: "lb", label: "Pounds" },
-              ]}
+              options={WEIGHT_UNITS.map((u) => ({ value: u, label: t.settings.units[u] }))}
             />
           </View>
         )}
         <Button
           theme={theme}
-          label={page < LAST ? "Next" : "Start my log"}
+          label={page < LAST ? t.welcome.next : t.welcome.start}
           disabled={saving}
           onPress={() => (page < LAST ? goTo(page + 1) : start())}
         />
         {page === LAST && (
-          <Text style={[type.small, styles.center, { color: theme.muted }]}>A personal log for adults. Not medical advice.</Text>
+          <Text style={[type.small, styles.center, { color: theme.muted }]}>{t.welcome.footer}</Text>
         )}
       </View>
     </View>
@@ -153,7 +139,7 @@ function Dots({ theme, scrollX, width }: { theme: Theme; scrollX: Animated.Value
         const inputRange = [(i - 1) * width, i * width, (i + 1) * width];
         return (
           <Animated.View
-            key={p.illustration}
+            key={p}
             style={[
               styles.dot,
               {

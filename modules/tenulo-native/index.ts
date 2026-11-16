@@ -9,6 +9,8 @@ declare class TenuloRemindersModule extends NativeModule {
   requestPermission(): Promise<boolean>;
   scheduleAt(id: string, title: string, body: string, atMs: number): void;
   scheduleDaily(id: string, title: string, body: string, minute: number): void;
+  /** The channel's name and description and the locked-screen title, in the user's language. */
+  setTexts(channelName: string, channelDescription: string, lockedTitle: string): void;
   cancel(id: string): void;
   cancelAll(): void;
   scheduledIds(): string[];
