@@ -13,6 +13,10 @@ Everything in code is done; these steps need the Play Console account owner.
 - The privacy policy the app links to (`PRIVACY_POLICY_URL` in `src/ui/copy.ts`) is live and
   names Kalkan Software: `curl -sL -o /dev/null -w "%{http_code}" https://kalkansoftware.com/tenulo/privacy/`
   prints `200`. Its source is the kalkansoftware.com site repo; change it there first, then here.
+- The policy describes everything the app stores, in Turkish and English: weigh-ins, injections,
+  plan, side effects, and the daily log (food entries and the user's own foods, water,
+  body measurements, exercise, daily goals, language). All of it stays on the phone; nothing about
+  Health Connect changes (Weight, read-only).
 
 ## 1. Build
 
@@ -73,13 +77,15 @@ Answers that match the code (re-check against Google's current definitions befor
 
 ## 5. Store listing
 
-- Text: `docs/store/listing.md`.
+- Text: `docs/store/listing.md`, Turkish (default listing language) and English.
 - Graphics: `docs/store/icon-512.png`, `docs/store/feature-graphic.png` (regenerate with
   `python scripts/brand.py <Roboto.ttf>`).
-- Screenshots: `docs/store/screenshots/01-trend.png` … `05-private.png` (1080 × 1920). To redo
-  them: release build with the sample backup restored (never real data), Android's demo-mode
-  status bar, raw captures into `docs/store/screenshots/raw/`, then
-  `python scripts/store_screens.py <Roboto.ttf>`.
+- Screenshots: the five screens and captions in `docs/store/listing.md` (1080 × 1920), once with
+  the phone in Turkish and once in English. To redo them: release build with the sample backup
+  restored (never real data), Android's demo-mode status bar, raw captures into
+  `docs/store/screenshots/raw/`, then `python scripts/store_screens.py <Roboto.ttf>`.
+- The release changes native code (the reminder module sets notification texts per language), so
+  a store build must come from a fresh `eas build`, not an OTA update.
 - Content rating questionnaire: medical/health reference, no user-generated content shared.
 - Target audience: 18+ (matches the privacy policy).
 

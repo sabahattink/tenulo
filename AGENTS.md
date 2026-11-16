@@ -58,16 +58,26 @@ Tenulo is a local-first GLP-1 and weight log for Android (`com.kalkansoftware.te
 - Tenulo logs what the user enters. It never recommends a medication, dose, dose change or injection site.
 - The dose schedule is the user's own plan, shown back to them (`planPosition`), never generated.
 - No drug brand names in code, presets, strings or store assets. Medication name is free text.
+- Daily goals (energy, protein, water) are the user's own numbers. Tenulo never computes, suggests or judges a target, a meal or an amount of exercise. Exercise energy that Tenulo estimates is always marked as an estimate and never stored.
+- No food brand names either: the food list is generic foods only.
 
 ### Data rules
 
-- Weight is integer grams, dose integer micrograms. No floats in the database.
+- Weight is integer grams, dose integer micrograms, energy integer kcal, nutrients integer milligrams, water integer millilitres, lengths integer millimetres, amounts integer thousandths. No floats in the database.
 - Dates are local `YYYY-MM-DD` (`LocalDate`); instants are UTC epoch ms. Day arithmetic goes through `src/domain/date.ts`.
-- Schema changes: edit `src/db/schema.ts`, run `pnpm db:generate`, commit the generated migration. Never edit a generated migration after it has shipped.
+- Schema changes: edit `src/db/schema.ts`, run `pnpm db:generate`, commit the generated migration. Never edit a generated migration after it has shipped. drizzle-kit rebuilds a table to add a CHECK; when a migration both adds columns and rebuilds, generate it in two steps (see 0004/0005 and the header of `schema.ts`).
+- Every new table goes into `ALL_TABLES_DELETE_ORDER` (Delete all data) and into the backup file (`src/domain/backup.ts`, bump `BACKUP_VERSION`, keep older versions readable).
+- Food values come only from `scripts/foods/` (USDA SR Legacy extract + recipes, ADR 0005). Never type a nutrient value in from memory; edit `scripts/foods/foods.json` and run `python scripts/foods/build_foods.py`.
+
+### Languages
+
+- Every user-visible string is in Turkish and English: `src/i18n/en.ts` defines the shape, `tr.ts` must satisfy it. Screens use `useI18n()` (`{ lang, t, f }`); numbers and dates go through `f`, never `toFixed` or `toLocale*`.
+- Use `f.upper`, not `textTransform: "uppercase"` (Android upper-cases in the phone's locale).
 
 ### Code layout
 
-- `src/domain/` is pure TypeScript with no React Native imports, and every function there has unit tests.
+- `src/domain/` is pure TypeScript with no React Native imports, and every function there has unit tests. `src/domain/foods/` holds the bundled food list (generated) and its search.
+- `src/i18n/` holds the Turkish and English dictionaries and formatters.
 - `src/db/` holds the Drizzle schema, client and migration tests (run against real SQLite via `node:sqlite`).
 - `src/app/` holds Expo Router screens only.
 - `src/platform/` wraps native code (reminders, billing, Health Connect) behind small typed adapters.
