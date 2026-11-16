@@ -8,15 +8,33 @@
  */
 import { z } from "zod";
 import { type LocalDate, isLocalDate } from "./date";
+import { EXERCISE_KINDS, INTENSITIES, MAX_DURATION_MIN, MAX_EXERCISE_KCAL } from "./exercise";
+import {
+  MAX_ENTRY_KCAL,
+  MAX_NUTRIENT_MG,
+  MAX_QUANTITY_MILLI,
+  MAX_SERVING_KCAL,
+  MAX_SERVING_NUTRIENT_G,
+  MEALS,
+  MIN_QUANTITY_MILLI,
+} from "./food-log";
+import { ENERGY_GOAL_KCAL, PROTEIN_GOAL_G, WATER_GOAL_ML, WATER_SERVING_ML } from "./goals";
 import { ULID_PATTERN } from "./id";
 import { INJECTION_SITES } from "./injection";
+import { LANGUAGE_PREFERENCES } from "./language";
+import { MAX_LENGTH_MM, MEASUREMENT_SITES, MIN_LENGTH_MM } from "./measurement";
 import { MAX_DOSE_MCG, MIN_DOSE_MCG } from "./parse";
 import { SIDE_EFFECT_TYPES } from "./side-effect";
+import { MAX_WATER_ENTRY_ML } from "./water";
 import { MAX_WEIGHT_G, MIN_WEIGHT_G, WEIGHT_SOURCES, WEIGHT_UNITS } from "./weight";
 
 export const BACKUP_FORMAT = "tenulo-backup";
-/** Bump when the shape changes; older versions must stay readable. */
-export const BACKUP_VERSION = 1;
+/**
+ * Bump when the shape changes; older versions must stay readable.
+ * 1: Tenulo 1.0. 2: adds the daily log (food, custom foods, water, measurements, exercise), the
+ * language and the daily goals; a version 1 file reads as one with none of them.
+ */
+export const BACKUP_VERSION = 2;
 
 /**
  * Far above any real backup (ten years of daily records is about 1.5 MB). A file bigger than this
@@ -40,6 +58,10 @@ const minuteOfDay = z.number().int().min(0).max(MINUTES_PER_DAY - 1);
 const dose = z.number().int().min(MIN_DOSE_MCG).max(MAX_DOSE_MCG);
 const timestamps = { createdAt: instant, updatedAt: instant };
 
+const wholeIn = (r: { min: number; max: number }) => z.number().int().min(r.min).max(r.max);
+/** Integer milligrams of one nutrient, or null when unknown. */
+const nutrientMg = (max: number) => z.number().int().min(0).max(max).nullable();
+
 const settingsSchema = z.object({
   weightUnit: z.enum(WEIGHT_UNITS),
   goalWeightG: z.number().int().min(MIN_WEIGHT_G).max(MAX_WEIGHT_G).nullable(),
@@ -47,6 +69,12 @@ const settingsSchema = z.object({
   injectionReminderMinute: minuteOfDay,
   weighInReminderEnabled: z.boolean(),
   weighInReminderMinute: minuteOfDay,
+  // Version 2; the defaults are what a version 1 file means.
+  language: z.enum(LANGUAGE_PREFERENCES).default("system"),
+  energyGoalKcal: wholeIn(ENERGY_GOAL_KCAL).nullable().default(null),
+  proteinGoalG: wholeIn(PROTEIN_GOAL_G).nullable().default(null),
+  waterGoalMl: wholeIn(WATER_GOAL_ML).nullable().default(null),
+  waterServingMl: wholeIn(WATER_SERVING_ML).default(WATER_SERVING_ML.default),
 });
 
 const weightSchema = z
@@ -101,6 +129,78 @@ const sideEffectSchema = z.object({
   ...timestamps,
 });
 
+const trimmedLength = (min: number, max: number) =>
+  z.string().refine((s) => s.trim().length >= min && s.trim().length <= max, `Must be ${min}-${max} characters`);
+
+const customFoodSchema = z.object({
+  id,
+  name: trimmedLength(1, 60),
+  servingLabel: trimmedLength(1, 40),
+  servingGrams: z.number().int().min(1).max(5000).nullable(),
+  energyKcal: z.number().int().min(0).max(MAX_SERVING_KCAL),
+  proteinMg: nutrientMg(MAX_SERVING_NUTRIENT_G * 1000),
+  carbMg: nutrientMg(MAX_SERVING_NUTRIENT_G * 1000),
+  fatMg: nutrientMg(MAX_SERVING_NUTRIENT_G * 1000),
+  fiberMg: nutrientMg(MAX_SERVING_NUTRIENT_G * 1000),
+  ...timestamps,
+});
+
+/** Ids in the bundled food list: lowercase kebab-case. */
+export const CATALOG_FOOD_ID = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+
+const foodEntrySchema = z
+  .object({
+    id,
+    localDate,
+    loggedAt: instant,
+    meal: z.enum(MEALS),
+    catalogFoodId: z.string().max(80).regex(CATALOG_FOOD_ID, "Not a food list id").nullable(),
+    customFoodId: id.nullable(),
+    name: trimmedLength(1, 80),
+    portionLabel: trimmedLength(1, 40),
+    quantityMilli: z.number().int().min(MIN_QUANTITY_MILLI).max(MAX_QUANTITY_MILLI),
+    grams: z.number().int().min(0).max(100_000).nullable(),
+    energyKcal: z.number().int().min(0).max(MAX_ENTRY_KCAL),
+    proteinMg: nutrientMg(MAX_NUTRIENT_MG),
+    carbMg: nutrientMg(MAX_NUTRIENT_MG),
+    fatMg: nutrientMg(MAX_NUTRIENT_MG),
+    fiberMg: nutrientMg(MAX_NUTRIENT_MG),
+    ...timestamps,
+  })
+  .refine((f) => f.catalogFoodId === null || f.customFoodId === null, {
+    message: "A food comes from the food list or from the user's own foods, not both",
+  });
+
+const waterEntrySchema = z.object({
+  id,
+  localDate,
+  loggedAt: instant,
+  amountMl: z.number().int().min(1).max(MAX_WATER_ENTRY_ML),
+  ...timestamps,
+});
+
+const measurementSchema = z.object({
+  id,
+  localDate,
+  measuredAt: instant,
+  site: z.enum(MEASUREMENT_SITES),
+  lengthMm: z.number().int().min(MIN_LENGTH_MM).max(MAX_LENGTH_MM),
+  note,
+  ...timestamps,
+});
+
+const exerciseSchema = z.object({
+  id,
+  localDate,
+  loggedAt: instant,
+  kind: z.enum(EXERCISE_KINDS),
+  durationMin: z.number().int().min(1).max(MAX_DURATION_MIN),
+  intensity: z.enum(INTENSITIES),
+  energyKcal: z.number().int().min(0).max(MAX_EXERCISE_KCAL).nullable(),
+  note,
+  ...timestamps,
+});
+
 const dataSchema = z
   .object({
     settings: settingsSchema.nullable(),
@@ -109,9 +209,26 @@ const dataSchema = z
     planSteps: z.array(planStepSchema),
     injections: z.array(injectionSchema),
     sideEffects: z.array(sideEffectSchema),
+    // Version 2; a version 1 file has none.
+    customFoods: z.array(customFoodSchema).default([]),
+    foodEntries: z.array(foodEntrySchema).default([]),
+    waterEntries: z.array(waterEntrySchema).default([]),
+    measurements: z.array(measurementSchema).default([]),
+    exercises: z.array(exerciseSchema).default([]),
   })
   .superRefine((d, ctx) => {
-    const tables = [d.weights, d.medications, d.planSteps, d.injections, d.sideEffects] as const;
+    const tables = [
+      d.weights,
+      d.medications,
+      d.planSteps,
+      d.injections,
+      d.sideEffects,
+      d.customFoods,
+      d.foodEntries,
+      d.waterEntries,
+      d.measurements,
+      d.exercises,
+    ] as const;
     for (const rows of tables) {
       if (new Set(rows.map((r) => r.id)).size !== rows.length) {
         ctx.addIssue({ code: "custom", message: "Duplicate id in backup" });
@@ -128,11 +245,15 @@ const dataSchema = z
     if (d.sideEffects.some((e) => e.injectionId !== null && !injectionIds.has(e.injectionId))) {
       ctx.addIssue({ code: "custom", message: "Side effect linked to an injection not in the backup" });
     }
+    const customFoodIds = new Set(d.customFoods.map((f) => f.id));
+    if (d.foodEntries.some((f) => f.customFoodId !== null && !customFoodIds.has(f.customFoodId))) {
+      ctx.addIssue({ code: "custom", message: "Food entry for a custom food not in the backup" });
+    }
   });
 
 const backupSchema = z.object({
   format: z.literal(BACKUP_FORMAT),
-  version: z.literal(BACKUP_VERSION),
+  version: z.union([z.literal(1), z.literal(BACKUP_VERSION)]),
   exportedAt: instant,
   appVersion: z.string().max(40),
   data: dataSchema,

@@ -14,7 +14,19 @@ import type { LocalDate } from "../domain/date";
 import type { ImportedWeight } from "../domain/health-connect";
 import { ulid } from "../domain/id";
 import type * as schema from "./schema";
-import { injections, medications, planSteps, settings, sideEffects, weightEntries } from "./schema";
+import {
+  customFoods,
+  exerciseEntries,
+  foodEntries,
+  injections,
+  measurementEntries,
+  medications,
+  planSteps,
+  settings,
+  sideEffects,
+  waterEntries,
+  weightEntries,
+} from "./schema";
 import { ALL_TABLES_DELETE_ORDER } from "./tables";
 
 export type SyncDb = ExpoSQLiteDatabase<typeof schema>;
@@ -104,12 +116,22 @@ export function readBackupData(database: SyncDb): BackupData {
               injectionReminderMinute: s.injectionReminderMinute,
               weighInReminderEnabled: s.weighInReminderEnabled,
               weighInReminderMinute: s.weighInReminderMinute,
+              language: s.language,
+              energyGoalKcal: s.energyGoalKcal,
+              proteinGoalG: s.proteinGoalG,
+              waterGoalMl: s.waterGoalMl,
+              waterServingMl: s.waterServingMl,
             },
       weights: tx.select().from(weightEntries).all(),
       medications: tx.select().from(medications).all(),
       planSteps: tx.select().from(planSteps).all(),
       injections: tx.select().from(injections).all(),
       sideEffects: tx.select().from(sideEffects).all(),
+      customFoods: tx.select().from(customFoods).all(),
+      foodEntries: tx.select().from(foodEntries).all(),
+      waterEntries: tx.select().from(waterEntries).all(),
+      measurements: tx.select().from(measurementEntries).all(),
+      exercises: tx.select().from(exerciseEntries).all(),
     } as BackupData;
   });
 }
@@ -122,6 +144,17 @@ export interface RestoreSummary {
   readonly planSteps: number;
   /** Medications added as inactive so that the phone keeps one current medication. */
   readonly inactiveMedications: number;
+  readonly customFoods: number;
+  readonly foodEntries: number;
+  readonly waterEntries: number;
+  readonly measurements: number;
+  readonly exercises: number;
+}
+
+/** Whether the phone holds any record of its own, so a restore must not replace its settings. */
+function hasRecords(tx: Pick<SyncDb, "select">): boolean {
+  const tables = [weightEntries, medications, foodEntries, customFoods, waterEntries, measurementEntries, exerciseEntries];
+  return tables.some((table) => tx.select({ id: table.id }).from(table).limit(1).all().length > 0);
 }
 
 /**
@@ -141,16 +174,15 @@ function oldestActive(meds: BackupData["medications"]): string | undefined {
 
 /**
  * Adds every record from a validated backup that is not on the phone yet. Nothing on the phone is
- * changed or removed: a row whose id (or Health Connect id, or plan date) exists is skipped. Unit
- * and goal come from the backup only on a phone with no records yet. The phone keeps exactly one
+ * changed or removed: a row whose id (or Health Connect id, or plan date) exists is skipped. Unit,
+ * goals and language come from the backup only on a phone with no records yet. Custom foods go in
+ * before the food entries that point at them. The phone keeps exactly one
  * current medication: its own if it has one, otherwise the backup's oldest active one; every other
  * active medication in the backup is added as inactive (its injections still show in History).
  */
 export function restoreData(database: SyncDb, data: BackupData, now: number): RestoreSummary {
   return database.transaction((tx) => {
-    const hadRecords =
-      tx.select({ id: weightEntries.id }).from(weightEntries).limit(1).all().length > 0 ||
-      tx.select({ id: medications.id }).from(medications).limit(1).all().length > 0;
+    const hadRecords = hasRecords(tx);
     const activeIds = new Set(
       tx.select({ id: medications.id }).from(medications).where(eq(medications.active, true)).all().map((m) => m.id),
     );
@@ -179,10 +211,35 @@ export function restoreData(database: SyncDb, data: BackupData, now: number): Re
     const weightsAdded = insertAll(data.weights, (c) =>
       tx.insert(weightEntries).values(c).onConflictDoNothing().returning({ id: weightEntries.id }).all(),
     ).length;
+    const customFoodsAdded = insertAll(data.customFoods, (c) =>
+      tx.insert(customFoods).values(c).onConflictDoNothing().returning({ id: customFoods.id }).all(),
+    ).length;
+    const foodEntriesAdded = insertAll(data.foodEntries, (c) =>
+      tx.insert(foodEntries).values(c).onConflictDoNothing().returning({ id: foodEntries.id }).all(),
+    ).length;
+    const waterAdded = insertAll(data.waterEntries, (c) =>
+      tx.insert(waterEntries).values(c).onConflictDoNothing().returning({ id: waterEntries.id }).all(),
+    ).length;
+    const measurementsAdded = insertAll(data.measurements, (c) =>
+      tx.insert(measurementEntries).values(c).onConflictDoNothing().returning({ id: measurementEntries.id }).all(),
+    ).length;
+    const exercisesAdded = insertAll(data.exercises, (c) =>
+      tx.insert(exerciseEntries).values(c).onConflictDoNothing().returning({ id: exerciseEntries.id }).all(),
+    ).length;
 
     if (!hadRecords && data.settings !== null) {
+      const s = data.settings;
       tx.update(settings)
-        .set({ weightUnit: data.settings.weightUnit, goalWeightG: data.settings.goalWeightG, updatedAt: now })
+        .set({
+          weightUnit: s.weightUnit,
+          goalWeightG: s.goalWeightG,
+          language: s.language,
+          energyGoalKcal: s.energyGoalKcal,
+          proteinGoalG: s.proteinGoalG,
+          waterGoalMl: s.waterGoalMl,
+          waterServingMl: s.waterServingMl,
+          updatedAt: now,
+        })
         .where(eq(settings.id, 1))
         .run();
     }
@@ -193,6 +250,11 @@ export function restoreData(database: SyncDb, data: BackupData, now: number): Re
       medications: medicationsAdded.length,
       planSteps: planStepsAdded,
       inactiveMedications: medicationsAdded.filter((id) => demoted.has(id)).length,
+      customFoods: customFoodsAdded,
+      foodEntries: foodEntriesAdded,
+      waterEntries: waterAdded,
+      measurements: measurementsAdded,
+      exercises: exercisesAdded,
     };
   });
 }

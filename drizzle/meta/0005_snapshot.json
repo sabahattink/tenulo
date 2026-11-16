@@ -1,0 +1,1201 @@
+{
+  "version": "6",
+  "dialect": "sqlite",
+  "id": "8e4253cf-e61f-4893-bc1e-04f345d2158a",
+  "prevId": "1511fa30-f498-455b-b237-95eabd795853",
+  "tables": {
+    "custom_food": {
+      "name": "custom_food",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "serving_label": {
+          "name": "serving_label",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "serving_grams": {
+          "name": "serving_grams",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "energy_kcal": {
+          "name": "energy_kcal",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "protein_mg": {
+          "name": "protein_mg",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "carb_mg": {
+          "name": "carb_mg",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "fat_mg": {
+          "name": "fat_mg",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "fiber_mg": {
+          "name": "fiber_mg",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "custom_food_name": {
+          "name": "custom_food_name",
+          "value": "length(trim(\"custom_food\".\"name\")) BETWEEN 1 AND 60"
+        },
+        "custom_food_serving_label": {
+          "name": "custom_food_serving_label",
+          "value": "length(trim(\"custom_food\".\"serving_label\")) BETWEEN 1 AND 40"
+        },
+        "custom_food_serving_grams": {
+          "name": "custom_food_serving_grams",
+          "value": "\"custom_food\".\"serving_grams\" IS NULL OR \"custom_food\".\"serving_grams\" BETWEEN 1 AND 5000"
+        },
+        "custom_food_energy": {
+          "name": "custom_food_energy",
+          "value": "\"custom_food\".\"energy_kcal\" BETWEEN 0 AND 5000"
+        },
+        "custom_food_nutrients": {
+          "name": "custom_food_nutrients",
+          "value": "coalesce(\"custom_food\".\"protein_mg\", 0) BETWEEN 0 AND 2000000 AND coalesce(\"custom_food\".\"carb_mg\", 0) BETWEEN 0 AND 2000000 AND coalesce(\"custom_food\".\"fat_mg\", 0) BETWEEN 0 AND 2000000 AND coalesce(\"custom_food\".\"fiber_mg\", 0) BETWEEN 0 AND 2000000"
+        }
+      }
+    },
+    "exercise_entry": {
+      "name": "exercise_entry",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "local_date": {
+          "name": "local_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "logged_at": {
+          "name": "logged_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "kind": {
+          "name": "kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "duration_min": {
+          "name": "duration_min",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "intensity": {
+          "name": "intensity",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "energy_kcal": {
+          "name": "energy_kcal",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "note": {
+          "name": "note",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "exercise_entry_local_date": {
+          "name": "exercise_entry_local_date",
+          "columns": [
+            "local_date"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "exercise_entry_local_date": {
+          "name": "exercise_entry_local_date",
+          "value": "\"exercise_entry\".\"local_date\" GLOB '[0-9][0-9][0-9][0-9]-[0-1][0-9]-[0-3][0-9]'"
+        },
+        "exercise_entry_kind": {
+          "name": "exercise_entry_kind",
+          "value": "\"exercise_entry\".\"kind\" IN ('walking', 'running', 'cycling', 'swimming', 'strength', 'yoga', 'sports', 'other')"
+        },
+        "exercise_entry_intensity": {
+          "name": "exercise_entry_intensity",
+          "value": "\"exercise_entry\".\"intensity\" IN ('light', 'moderate', 'vigorous')"
+        },
+        "exercise_entry_duration": {
+          "name": "exercise_entry_duration",
+          "value": "\"exercise_entry\".\"duration_min\" BETWEEN 1 AND 1440"
+        },
+        "exercise_entry_energy": {
+          "name": "exercise_entry_energy",
+          "value": "\"exercise_entry\".\"energy_kcal\" IS NULL OR \"exercise_entry\".\"energy_kcal\" BETWEEN 0 AND 10000"
+        }
+      }
+    },
+    "food_entry": {
+      "name": "food_entry",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "local_date": {
+          "name": "local_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "logged_at": {
+          "name": "logged_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "meal": {
+          "name": "meal",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "catalog_food_id": {
+          "name": "catalog_food_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "custom_food_id": {
+          "name": "custom_food_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "portion_label": {
+          "name": "portion_label",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "quantity_milli": {
+          "name": "quantity_milli",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "grams": {
+          "name": "grams",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "energy_kcal": {
+          "name": "energy_kcal",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "protein_mg": {
+          "name": "protein_mg",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "carb_mg": {
+          "name": "carb_mg",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "fat_mg": {
+          "name": "fat_mg",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "fiber_mg": {
+          "name": "fiber_mg",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "food_entry_local_date": {
+          "name": "food_entry_local_date",
+          "columns": [
+            "local_date"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "food_entry_custom_food_id_custom_food_id_fk": {
+          "name": "food_entry_custom_food_id_custom_food_id_fk",
+          "tableFrom": "food_entry",
+          "tableTo": "custom_food",
+          "columnsFrom": [
+            "custom_food_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "food_entry_local_date": {
+          "name": "food_entry_local_date",
+          "value": "\"food_entry\".\"local_date\" GLOB '[0-9][0-9][0-9][0-9]-[0-1][0-9]-[0-3][0-9]'"
+        },
+        "food_entry_meal": {
+          "name": "food_entry_meal",
+          "value": "\"food_entry\".\"meal\" IN ('breakfast', 'lunch', 'dinner', 'snack')"
+        },
+        "food_entry_one_source": {
+          "name": "food_entry_one_source",
+          "value": "\"food_entry\".\"catalog_food_id\" IS NULL OR \"food_entry\".\"custom_food_id\" IS NULL"
+        },
+        "food_entry_name": {
+          "name": "food_entry_name",
+          "value": "length(trim(\"food_entry\".\"name\")) BETWEEN 1 AND 80"
+        },
+        "food_entry_portion": {
+          "name": "food_entry_portion",
+          "value": "length(trim(\"food_entry\".\"portion_label\")) BETWEEN 1 AND 40"
+        },
+        "food_entry_quantity": {
+          "name": "food_entry_quantity",
+          "value": "\"food_entry\".\"quantity_milli\" BETWEEN 1 AND 100000000"
+        },
+        "food_entry_grams": {
+          "name": "food_entry_grams",
+          "value": "\"food_entry\".\"grams\" IS NULL OR \"food_entry\".\"grams\" BETWEEN 0 AND 100000"
+        },
+        "food_entry_energy": {
+          "name": "food_entry_energy",
+          "value": "\"food_entry\".\"energy_kcal\" BETWEEN 0 AND 10000"
+        },
+        "food_entry_nutrients": {
+          "name": "food_entry_nutrients",
+          "value": "coalesce(\"food_entry\".\"protein_mg\", 0) BETWEEN 0 AND 2000000 AND coalesce(\"food_entry\".\"carb_mg\", 0) BETWEEN 0 AND 2000000 AND coalesce(\"food_entry\".\"fat_mg\", 0) BETWEEN 0 AND 2000000 AND coalesce(\"food_entry\".\"fiber_mg\", 0) BETWEEN 0 AND 2000000"
+        }
+      }
+    },
+    "injection": {
+      "name": "injection",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "medication_id": {
+          "name": "medication_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "taken_at": {
+          "name": "taken_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "local_date": {
+          "name": "local_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "dose_mcg": {
+          "name": "dose_mcg",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "site": {
+          "name": "site",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "note": {
+          "name": "note",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "injection_medication_date": {
+          "name": "injection_medication_date",
+          "columns": [
+            "medication_id",
+            "local_date"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "injection_medication_id_medication_id_fk": {
+          "name": "injection_medication_id_medication_id_fk",
+          "tableFrom": "injection",
+          "tableTo": "medication",
+          "columnsFrom": [
+            "medication_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "injection_dose": {
+          "name": "injection_dose",
+          "value": "\"injection\".\"dose_mcg\" > 0"
+        },
+        "injection_site": {
+          "name": "injection_site",
+          "value": "\"injection\".\"site\" IS NULL OR \"injection\".\"site\" IN ('abdomen-left', 'abdomen-right', 'thigh-left', 'thigh-right', 'arm-left', 'arm-right')"
+        }
+      }
+    },
+    "measurement_entry": {
+      "name": "measurement_entry",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "local_date": {
+          "name": "local_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "measured_at": {
+          "name": "measured_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "site": {
+          "name": "site",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "length_mm": {
+          "name": "length_mm",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "note": {
+          "name": "note",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "measurement_entry_site_date": {
+          "name": "measurement_entry_site_date",
+          "columns": [
+            "site",
+            "local_date"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "measurement_entry_local_date": {
+          "name": "measurement_entry_local_date",
+          "value": "\"measurement_entry\".\"local_date\" GLOB '[0-9][0-9][0-9][0-9]-[0-1][0-9]-[0-3][0-9]'"
+        },
+        "measurement_entry_site": {
+          "name": "measurement_entry_site",
+          "value": "\"measurement_entry\".\"site\" IN ('waist', 'hip', 'chest', 'neck', 'arm', 'thigh')"
+        },
+        "measurement_entry_length": {
+          "name": "measurement_entry_length",
+          "value": "\"measurement_entry\".\"length_mm\" BETWEEN 100 AND 3000"
+        }
+      }
+    },
+    "medication": {
+      "name": "medication",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "active": {
+          "name": "active",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "medication_name": {
+          "name": "medication_name",
+          "value": "length(trim(\"medication\".\"name\")) BETWEEN 1 AND 60"
+        }
+      }
+    },
+    "plan_step": {
+      "name": "plan_step",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "medication_id": {
+          "name": "medication_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "start_date": {
+          "name": "start_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "dose_mcg": {
+          "name": "dose_mcg",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "interval_days": {
+          "name": "interval_days",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 7
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "plan_step_medication_start": {
+          "name": "plan_step_medication_start",
+          "columns": [
+            "medication_id",
+            "start_date"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "plan_step_medication_id_medication_id_fk": {
+          "name": "plan_step_medication_id_medication_id_fk",
+          "tableFrom": "plan_step",
+          "tableTo": "medication",
+          "columnsFrom": [
+            "medication_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "plan_step_dose": {
+          "name": "plan_step_dose",
+          "value": "\"plan_step\".\"dose_mcg\" > 0"
+        },
+        "plan_step_interval": {
+          "name": "plan_step_interval",
+          "value": "\"plan_step\".\"interval_days\" BETWEEN 1 AND 90"
+        }
+      }
+    },
+    "settings": {
+      "name": "settings",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "weight_unit": {
+          "name": "weight_unit",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'kg'"
+        },
+        "goal_weight_g": {
+          "name": "goal_weight_g",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "injection_reminder_enabled": {
+          "name": "injection_reminder_enabled",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "injection_reminder_minute": {
+          "name": "injection_reminder_minute",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 540
+        },
+        "weigh_in_reminder_enabled": {
+          "name": "weigh_in_reminder_enabled",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "weigh_in_reminder_minute": {
+          "name": "weigh_in_reminder_minute",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 450
+        },
+        "health_connect_enabled": {
+          "name": "health_connect_enabled",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "health_connect_synced_at": {
+          "name": "health_connect_synced_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "welcomed_at": {
+          "name": "welcomed_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "language": {
+          "name": "language",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'system'"
+        },
+        "energy_goal_kcal": {
+          "name": "energy_goal_kcal",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "protein_goal_g": {
+          "name": "protein_goal_g",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "water_goal_ml": {
+          "name": "water_goal_ml",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "water_serving_ml": {
+          "name": "water_serving_ml",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 250
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "settings_singleton": {
+          "name": "settings_singleton",
+          "value": "\"settings\".\"id\" = 1"
+        },
+        "settings_weight_unit": {
+          "name": "settings_weight_unit",
+          "value": "\"settings\".\"weight_unit\" IN ('kg', 'lb')"
+        },
+        "settings_goal_range": {
+          "name": "settings_goal_range",
+          "value": "\"settings\".\"goal_weight_g\" IS NULL OR \"settings\".\"goal_weight_g\" BETWEEN 20000 AND 400000"
+        },
+        "settings_injection_minute": {
+          "name": "settings_injection_minute",
+          "value": "\"settings\".\"injection_reminder_minute\" BETWEEN 0 AND 1439"
+        },
+        "settings_weigh_in_minute": {
+          "name": "settings_weigh_in_minute",
+          "value": "\"settings\".\"weigh_in_reminder_minute\" BETWEEN 0 AND 1439"
+        },
+        "settings_language": {
+          "name": "settings_language",
+          "value": "\"settings\".\"language\" IN ('system', 'tr', 'en')"
+        },
+        "settings_energy_goal": {
+          "name": "settings_energy_goal",
+          "value": "\"settings\".\"energy_goal_kcal\" IS NULL OR \"settings\".\"energy_goal_kcal\" BETWEEN 500 AND 6000"
+        },
+        "settings_protein_goal": {
+          "name": "settings_protein_goal",
+          "value": "\"settings\".\"protein_goal_g\" IS NULL OR \"settings\".\"protein_goal_g\" BETWEEN 10 AND 400"
+        },
+        "settings_water_goal": {
+          "name": "settings_water_goal",
+          "value": "\"settings\".\"water_goal_ml\" IS NULL OR \"settings\".\"water_goal_ml\" BETWEEN 250 AND 10000"
+        },
+        "settings_water_serving": {
+          "name": "settings_water_serving",
+          "value": "\"settings\".\"water_serving_ml\" BETWEEN 50 AND 2000"
+        }
+      }
+    },
+    "side_effect": {
+      "name": "side_effect",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "local_date": {
+          "name": "local_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "type": {
+          "name": "type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "severity": {
+          "name": "severity",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "injection_id": {
+          "name": "injection_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "note": {
+          "name": "note",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "side_effect_local_date": {
+          "name": "side_effect_local_date",
+          "columns": [
+            "local_date"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "side_effect_injection_id_injection_id_fk": {
+          "name": "side_effect_injection_id_injection_id_fk",
+          "tableFrom": "side_effect",
+          "tableTo": "injection",
+          "columnsFrom": [
+            "injection_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "side_effect_severity": {
+          "name": "side_effect_severity",
+          "value": "\"side_effect\".\"severity\" BETWEEN 1 AND 3"
+        },
+        "side_effect_type": {
+          "name": "side_effect_type",
+          "value": "\"side_effect\".\"type\" IN ('nausea', 'vomiting', 'constipation', 'diarrhea', 'heartburn', 'fatigue', 'headache', 'injection-site', 'other')"
+        }
+      }
+    },
+    "water_entry": {
+      "name": "water_entry",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "local_date": {
+          "name": "local_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "logged_at": {
+          "name": "logged_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "amount_ml": {
+          "name": "amount_ml",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "water_entry_local_date": {
+          "name": "water_entry_local_date",
+          "columns": [
+            "local_date"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "water_entry_local_date": {
+          "name": "water_entry_local_date",
+          "value": "\"water_entry\".\"local_date\" GLOB '[0-9][0-9][0-9][0-9]-[0-1][0-9]-[0-3][0-9]'"
+        },
+        "water_entry_amount": {
+          "name": "water_entry_amount",
+          "value": "\"water_entry\".\"amount_ml\" BETWEEN 1 AND 5000"
+        }
+      }
+    },
+    "weight_entry": {
+      "name": "weight_entry",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "measured_at": {
+          "name": "measured_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "local_date": {
+          "name": "local_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "weight_g": {
+          "name": "weight_g",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "source": {
+          "name": "source",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "health_connect_id": {
+          "name": "health_connect_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "note": {
+          "name": "note",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "weight_entry_local_date": {
+          "name": "weight_entry_local_date",
+          "columns": [
+            "local_date"
+          ],
+          "isUnique": false
+        },
+        "weight_entry_hc_id": {
+          "name": "weight_entry_hc_id",
+          "columns": [
+            "health_connect_id"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "weight_entry_range": {
+          "name": "weight_entry_range",
+          "value": "\"weight_entry\".\"weight_g\" BETWEEN 20000 AND 400000"
+        },
+        "weight_entry_source": {
+          "name": "weight_entry_source",
+          "value": "\"weight_entry\".\"source\" IN ('manual', 'health_connect')"
+        },
+        "weight_entry_local_date": {
+          "name": "weight_entry_local_date",
+          "value": "\"weight_entry\".\"local_date\" GLOB '[0-9][0-9][0-9][0-9]-[0-1][0-9]-[0-3][0-9]'"
+        },
+        "weight_entry_hc_source": {
+          "name": "weight_entry_hc_source",
+          "value": "(\"weight_entry\".\"source\" = 'health_connect') = (\"weight_entry\".\"health_connect_id\" IS NOT NULL)"
+        }
+      }
+    }
+  },
+  "views": {},
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "indexes": {}
+  }
+}

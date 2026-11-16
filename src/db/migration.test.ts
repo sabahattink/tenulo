@@ -10,7 +10,7 @@ import { migrate } from "drizzle-orm/expo-sqlite/migrator";
 import { getTableConfig } from "drizzle-orm/sqlite-core";
 import { beforeEach, describe, expect, it } from "vitest";
 import { ALL_TABLES_DELETE_ORDER } from "./tables";
-import { migrationBundle, migrationSql, testDb, upgrade } from "./test-db";
+import { count, migrationBundle, migrationSql, testDb, upgrade } from "./test-db";
 
 const now = 1_792_300_000_000;
 let db: DatabaseSync;
@@ -112,6 +112,57 @@ describe("schema constraints", () => {
       );
       expect(db.prepare(`SELECT ${column[table]} AS d FROM ${table}`).all(), table).toEqual([{ d: "2026-10-18" }]);
     }
+  });
+
+  it("guards the daily log: meals, food sources, amounts, sites, kinds and dates", () => {
+    const food = (values: Record<string, string | number | null>) => {
+      const row: Record<string, string | number | null> = {
+        id: "f",
+        local_date: "2026-11-16",
+        logged_at: now,
+        meal: "lunch",
+        catalog_food_id: "egg-boiled",
+        custom_food_id: null,
+        name: "Yumurta",
+        portion_label: "1 adet",
+        quantity_milli: 2000,
+        grams: 100,
+        energy_kcal: 155,
+        protein_mg: 12_600,
+        created_at: now,
+        updated_at: now,
+        ...values,
+      };
+      const cols = Object.keys(row);
+      db.prepare(`INSERT INTO food_entry (${cols.join(",")}) VALUES (${cols.map(() => "?").join(",")})`).run(...Object.values(row));
+    };
+    expect(() => food({})).not.toThrow();
+    expect(() => food({ id: "f2", meal: "brunch" })).toThrow(/CHECK/);
+    expect(() => food({ id: "f3", local_date: "16.11.2026" })).toThrow(/CHECK/);
+    expect(() => food({ id: "f4", quantity_milli: 0 })).toThrow(/CHECK/);
+    expect(() => food({ id: "f5", protein_mg: -1 })).toThrow(/CHECK/);
+    expect(() => food({ id: "f6", name: "  " })).toThrow(/CHECK/);
+    db.prepare("INSERT INTO custom_food (id, name, serving_label, energy_kcal, created_at, updated_at) VALUES ('c', 'Mantı', '1 tabak', 450, ?, ?)").run(now, now);
+    expect(() => food({ id: "f7", custom_food_id: "c" })).toThrow(/CHECK/);
+    expect(() => food({ id: "f8", catalog_food_id: null, custom_food_id: "c" })).not.toThrow();
+    db.prepare("DELETE FROM custom_food WHERE id = 'c'").run();
+    expect(db.prepare("SELECT custom_food_id, energy_kcal FROM food_entry WHERE id = 'f8'").get()).toEqual({ custom_food_id: null, energy_kcal: 155 });
+
+    const insert = (table: string, row: Record<string, string | number>) => {
+      const cols = Object.keys(row);
+      db.prepare(`INSERT INTO ${table} (${cols.join(",")}) VALUES (${cols.map(() => "?").join(",")})`).run(...Object.values(row));
+    };
+    const stamps = { created_at: now, updated_at: now };
+    expect(() => insert("water_entry", { id: "w", local_date: "2026-11-16", logged_at: now, amount_ml: 250, ...stamps })).not.toThrow();
+    expect(() => insert("water_entry", { id: "w2", local_date: "2026-11-16", logged_at: now, amount_ml: 0, ...stamps })).toThrow(/CHECK/);
+    const measure = { local_date: "2026-11-16", measured_at: now, site: "waist", length_mm: 925, ...stamps };
+    expect(() => insert("measurement_entry", { id: "m", ...measure })).not.toThrow();
+    expect(() => insert("measurement_entry", { id: "m2", ...measure, site: "ankle" })).toThrow(/CHECK/);
+    expect(() => insert("measurement_entry", { id: "m3", ...measure, length_mm: 50 })).toThrow(/CHECK/);
+    const exercise = { local_date: "2026-11-16", logged_at: now, kind: "walking", duration_min: 30, intensity: "moderate", ...stamps };
+    expect(() => insert("exercise_entry", { id: "e", ...exercise })).not.toThrow();
+    expect(() => insert("exercise_entry", { id: "e2", ...exercise, kind: "chess" })).toThrow(/CHECK/);
+    expect(() => insert("exercise_entry", { id: "e3", ...exercise, duration_min: 0 })).toThrow(/CHECK/);
   });
 
   it("rejects empty medication names and bad side effects", () => {
@@ -216,6 +267,34 @@ describe("upgrades", () => {
     expect(() => old.sqlite.prepare("UPDATE injection SET local_date = '18.10.2026'").run()).toThrow(/CHECK/);
   });
 
+  it("adds the daily log and the goal settings to a 1.0 phone without touching its settings or links", async () => {
+    const old = await testDb(":memory:", 3);
+    old.sqlite.exec(`
+      INSERT INTO settings (id, weight_unit, goal_weight_g, weigh_in_reminder_enabled, welcomed_at, updated_at)
+        VALUES (1, 'lb', 80000, 1, ${now}, ${now});
+      INSERT INTO medication (id, name, created_at, updated_at) VALUES ('m', 'Pen', ${now}, ${now});
+      INSERT INTO injection (id, medication_id, taken_at, local_date, dose_mcg, created_at, updated_at) VALUES ('i', 'm', ${now}, '2026-10-18', 250, ${now}, ${now});
+      INSERT INTO side_effect (id, local_date, type, severity, injection_id, created_at, updated_at) VALUES ('s', '2026-10-18', 'nausea', 1, 'i', ${now}, ${now});
+    `);
+
+    await upgrade(old);
+
+    expect(old.sqlite.prepare("SELECT weight_unit, goal_weight_g, weigh_in_reminder_enabled, welcomed_at, language, energy_goal_kcal, water_serving_ml FROM settings").get()).toEqual({
+      weight_unit: "lb",
+      goal_weight_g: 80000,
+      weigh_in_reminder_enabled: 1,
+      welcomed_at: now,
+      language: "system",
+      energy_goal_kcal: null,
+      water_serving_ml: 250,
+    });
+    expect(old.sqlite.prepare("SELECT injection_id FROM side_effect").get()).toEqual({ injection_id: "i" });
+    expect(() => old.sqlite.prepare("UPDATE settings SET energy_goal_kcal = 100").run()).toThrow(/CHECK/);
+    for (const table of ["food_entry", "custom_food", "water_entry", "measurement_entry", "exercise_entry"]) {
+      expect(count(old.sqlite, table)).toBe(0);
+    }
+  });
+
   it("shows them on a fresh install", () => {
     db.prepare("INSERT INTO settings (id, updated_at) VALUES (1, ?)").run(now);
     expect(db.prepare("SELECT welcomed_at FROM settings").get()).toEqual({ welcomed_at: null });
@@ -264,7 +343,7 @@ describe("migrations on the phone", () => {
 
   it("never drop a table that others reference, so a migration cannot clear or break their rows", () => {
     // Change such a table with a new table plus copy, or with triggers, never a drop-and-rename.
-    expect([...referenced].sort()).toEqual(["injection", "medication"]);
+    expect([...referenced].sort()).toEqual(["custom_food", "injection", "medication"]);
     const drops = migrationSql().flatMap(({ tag, sql }) =>
       referenced.filter((name) => new RegExp(`DROP TABLE\\s+[\`"]?${name}[\`"]?\\s*;`, "i").test(sql)).map((name) => `${tag}: ${name}`),
     );
