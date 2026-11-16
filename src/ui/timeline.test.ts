@@ -21,6 +21,17 @@ describe("timeline", () => {
     expect(t[1]?.items.map((i) => i.id)).toEqual(["2026-09-30|3", "w1"]);
   });
 
+  it("orders across a year boundary", () => {
+    const t = timeline(
+      [
+        { kind: "weight", id: "dec", date: d("2026-12-31"), at: 9 },
+        { kind: "weight", id: "jan", date: d("2027-01-02"), at: 1 },
+      ],
+      "all",
+    );
+    expect(t.map((s) => s.month)).toEqual(["2027-01", "2026-12"]);
+  });
+
   it("filters by kind and drops empty months", () => {
     expect(timeline(items, "injection")).toEqual([{ month: "2026-10", items: [items[1]] }]);
     expect(timeline(items, "measurement")).toEqual([{ month: "2026-09", items: [items[6]] }]);

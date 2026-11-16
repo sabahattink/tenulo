@@ -5,11 +5,11 @@ import { mealLines, measurementSittings, waterLines, weightOnOrBefore } from "./
 describe("mealLines", () => {
   it("makes one line per meal per day with its foods and energy added up", () => {
     const lines = mealLines([
-      { localDate: "2026-11-16", meal: "lunch", loggedAt: 100, energyKcal: 300 },
-      { localDate: "2026-11-16", meal: "lunch", loggedAt: 140, energyKcal: 240 },
-      { localDate: "2026-11-16", meal: "lunch", loggedAt: 120, energyKcal: 100 },
-      { localDate: "2026-11-16", meal: "breakfast", loggedAt: 50, energyKcal: 410 },
-      { localDate: "2026-11-17", meal: "dinner", loggedAt: 300, energyKcal: 520 },
+      { localDate: "2026-11-16", meal: "lunch", foods: 1, loggedAt: 100, energyKcal: 300 },
+      { localDate: "2026-11-16", meal: "lunch", foods: 1, loggedAt: 140, energyKcal: 240 },
+      { localDate: "2026-11-16", meal: "lunch", foods: 1, loggedAt: 120, energyKcal: 100 },
+      { localDate: "2026-11-16", meal: "breakfast", foods: 1, loggedAt: 50, energyKcal: 410 },
+      { localDate: "2026-11-17", meal: "dinner", foods: 1, loggedAt: 300, energyKcal: 520 },
     ]);
     expect(lines).toEqual([
       { id: "2026-11-17|dinner", date: "2026-11-17", meal: "dinner", foods: 1, energyKcal: 520, at: 300 },
@@ -20,11 +20,19 @@ describe("mealLines", () => {
 
   it("keeps the same meal on different days apart", () => {
     const lines = mealLines([
-      { localDate: "2026-11-15", meal: "snack", loggedAt: 1, energyKcal: 90 },
-      { localDate: "2026-11-16", meal: "snack", loggedAt: 2, energyKcal: 60 },
+      { localDate: "2026-11-15", meal: "snack", foods: 1, loggedAt: 1, energyKcal: 90 },
+      { localDate: "2026-11-16", meal: "snack", foods: 1, loggedAt: 2, energyKcal: 60 },
     ]);
     expect(lines.map((l) => l.id)).toEqual(["2026-11-16|snack", "2026-11-15|snack"]);
     expect(mealLines([])).toEqual([]);
+  });
+
+  it("takes meals the database already added up, counting their foods", () => {
+    const lines = mealLines([
+      { localDate: "2026-11-16", meal: "dinner", foods: 3, loggedAt: 70, energyKcal: 610 },
+      { localDate: "2026-11-16", meal: "dinner", foods: 1, loggedAt: 90, energyKcal: 120 },
+    ]);
+    expect(lines).toEqual([{ id: "2026-11-16|dinner", date: "2026-11-16", meal: "dinner", foods: 4, energyKcal: 730, at: 90 }]);
   });
 });
 
@@ -74,13 +82,16 @@ describe("weightOnOrBefore", () => {
   ];
 
   it("takes the latest weigh-in on or before the day, in any input order", () => {
-    expect(weightOnOrBefore(weights, d("2026-11-07"))).toBe(89_200);
-    expect(weightOnOrBefore(weights, d("2026-11-10"))).toBe(88_500);
-    expect(weightOnOrBefore(weights, d("2026-12-01"))).toBe(88_500);
+    const on = weightOnOrBefore(weights);
+    expect(on(d("2026-11-07"))).toBe(89_200);
+    expect(on(d("2026-11-10"))).toBe(88_500);
+    expect(on(d("2026-12-01"))).toBe(88_500);
+    expect(on(d("2026-11-01"))).toBe(90_000);
+    expect(on(d("2026-11-04"))).toBe(90_000);
   });
 
   it("knows no weight before the first weigh-in", () => {
-    expect(weightOnOrBefore(weights, d("2026-10-31"))).toBeUndefined();
-    expect(weightOnOrBefore([], d("2026-11-07"))).toBeUndefined();
+    expect(weightOnOrBefore(weights)(d("2026-10-31"))).toBeUndefined();
+    expect(weightOnOrBefore([])(d("2026-11-07"))).toBeUndefined();
   });
 });

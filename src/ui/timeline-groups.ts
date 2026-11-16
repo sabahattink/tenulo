@@ -6,9 +6,12 @@ import { type LocalDate, parseLocalDate, toDayNumber } from "../domain/date";
 import { MEALS, type Meal } from "../domain/food-log";
 import { MEASUREMENT_SITES, type MeasurementSite } from "../domain/measurement";
 
+/** Foods of one meal on one day: a single entry (`foods` 1), or several already added up by the database. */
 export interface FoodLogRow {
   readonly localDate: string;
   readonly meal: Meal;
+  readonly foods: number;
+  /** The latest entry's. */
   readonly loggedAt: number;
   readonly energyKcal: number;
 }
@@ -31,9 +34,9 @@ export function mealLines(rows: readonly FoodLogRow[]): MealLine[] {
     const id = `${r.localDate}|${r.meal}`;
     const g = groups.get(id);
     if (g === undefined) {
-      groups.set(id, { date: parseLocalDate(r.localDate), meal: r.meal, foods: 1, energyKcal: r.energyKcal, at: r.loggedAt });
+      groups.set(id, { date: parseLocalDate(r.localDate), meal: r.meal, foods: r.foods, energyKcal: r.energyKcal, at: r.loggedAt });
     } else {
-      g.foods += 1;
+      g.foods += r.foods;
       g.energyKcal += r.energyKcal;
       g.at = Math.max(g.at, r.loggedAt);
     }
@@ -109,18 +112,31 @@ export function measurementSittings(rows: readonly MeasurementRow[]): SittingLin
 }
 
 /**
- * The body weight on a day: the latest weigh-in on or before it. Used only to show an exercise
- * estimate (marked as one); undefined before the first weigh-in.
+ * Looks up the body weight on a day: the latest weigh-in on or before it, undefined before the
+ * first. Used only to show an exercise estimate (marked as one). The weigh-ins are sorted once, so
+ * each lookup is a binary search rather than a pass over every weigh-in.
  */
 export function weightOnOrBefore(
   weights: readonly { readonly date: LocalDate; readonly weightG: number }[],
-  date: LocalDate,
-): number | undefined {
-  const day = toDayNumber(date);
-  let best: { day: number; weightG: number } | undefined;
-  for (const w of weights) {
-    const d = toDayNumber(w.date);
-    if (d <= day && (best === undefined || d > best.day)) best = { day: d, weightG: w.weightG };
-  }
-  return best?.weightG;
+): (date: LocalDate) => number | undefined {
+  const sorted = weights.map((w) => ({ day: toDayNumber(w.date), weightG: w.weightG })).sort((a, b) => a.day - b.day);
+  return (date) => {
+    const day = toDayNumber(date);
+    // The last index whose day is on or before `day`.
+    let lo = 0;
+    let hi = sorted.length - 1;
+    let found: number | undefined;
+    while (lo <= hi) {
+      const mid = (lo + hi) >> 1;
+      const entry = sorted[mid];
+      if (entry === undefined) break;
+      if (entry.day <= day) {
+        found = entry.weightG;
+        lo = mid + 1;
+      } else {
+        hi = mid - 1;
+      }
+    }
+    return found;
+  };
 }

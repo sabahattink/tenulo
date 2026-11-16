@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { LocalDate } from "@/domain/date";
 import { useI18n } from "@/i18n/provider";
@@ -5,25 +6,21 @@ import { Icon } from "./icons";
 import { type Theme, space, type } from "./theme";
 import type { TimelineRow as Row } from "./timeline-rows";
 
+interface Props {
+  readonly theme: Theme;
+  readonly row: Row;
+  readonly now: LocalDate;
+  readonly last: boolean;
+  readonly onOpen: (row: Row) => void;
+  readonly onDelete: (row: Row) => void;
+}
+
 /**
  * One History line. A tap opens the day where its records are kept (meals, water); a long press, or
- * the "delete" accessibility action, asks before deleting what the line stands for.
+ * the "delete" accessibility action, asks before deleting what the line stands for. Memoized: a
+ * month card holds every line of the month, and a write elsewhere must not redraw them all.
  */
-export function TimelineRow({
-  theme,
-  row,
-  now,
-  last,
-  onOpen,
-  onDelete,
-}: {
-  theme: Theme;
-  row: Row;
-  now: LocalDate;
-  last: boolean;
-  onOpen: () => void;
-  onDelete: () => void;
-}) {
+export const TimelineRow = memo(function TimelineRow({ theme, row, now, last, onOpen, onDelete }: Props) {
   const { t, f } = useI18n();
   const tint = row.tint === "warn" ? theme.warn : theme.accent;
   const when = f.relativeDay(row.date, now);
@@ -31,13 +28,13 @@ export function TimelineRow({
   const hint = [row.open?.hint, removable ? t.history.deleteHint : undefined].filter((h) => h !== undefined).join(". ");
   return (
     <Pressable
-      onPress={row.open === undefined ? undefined : onOpen}
-      onLongPress={removable ? onDelete : undefined}
+      onPress={row.open === undefined ? undefined : () => onOpen(row)}
+      onLongPress={removable ? () => onDelete(row) : undefined}
       accessibilityRole={row.open === undefined ? undefined : "button"}
       accessibilityHint={hint === "" ? undefined : hint}
       accessibilityActions={removable ? [{ name: "delete", label: t.common.delete }] : undefined}
       onAccessibilityAction={(e) => {
-        if (e.nativeEvent.actionName === "delete" && removable) onDelete();
+        if (e.nativeEvent.actionName === "delete" && removable) onDelete(row);
       }}
       accessibilityLabel={[row.title, row.detail, when].filter((p) => p !== "").join(", ")}
       style={({ pressed }) => [
@@ -61,7 +58,7 @@ export function TimelineRow({
       {row.open !== undefined && <Icon name="chevron" color={theme.muted} size={18} />}
     </Pressable>
   );
-}
+});
 
 const styles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", gap: space.m, minHeight: 64, paddingVertical: space.m },

@@ -10,9 +10,9 @@ const data: TimelineData = {
   injections: [{ id: "i1", localDate: "2026-11-10", takenAt: 2, doseMcg: 2_500, site: null, note: null }],
   sideEffects: [{ id: "s1", localDate: "2026-11-11", createdAt: 3, type: "nausea", severity: 2, note: "evening" }],
   food: [
-    { localDate: "2026-11-16", meal: "lunch", loggedAt: 10, energyKcal: 300 },
-    { localDate: "2026-11-16", meal: "lunch", loggedAt: 11, energyKcal: 240 },
-    { localDate: "2026-11-16", meal: "lunch", loggedAt: 12, energyKcal: 1100 },
+    { localDate: "2026-11-16", meal: "lunch", foods: 1, loggedAt: 10, energyKcal: 300 },
+    { localDate: "2026-11-16", meal: "lunch", foods: 1, loggedAt: 11, energyKcal: 240 },
+    { localDate: "2026-11-16", meal: "lunch", foods: 1, loggedAt: 12, energyKcal: 1100 },
   ],
   water: [
     { id: "a", localDate: "2026-11-16", loggedAt: 20, amountMl: 1000 },

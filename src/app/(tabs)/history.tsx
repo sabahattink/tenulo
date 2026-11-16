@@ -1,6 +1,6 @@
 import { router } from "expo-router";
-import { useMemo, useState } from "react";
-import { Alert, FlatList, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useCallback, useMemo, useState } from "react";
+import { Alert, FlatList, type ListRenderItem, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useMeasurements } from "@/data/body";
 import { deleteExercise } from "@/data/exercise";
@@ -16,7 +16,16 @@ import { Chip, ScreenTitle } from "@/ui/kit";
 import { radius, space, type, useTheme } from "@/ui/theme";
 import { TIMELINE_FILTERS, type TimelineFilter, type TimelineKind, timeline } from "@/ui/timeline";
 import { TimelineRow } from "@/ui/timeline-row";
-import { type TimelineRow as Row, timelineRows } from "@/ui/timeline-rows";
+import {
+  type TimelineRow as Row,
+  exerciseRows,
+  foodRows,
+  injectionRows,
+  measurementRows,
+  sideEffectRows,
+  waterRows,
+  weightRows,
+} from "@/ui/timeline-rows";
 
 /** One calendar month of the timeline, drawn as one card. */
 interface MonthSection {
@@ -67,41 +76,86 @@ export default function History() {
   const exercise = useExerciseLog();
   const [filter, setFilter] = useState<TimelineFilter>("all");
 
+  // One memo per kind: logging a glass of water rebuilds the water lines, not years of meals.
+  const weightLines = useMemo(() => weightRows(weights, unit, i18n), [weights, unit, i18n]);
+  const injectionLines = useMemo(() => injectionRows(injections, i18n), [injections, i18n]);
+  const sideEffectLines = useMemo(() => sideEffectRows(sideEffects, i18n), [sideEffects, i18n]);
+  const foodLines = useMemo(() => foodRows(food, i18n), [food, i18n]);
+  const waterLines = useMemo(() => waterRows(water, i18n), [water, i18n]);
+  const measurementLines = useMemo(() => measurementRows(measurements, unit, i18n), [measurements, unit, i18n]);
+  const exerciseLines = useMemo(() => exerciseRows(exercise, weights, i18n), [exercise, weights, i18n]);
+
   const sections = useMemo(() => {
-    const rows = timelineRows({ weights, injections, sideEffects, food, water, measurements, exercise }, filter, unit, i18n);
+    const rows = [
+      ...weightLines,
+      ...injectionLines,
+      ...sideEffectLines,
+      ...foodLines,
+      ...waterLines,
+      ...measurementLines,
+      ...exerciseLines,
+    ];
     return timeline(rows, filter).map((s): MonthSection => ({ month: s.month, rows: s.items }));
-  }, [weights, injections, sideEffects, food, water, measurements, exercise, filter, unit, i18n]);
+  }, [weightLines, injectionLines, sideEffectLines, foodLines, waterLines, measurementLines, exerciseLines, filter]);
 
-  const confirmDelete = (row: Row) => {
-    const remove = row.remove;
-    if (remove === undefined) return;
-    Alert.alert(remove.question, `${row.title} · ${f.relativeDay(row.date, now)}`, [
-      { text: t.common.cancel, style: "cancel" },
-      {
-        text: t.common.delete,
-        style: "destructive",
-        onPress: () =>
-          void removeRecords(row.kind, remove.ids).catch((e: unknown) =>
-            Alert.alert(t.common.didNotWork, e instanceof Error ? e.message : t.common.somethingWentWrong),
-          ),
-      },
-    ]);
-  };
+  const confirmDelete = useCallback(
+    (row: Row) => {
+      const remove = row.remove;
+      if (remove === undefined) return;
+      Alert.alert(remove.question, `${row.title} · ${f.relativeDay(row.date, now)}`, [
+        { text: t.common.cancel, style: "cancel" },
+        {
+          text: t.common.delete,
+          style: "destructive",
+          onPress: () =>
+            void removeRecords(row.kind, remove.ids).catch((e: unknown) =>
+              Alert.alert(t.common.didNotWork, e instanceof Error ? e.message : t.common.somethingWentWrong),
+            ),
+        },
+      ]);
+    },
+    [t, f, now],
+  );
 
-  const open = (row: Row) => {
+  const open = useCallback((row: Row) => {
     if (row.open === undefined) return;
     // The Food tab and the water screen take the day to show.
     router.push({ pathname: row.open.screen === "food" ? "/food" : "/water", params: { date: row.open.date } });
-  };
+  }, []);
+
+  const renderMonth = useCallback<ListRenderItem<MonthSection>>(
+    ({ item: section }) => (
+      <View style={styles.section}>
+        <Text style={[type.caption, styles.month, { color: theme.muted }]}>
+          {f.upper(f.monthTitle(parseLocalDate(`${section.month}-01`)))}
+        </Text>
+        <View style={[styles.group, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          {section.rows.map((row, i) => (
+            <TimelineRow
+              key={`${row.kind}-${row.id}`}
+              theme={theme}
+              row={row}
+              now={now}
+              last={i === section.rows.length - 1}
+              onOpen={open}
+              onDelete={confirmDelete}
+            />
+          ))}
+        </View>
+      </View>
+    ),
+    [theme, f, now, open, confirmDelete],
+  );
 
   // A virtualized list of months: years of daily weigh-ins and meals would otherwise mount every row
   // at once. Each month is drawn whole, as one card. Splitting a card's border across row cells left
-  // a one-pixel gap between rows on fractional pixel densities (1 dp = 2.625 px).
+  // a one-pixel gap between rows on fractional pixel densities (1 dp = 2.625 px). A month of meals,
+  // water and weigh-ins fills several screens, so one month is enough to start with.
   return (
     <FlatList<MonthSection>
       data={sections}
       keyExtractor={(section) => section.month}
-      initialNumToRender={2}
+      initialNumToRender={1}
       style={{ backgroundColor: theme.background }}
       contentContainerStyle={[styles.content, { paddingTop: insets.top + space.l }]}
       ListHeaderComponent={
@@ -114,26 +168,7 @@ export default function History() {
           </ScrollView>
         </View>
       }
-      renderItem={({ item: section }) => (
-        <View style={styles.section}>
-          <Text style={[type.caption, styles.month, { color: theme.muted }]}>
-            {f.upper(f.monthTitle(parseLocalDate(`${section.month}-01`)))}
-          </Text>
-          <View style={[styles.group, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            {section.rows.map((row, i) => (
-              <TimelineRow
-                key={`${row.kind}-${row.id}`}
-                theme={theme}
-                row={row}
-                now={now}
-                last={i === section.rows.length - 1}
-                onOpen={() => open(row)}
-                onDelete={() => confirmDelete(row)}
-              />
-            ))}
-          </View>
-        </View>
-      )}
+      renderItem={renderMonth}
       ListEmptyComponent={
         <View style={styles.empty}>
           {filter === "all" ? (
