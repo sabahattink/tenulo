@@ -291,7 +291,7 @@ function exerciseBlock(r: Report, i18n: I18n): string {
   ${listTable(
     i18n,
     [t.reportPdf.type, pdf.sessions, pdf.totalTime],
-    x.byKind.map((k) => [t.historyLog.exerciseKinds[k.kind], f.integer(k.sessions), minutes(k.minutes)]),
+    x.byKind.map((k) => [t.exerciseLog.kinds[k.kind], f.integer(k.sessions), minutes(k.minutes)]),
   )}
   <p class="note">${e(pdf.exerciseNote)}</p>
 </section>`;

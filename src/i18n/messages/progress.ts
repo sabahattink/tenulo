@@ -6,8 +6,6 @@
  * Neutral on purpose: numbers and the direction they moved, never "good", "bad" or "should".
  * Unit symbols (kcal, g, ml, cm, in) are the same in both languages and are added by the screens.
  */
-import type { ExerciseKind, Intensity } from "../../domain/exercise";
-import type { Meal } from "../../domain/food-log";
 import type { MeasurementSite } from "../../domain/measurement";
 import type { Direction } from "../../domain/weekly";
 
@@ -75,22 +73,10 @@ export const progressEn = {
     deleteHint: "Long press a reading to delete it.",
   },
   historyLog: {
-    meals: { breakfast: "Breakfast", lunch: "Lunch", dinner: "Dinner", snack: "Snacks" } satisfies Record<Meal, string>,
     foods: (n: number) => plural(n, "food", "foods"),
     water: (amount: string) => `Water · ${amount}`,
     entries: (n: number) => plural(n, "entry", "entries"),
     measurements: "Measurements",
-    exerciseKinds: {
-      walking: "Walking",
-      running: "Running",
-      cycling: "Cycling",
-      swimming: "Swimming",
-      strength: "Strength training",
-      yoga: "Yoga and stretching",
-      sports: "Sports",
-      other: "Other exercise",
-    } satisfies Record<ExerciseKind, string>,
-    intensities: { light: "Light", moderate: "Moderate", vigorous: "Vigorous" } satisfies Record<Intensity, string>,
     minutes: (n: string) => `${n} min`,
     /** Energy Tenulo estimated (never stored), marked as such. */
     estimate: (kcal: string) => `≈ ${kcal} (estimate)`,
@@ -186,22 +172,10 @@ export const progressTr: ProgressMessages = {
     deleteHint: "Bir ölçümü silmek için üzerine basılı tut.",
   },
   historyLog: {
-    meals: { breakfast: "Kahvaltı", lunch: "Öğle yemeği", dinner: "Akşam yemeği", snack: "Ara öğün" },
     foods: (n) => `${n} yiyecek`,
     water: (amount) => `Su · ${amount}`,
     entries: (n) => `${n} kayıt`,
     measurements: "Ölçümler",
-    exerciseKinds: {
-      walking: "Yürüyüş",
-      running: "Koşu",
-      cycling: "Bisiklet",
-      swimming: "Yüzme",
-      strength: "Kuvvet antrenmanı",
-      yoga: "Yoga ve esneme",
-      sports: "Spor",
-      other: "Diğer egzersiz",
-    },
-    intensities: { light: "Hafif", moderate: "Orta", vigorous: "Yoğun" },
     minutes: (n) => `${n} dk`,
     estimate: (kcal) => `≈ ${kcal} (tahmini)`,
     openFood: "Bu günün yiyecek günlüğünü açar",
