@@ -13,8 +13,8 @@ import type { WaterActions } from "./use-water-actions";
 type Action = keyof Messages["daily"]["actions"];
 
 const ACTIONS: readonly { action: Action; icon: IconName }[] = [
-  { action: "food", icon: "bowl" },
-  { action: "water", icon: "drop" },
+  { action: "food", icon: "food" },
+  { action: "water", icon: "glass" },
   { action: "weight", icon: "scale" },
   { action: "measurement", icon: "tape" },
   { action: "exercise", icon: "run" },

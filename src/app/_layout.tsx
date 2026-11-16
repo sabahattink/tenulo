@@ -110,6 +110,8 @@ function Navigator({ theme, welcomed }: { theme: Theme; welcomed: boolean }) {
           <Stack.Screen name="food/mine" options={{ title: t.food.mine.title }} />
           <Stack.Screen name="food/custom" options={{ title: t.food.custom.newTitle }} />
           <Stack.Screen name="goals" options={{ title: t.goals.title }} />
+          <Stack.Screen name="add-measurement" options={{ title: t.measure.addTitle, ...modal }} />
+          <Stack.Screen name="measurements" options={{ title: t.measure.readingsTitle }} />
         </Stack.Protected>
         <Stack.Protected guard={!welcomed}>
           <Stack.Screen name="welcome" options={{ headerShown: false, animation: "fade" }} />

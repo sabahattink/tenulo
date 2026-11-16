@@ -1,23 +1,31 @@
-import { useMemo, useState } from "react";
-import { Alert, FlatList, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { router } from "expo-router";
+import { useCallback, useMemo, useState } from "react";
+import { Alert, FlatList, type ListRenderItem, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useMeasurements } from "@/data/body";
+import { deleteExercise } from "@/data/exercise";
+import { deleteMeasurements, deleteWaterEntries, useExerciseLog, useFoodLog, useWaterLog } from "@/data/history";
 import { deleteInjection, deleteSideEffect, useAllInjections, useSideEffects } from "@/data/injections";
 import { deleteWeight, useSettings, useWeightEntries } from "@/data/repo";
 import { useToday } from "@/data/use-today";
-import { type LocalDate, parseLocalDate } from "@/domain/date";
-import { isSeverity } from "@/domain/side-effect";
+import { parseLocalDate } from "@/domain/date";
 import { useI18n } from "@/i18n/provider";
 import { Illustration } from "@/ui/Illustration";
-import { Icon, type IconName } from "@/ui/icons";
+import { Icon } from "@/ui/icons";
 import { Chip, ScreenTitle } from "@/ui/kit";
-import { type TimelineFilter, type TimelineItem, timeline } from "@/ui/timeline";
-import { type Theme, radius, space, type, useTheme } from "@/ui/theme";
-
-interface Row extends TimelineItem {
-  readonly title: string;
-  readonly detail: string;
-  readonly icon: IconName;
-}
+import { radius, space, type, useTheme } from "@/ui/theme";
+import { TIMELINE_FILTERS, type TimelineFilter, type TimelineKind, timeline } from "@/ui/timeline";
+import { TimelineRow } from "@/ui/timeline-row";
+import {
+  type TimelineRow as Row,
+  exerciseRows,
+  foodRows,
+  injectionRows,
+  measurementRows,
+  sideEffectRows,
+  waterRows,
+  weightRows,
+} from "@/ui/timeline-rows";
 
 /** One calendar month of the timeline, drawn as one card. */
 interface MonthSection {
@@ -26,108 +34,141 @@ interface MonthSection {
   readonly rows: readonly Row[];
 }
 
-const FILTERS: readonly TimelineFilter[] = ["all", "weight", "injection", "side-effect"];
+/** Deletes the records behind one line. Meals are not deleted here: the food diary keeps them. */
+async function removeRecords(kind: TimelineKind, ids: readonly string[]): Promise<void> {
+  switch (kind) {
+    case "weight":
+      await Promise.all(ids.map(deleteWeight));
+      return;
+    case "injection":
+      await Promise.all(ids.map(deleteInjection));
+      return;
+    case "side-effect":
+      await Promise.all(ids.map(deleteSideEffect));
+      return;
+    case "exercise":
+      await Promise.all(ids.map(deleteExercise));
+      return;
+    case "water":
+      await deleteWaterEntries(ids);
+      return;
+    case "measurement":
+      await deleteMeasurements(ids);
+      return;
+    case "food":
+      return;
+  }
+}
 
 export default function History() {
   const theme = useTheme();
-  const { t, f } = useI18n();
+  const i18n = useI18n();
+  const { t, f } = i18n;
   const insets = useSafeAreaInsets();
   const now = useToday();
   const unit = useSettings()?.weightUnit ?? "kg";
   const weights = useWeightEntries();
-  const shots = useAllInjections();
-  const effects = useSideEffects();
+  const injections = useAllInjections();
+  const sideEffects = useSideEffects();
+  const food = useFoodLog();
+  const water = useWaterLog();
+  const measurements = useMeasurements();
+  const exercise = useExerciseLog();
   const [filter, setFilter] = useState<TimelineFilter>("all");
 
+  // One memo per kind: logging a glass of water rebuilds the water lines, not years of meals.
+  const weightLines = useMemo(() => weightRows(weights, unit, i18n), [weights, unit, i18n]);
+  const injectionLines = useMemo(() => injectionRows(injections, i18n), [injections, i18n]);
+  const sideEffectLines = useMemo(() => sideEffectRows(sideEffects, i18n), [sideEffects, i18n]);
+  const foodLines = useMemo(() => foodRows(food, i18n), [food, i18n]);
+  const waterLines = useMemo(() => waterRows(water, i18n), [water, i18n]);
+  const measurementLines = useMemo(() => measurementRows(measurements, unit, i18n), [measurements, unit, i18n]);
+  const exerciseLines = useMemo(() => exerciseRows(exercise, weights, i18n), [exercise, weights, i18n]);
+
   const sections = useMemo(() => {
-    const rows: Row[] = [
-      ...weights.map(
-        (w): Row => ({
-          kind: "weight",
-          id: w.id,
-          date: parseLocalDate(w.localDate),
-          at: w.measuredAt,
-          title: f.weight(w.weightG, unit),
-          detail: w.source === "health_connect" ? t.history.fromHealthConnect : t.history.weighIn,
-          icon: "scale",
-        }),
-      ),
-      ...shots.map(
-        (s): Row => ({
-          kind: "injection",
-          id: s.id,
-          date: parseLocalDate(s.localDate),
-          at: s.takenAt,
-          title: t.history.injection(f.dose(s.doseMcg)),
-          detail: [s.site ? t.sites[s.site] : t.history.siteNotRecorded, s.note].filter(Boolean).join(" · "),
-          icon: "pen",
-        }),
-      ),
-      ...effects.map(
-        (e): Row => ({
-          kind: "side-effect",
-          id: e.id,
-          date: parseLocalDate(e.localDate),
-          at: e.createdAt,
-          title: t.sideEffects[e.type],
-          detail: [isSeverity(e.severity) ? t.severity[e.severity] : "", e.note].filter(Boolean).join(" · "),
-          icon: "drop",
-        }),
-      ),
+    const rows = [
+      ...weightLines,
+      ...injectionLines,
+      ...sideEffectLines,
+      ...foodLines,
+      ...waterLines,
+      ...measurementLines,
+      ...exerciseLines,
     ];
     return timeline(rows, filter).map((s): MonthSection => ({ month: s.month, rows: s.items }));
-  }, [weights, shots, effects, filter, unit, t, f]);
+  }, [weightLines, injectionLines, sideEffectLines, foodLines, waterLines, measurementLines, exerciseLines, filter]);
 
-  const confirmDelete = (row: Row) =>
-    Alert.alert(t.history.deleteTitle, `${row.title} · ${f.relativeDay(row.date, now)}`, [
-      { text: t.common.cancel, style: "cancel" },
-      {
-        text: t.common.delete,
-        style: "destructive",
-        onPress: () =>
-          void (row.kind === "weight" ? deleteWeight(row.id) : row.kind === "injection" ? deleteInjection(row.id) : deleteSideEffect(row.id)),
-      },
-    ]);
+  const confirmDelete = useCallback(
+    (row: Row) => {
+      const remove = row.remove;
+      if (remove === undefined) return;
+      Alert.alert(remove.question, `${row.title} · ${f.relativeDay(row.date, now)}`, [
+        { text: t.common.cancel, style: "cancel" },
+        {
+          text: t.common.delete,
+          style: "destructive",
+          onPress: () =>
+            void removeRecords(row.kind, remove.ids).catch((e: unknown) =>
+              Alert.alert(t.common.didNotWork, e instanceof Error ? e.message : t.common.somethingWentWrong),
+            ),
+        },
+      ]);
+    },
+    [t, f, now],
+  );
 
-  // A virtualized list of months: years of daily weigh-ins would otherwise mount every row at once.
-  // Each month is drawn whole, as one card. Splitting a card's border across row cells left a
-  // one-pixel gap between rows on fractional pixel densities (1 dp = 2.625 px).
+  const open = useCallback((row: Row) => {
+    if (row.open === undefined) return;
+    // The Food tab and the water screen take the day to show.
+    router.push({ pathname: row.open.screen === "food" ? "/food" : "/water", params: { date: row.open.date } });
+  }, []);
+
+  const renderMonth = useCallback<ListRenderItem<MonthSection>>(
+    ({ item: section }) => (
+      <View style={styles.section}>
+        <Text style={[type.caption, styles.month, { color: theme.muted }]}>
+          {f.upper(f.monthTitle(parseLocalDate(`${section.month}-01`)))}
+        </Text>
+        <View style={[styles.group, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          {section.rows.map((row, i) => (
+            <TimelineRow
+              key={`${row.kind}-${row.id}`}
+              theme={theme}
+              row={row}
+              now={now}
+              last={i === section.rows.length - 1}
+              onOpen={open}
+              onDelete={confirmDelete}
+            />
+          ))}
+        </View>
+      </View>
+    ),
+    [theme, f, now, open, confirmDelete],
+  );
+
+  // A virtualized list of months: years of daily weigh-ins and meals would otherwise mount every row
+  // at once. Each month is drawn whole, as one card. Splitting a card's border across row cells left
+  // a one-pixel gap between rows on fractional pixel densities (1 dp = 2.625 px). A month of meals,
+  // water and weigh-ins fills several screens, so one month is enough to start with.
   return (
     <FlatList<MonthSection>
       data={sections}
       keyExtractor={(section) => section.month}
-      initialNumToRender={2}
+      initialNumToRender={1}
       style={{ backgroundColor: theme.background }}
       contentContainerStyle={[styles.content, { paddingTop: insets.top + space.l }]}
       ListHeaderComponent={
         <View style={styles.header}>
           <ScreenTitle theme={theme} title={t.history.title} />
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters} accessibilityRole="radiogroup">
-            {FILTERS.map((value) => (
+            {TIMELINE_FILTERS.map((value) => (
               <Chip key={value} theme={theme} label={t.history.filters[value]} selected={filter === value} onPress={() => setFilter(value)} />
             ))}
           </ScrollView>
         </View>
       }
-      renderItem={({ item: section }) => (
-        <View style={styles.section}>
-          <Text style={[type.caption, styles.month, { color: theme.muted }]}>
-            {f.upper(f.monthTitle(parseLocalDate(`${section.month}-01`)))}
-          </Text>
-          <View style={[styles.group, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            {section.rows.map((row, i) => (
-              <TimelineRow
-                key={`${row.kind}-${row.id}`}
-                theme={theme}
-                row={row}
-                now={now}
-                last={i === section.rows.length - 1}
-                onLongPress={() => confirmDelete(row)}
-              />
-            ))}
-          </View>
-        </View>
-      )}
+      renderItem={renderMonth}
       ListEmptyComponent={
         <View style={styles.empty}>
           {filter === "all" ? (
@@ -153,52 +194,6 @@ export default function History() {
   );
 }
 
-function TimelineRow({
-  theme,
-  row,
-  now,
-  last,
-  onLongPress,
-}: {
-  theme: Theme;
-  row: Row;
-  now: LocalDate;
-  last: boolean;
-  onLongPress: () => void;
-}) {
-  const { t, f } = useI18n();
-  const tint = row.kind === "side-effect" ? theme.warn : theme.accent;
-  return (
-    <Pressable
-      onLongPress={onLongPress}
-      accessibilityHint={t.history.deleteHint}
-      accessibilityActions={[{ name: "delete", label: t.common.delete }]}
-      onAccessibilityAction={(e) => {
-        if (e.nativeEvent.actionName === "delete") onLongPress();
-      }}
-      accessibilityLabel={`${row.title}, ${row.detail}, ${f.relativeDay(row.date, now)}`}
-      style={({ pressed }) => [
-        styles.row,
-        !last && { borderBottomColor: theme.border, borderBottomWidth: StyleSheet.hairlineWidth },
-        { opacity: pressed ? 0.7 : 1 },
-      ]}
-    >
-      <View style={[styles.icon, { backgroundColor: row.kind === "side-effect" ? theme.surfaceAlt : theme.accentSoft }]}>
-        <Icon name={row.icon} color={tint} size={20} />
-      </View>
-      <View style={styles.text}>
-        <Text style={[type.bodyStrong, { color: theme.text }]}>{row.title}</Text>
-        {row.detail !== "" && (
-          <Text style={[type.small, { color: theme.muted }]} numberOfLines={2}>
-            {row.detail}
-          </Text>
-        )}
-      </View>
-      <Text style={[type.small, { color: theme.muted }]}>{f.relativeDay(row.date, now)}</Text>
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
   content: { paddingHorizontal: space.l, paddingBottom: space.xxl },
   header: { gap: space.l },
@@ -207,8 +202,5 @@ const styles = StyleSheet.create({
   section: { gap: space.s, paddingTop: space.l },
   month: { paddingHorizontal: space.xs },
   group: { borderWidth: 1, borderRadius: radius.l, paddingHorizontal: space.l },
-  row: { flexDirection: "row", alignItems: "center", gap: space.m, minHeight: 64, paddingVertical: space.m },
-  icon: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center" },
-  text: { flex: 1, gap: 2 },
   hint: { textAlign: "center", paddingTop: space.l },
 });

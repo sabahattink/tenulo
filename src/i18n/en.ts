@@ -14,7 +14,8 @@ import type { ReminderTexts } from "../platform/reminders";
 import type { TimelineFilter } from "../ui/timeline";
 import { foodEn } from "./messages/food";
 import type { BackupRecord, RestoreCountKey } from "./records";
-import { todayEn } from "./messages/today";
+import { todayEn } from "./messages/today"
+import { progressEn } from "./messages/progress";
 
 type Twelve = readonly [string, string, string, string, string, string, string, string, string, string, string, string];
 type Seven = readonly [string, string, string, string, string, string, string];
@@ -178,19 +179,25 @@ export const en = {
   },
   history: {
     title: "History",
-    filters: { all: "All", weight: "Weight", injection: "Injections", "side-effect": "Side effects" } satisfies Record<
-      TimelineFilter,
-      string
-    >,
+    filters: {
+      all: "All",
+      weight: "Weight",
+      injection: "Injections",
+      "side-effect": "Side effects",
+      food: "Food",
+      water: "Water",
+      measurement: "Measurements",
+      exercise: "Exercise",
+    } satisfies Record<TimelineFilter, string>,
     fromHealthConnect: "From Health Connect",
     weighIn: "Weigh-in",
     injection: (dose: string) => `Injection · ${dose}`,
     siteNotRecorded: "Site not recorded",
     deleteTitle: "Delete this entry?",
     emptyTitle: "Your log starts here",
-    emptyBody: "Weigh-ins, injections and side effects appear here as one timeline, newest first.",
+    emptyBody: "Weigh-ins, injections, side effects, meals, water, measurements and exercise appear here as one timeline, newest first.",
     emptyFiltered: "Nothing of this kind yet.",
-    longPressHint: "Long press an entry to delete it.",
+    longPressHint: "Tap a meal or a day's water to open that day. Long press an entry to delete it.",
     deleteHint: "Long press to delete",
   },
   addWeight: {
@@ -603,6 +610,7 @@ export const en = {
     } satisfies Record<RestoreCountKey, (n: number) => string>,
   },
   ...todayEn,
+  ...progressEn,
 };
 
 export type Messages = typeof en;

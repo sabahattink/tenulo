@@ -1,19 +1,42 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
-import { injections, medications, planSteps, settings, sideEffects, weightEntries } from "@/db/schema";
+import {
+  exerciseEntries,
+  foodEntries,
+  injections,
+  measurementEntries,
+  medications,
+  planSteps,
+  settings,
+  sideEffects,
+  waterEntries,
+  weightEntries,
+} from "@/db/schema";
 import { type LocalDate, addDays } from "@/domain/date";
 import { ulid } from "@/domain/id";
 import { INJECTION_SITES } from "@/domain/injection";
-import { sampleWeights } from "@/domain/sample";
+import { resolveLanguage } from "@/domain/language";
+import { sampleExercise, sampleFoodLog, sampleMeasurements, sampleWater, sampleWeights } from "@/domain/sample";
 import type { SideEffectType } from "@/domain/side-effect";
+import { deviceLocale } from "@/i18n/device";
 
 const DAYS = 63;
+/** The daily log is newer than the weight log: a few weeks of food and water, six of exercise. */
+const FOOD_DAYS = 28;
+const EXERCISE_DAYS = 42;
+
+/** The instant of a minute of a local calendar day, in the phone's time zone. */
+function instantOf(date: LocalDate, minuteOfDay: number): number {
+  const [y, m, d] = date.split("-").map(Number);
+  return new Date(y ?? 1970, (m ?? 1) - 1, d ?? 1, 0, minuteOfDay).getTime();
+}
 
 /**
  * Development builds only: fills an empty log with realistic, deterministic sample data for trying
  * the app and taking store screenshots. Never reachable in a release build (the caller checks
- * __DEV__), and the medication name is generic: no brand names, even in sample data. One
- * synchronous transaction: see src/db/ops.ts for why.
+ * __DEV__), and the medication name is generic: no brand names, even in sample data. Foods are
+ * named in the app's current language, as a person logging them would see them. One synchronous
+ * transaction: see src/db/ops.ts for why.
  */
 export function seedSampleData(today: LocalDate): void {
   if (!__DEV__) throw new Error("Sample data is for development builds only");
@@ -38,6 +61,14 @@ export function seedSampleData(today: LocalDate): void {
     { day: 30, type: "headache", severity: 1, note: null },
     { day: 44, type: "constipation", severity: 1, note: null },
   ];
+
+  const [current] = db.select({ language: settings.language }).from(settings).where(eq(settings.id, 1)).all();
+  const lang = resolveLanguage(current?.language ?? "system", deviceLocale());
+  const food = sampleFoodLog({ endDate: today, days: FOOD_DAYS, seed: 11, lang });
+  const water = sampleWater({ endDate: today, days: FOOD_DAYS, seed: 12 });
+  // Measured on injection days, from the first one: the same weeks as the weigh-ins.
+  const measurements = sampleMeasurements({ endDate: today, days: DAYS, seed: 5 });
+  const exercise = sampleExercise({ endDate: today, days: EXERCISE_DAYS, seed: 3 });
 
   db.transaction((tx) => {
     tx.insert(weightEntries).values(
@@ -91,6 +122,64 @@ export function seedSampleData(today: LocalDate): void {
         updatedAt: now,
       })),
     ).run();
-    tx.update(settings).set({ goalWeightG: 85_000, updatedAt: now }).where(eq(settings.id, 1)).run();
+    tx.insert(foodEntries).values(
+      food.map((f) => {
+        const at = instantOf(f.date, f.minuteOfDay);
+        return {
+          id: ulid(at),
+          localDate: f.date,
+          loggedAt: at,
+          meal: f.meal,
+          catalogFoodId: f.catalogFoodId,
+          customFoodId: null,
+          name: f.name,
+          portionId: f.portionId,
+          portionLabel: f.portionLabel,
+          quantityMilli: f.quantityMilli,
+          grams: f.grams,
+          energyKcal: f.energyKcal,
+          proteinMg: f.proteinMg,
+          carbMg: f.carbMg,
+          fatMg: f.fatMg,
+          fiberMg: f.fiberMg,
+          createdAt: at,
+          updatedAt: at,
+        };
+      }),
+    ).run();
+    tx.insert(waterEntries).values(
+      water.map((w) => {
+        const at = instantOf(w.date, w.minuteOfDay);
+        return { id: ulid(at), localDate: w.date, loggedAt: at, amountMl: w.amountMl, createdAt: at, updatedAt: at };
+      }),
+    ).run();
+    tx.insert(measurementEntries).values(
+      measurements.map((m) => {
+        const at = instantOf(m.date, m.minuteOfDay);
+        return { id: ulid(at), localDate: m.date, measuredAt: at, site: m.site, lengthMm: m.lengthMm, note: null, createdAt: at, updatedAt: at };
+      }),
+    ).run();
+    tx.insert(exerciseEntries).values(
+      exercise.map((x) => {
+        const at = instantOf(x.date, x.minuteOfDay);
+        return {
+          id: ulid(at),
+          localDate: x.date,
+          loggedAt: at,
+          kind: x.kind,
+          durationMin: x.durationMin,
+          intensity: x.intensity,
+          energyKcal: null,
+          note: null,
+          createdAt: at,
+          updatedAt: at,
+        };
+      }),
+    ).run();
+    // Goals the made-up person set for themselves, so the screenshots show filled rings.
+    tx.update(settings)
+      .set({ goalWeightG: 85_000, energyGoalKcal: 1_600, proteinGoalG: 90, waterGoalMl: 2_000, updatedAt: now })
+      .where(eq(settings.id, 1))
+      .run();
   });
 }

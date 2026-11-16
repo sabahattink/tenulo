@@ -12,7 +12,6 @@ export type IconName =
   | "plus"
   | "scale"
   | "pen"
-  | "drop"
   | "bell"
   | "heart"
   | "report"
@@ -26,7 +25,6 @@ export type IconName =
   | "shield"
   | "calendar"
   // Today, water and exercise (daily-log slice B).
-  | "bowl"
   | "tape"
   | "face"
   | "undo"
@@ -40,7 +38,9 @@ export type IconName =
   | "ball"
   | "food"
   | "target"
-  | "search";
+  | "search"
+  | "progress"
+  | "glass";
 
 const PATHS: Record<IconName, string[]> = {
   today: ["M3.5 15.5c3-0.2 4.6-6 8-6s4.6 4 9 3.6", "M3.5 20h17"],
@@ -49,7 +49,6 @@ const PATHS: Record<IconName, string[]> = {
   plus: ["M12 5v14", "M5 12h14"],
   scale: ["M5 4h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z", "M8.5 10a3.5 3.5 0 0 1 7 0", "M12 10l1.4-1.6"],
   pen: ["M15 3.5l5.5 5.5", "M17.8 6.2L8 16l-3.5 0.5L5 13l9.8-9.8", "M11 7l6 6", "M4.5 19.5l2-2"],
-  drop: ["M12 3.5c3.2 4 5.5 7 5.5 10a5.5 5.5 0 0 1-11 0c0-3 2.3-6 5.5-10z"],
   bell: ["M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z", "M10 20.5a2.2 2.2 0 0 0 4 0"],
   heart: ["M12 19.5s-7.5-4.6-7.5-10A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7.5 2.5c0 5.4-7.5 10-7.5 10z", "M6.5 12h3l1.5-2.5 2 4.5 1.5-2h3"],
   report: ["M7 3.5h7l4.5 4.5v11.5a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1v-15a1 1 0 0 1 1-1z", "M14 3.5V8h4.5", "M9 13h6", "M9 16.5h4"],
@@ -63,7 +62,6 @@ const PATHS: Record<IconName, string[]> = {
   shield: ["M12 3.5l7 2.8v5.2c0 4.3-3 7.6-7 9-4-1.4-7-4.7-7-9V6.3z", "M9 12l2.2 2.2L15.5 10"],
   calendar: ["M5 6h14a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1z", "M4 10h16", "M8.5 4v4", "M15.5 4v4"],
   // Today, water and exercise (daily-log slice B). Circles are drawn as two arcs.
-  bowl: ["M3.5 11.5h17", "M4.5 11.5a7.5 7.5 0 0 0 15 0", "M9.5 8.5c-0.9-1.1 0.9-1.9 0-3", "M14.5 8.5c-0.9-1.1 0.9-1.9 0-3"],
   tape: ["M4 15.5L15.5 4l4.5 4.5L8.5 20z", "M7.5 12l2 2", "M10 9.5l1.3 1.3", "M12.5 7l2 2"],
   face: ["M3.5 12a8.5 8.5 0 1 0 17 0a8.5 8.5 0 1 0-17 0", "M9 10v0.6", "M15 10v0.6", "M8.5 15.5c1.2-1 2.3-1 3.5 0s2.3 1 3.5 0"],
   undo: ["M8.5 5L4 9.5 8.5 14", "M4 9.5h10a4.75 4.75 0 0 1 0 9.5h-3"],
@@ -92,6 +90,8 @@ const PATHS: Record<IconName, string[]> = {
   food: ["M5.5 3.5V8a2.5 2.5 0 0 0 5 0V3.5", "M8 3.5v17", "M17.5 20.5v-17c-2 1.5-3.2 4.2-3.2 8h3.2"],
   target: ["M3.5 12a8.5 8.5 0 1 0 17 0a8.5 8.5 0 1 0-17 0", "M7.5 12a4.5 4.5 0 1 0 9 0a4.5 4.5 0 1 0-9 0", "M12 12h0.01"],
   search: ["M4.5 10.5a6 6 0 1 0 12 0a6 6 0 1 0-12 0", "M15 15l5 5"],
+  progress: ["M4 20h16", "M7 16.5v-4", "M12 16.5V6.5", "M17 16.5v-7"],
+  glass: ["M6 4h12l-1.4 15.2a1 1 0 0 1-1 0.8H8.4a1 1 0 0 1-1-0.8z", "M6.7 10.5h10.6"],
 };
 
 export function Icon({ name, color, size = 24 }: { name: IconName; color: ColorValue; size?: number }) {

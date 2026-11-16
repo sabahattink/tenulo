@@ -9,7 +9,8 @@
 import type { Messages } from "./en";
 import { foodTr } from "./messages/food";
 import type { BackupRecord, RestoreCountKey } from "./records";
-import { todayTr } from "./messages/today";
+import { todayTr } from "./messages/today"
+import { progressTr } from "./messages/progress";
 
 /** "Sorun 4. tartımda." / "Sorun tartımlarda.": the locative is part of the word, so it is spelled out. */
 const BACKUP_PLACES: Record<BackupRecord, { readonly one: string; readonly all: string }> = {
@@ -179,16 +180,26 @@ export const tr: Messages = {
   },
   history: {
     title: "Geçmiş",
-    filters: { all: "Tümü", weight: "Kilo", injection: "Enjeksiyonlar", "side-effect": "Yan etkiler" },
+    filters: {
+      all: "Tümü",
+      weight: "Kilo",
+      injection: "Enjeksiyonlar",
+      "side-effect": "Yan etkiler",
+      food: "Yiyecek",
+      water: "Su",
+      measurement: "Ölçümler",
+      exercise: "Egzersiz",
+    },
     fromHealthConnect: "Health Connect'ten",
     weighIn: "Tartım",
     injection: (dose) => `Enjeksiyon · ${dose}`,
     siteNotRecorded: "Bölge kaydedilmedi",
     deleteTitle: "Bu kayıt silinsin mi?",
     emptyTitle: "Kaydın burada başlıyor",
-    emptyBody: "Tartımların, enjeksiyonların ve yan etkilerin burada tek bir zaman çizelgesinde görünür, en yenisi en üstte.",
+    emptyBody:
+      "Tartımların, enjeksiyonların, yan etkilerin, öğünlerin, su, ölçüm ve egzersiz kayıtların burada tek bir zaman çizelgesinde görünür, en yenisi en üstte.",
     emptyFiltered: "Bu türde henüz bir kayıt yok.",
-    longPressHint: "Bir kaydı silmek için üzerine basılı tut.",
+    longPressHint: "Bir öğüne ya da günün suyuna dokunursan o gün açılır. Bir kaydı silmek için üzerine basılı tut.",
     deleteHint: "Silmek için basılı tut",
   },
   addWeight: {
@@ -590,4 +601,5 @@ export const tr: Messages = {
     },
   },
   ...todayTr,
+  ...progressTr,
 };

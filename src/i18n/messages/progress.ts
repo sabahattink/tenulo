@@ -1,0 +1,236 @@
+/**
+ * Words for the Progress tab, body measurements, the daily-log lines in History and the doctor
+ * report's new sections. `progressEn` defines the shape; `progressTr` must match it. Both are
+ * spread into en.ts / tr.ts, so they are walked by messages.test.ts like every other string.
+ *
+ * Neutral on purpose: numbers and the direction they moved, never "good", "bad" or "should".
+ * Unit symbols (kcal, g, ml, cm, in) are the same in both languages and are added by the screens.
+ */
+import type { ExerciseKind, Intensity } from "../../domain/exercise";
+import type { Meal } from "../../domain/food-log";
+import type { MeasurementSite } from "../../domain/measurement";
+import type { Direction } from "../../domain/weekly";
+
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+
+export const progressEn = {
+  progress: {
+    tab: "Progress",
+    title: "Progress",
+    weight: "Weight",
+    weightEmpty: "Your trend chart appears here once you have a few weigh-ins.",
+    logWeight: "Log your weight",
+    measurements: "Measurements",
+    addMeasurements: "Add measurements",
+    measurementsEmpty: "Waist, hip and your other tape measurements appear here, each with its own small trend.",
+    /** Under a site's latest value; `change` is signed ("−3.5 cm"). */
+    sinceFirst: (change: string) => `${change} since first`,
+    firstReading: "First reading",
+    /** `when` is "today", "3 days ago" or a date. */
+    measured: (when: string) => `Measured ${when}`,
+    openReadings: "Opens every reading of this site",
+    week: {
+      title: "Weekly comparison",
+      current: "Last 7 days",
+      previous: "7 days before",
+      energy: "Energy, daily average",
+      protein: "Protein, daily average",
+      water: "Water, daily average",
+      exercise: "Exercise",
+      daysLogged: (n: number) => `${n} of 7 days logged`,
+      notLogged: "Not logged",
+      times: (n: number) => plural(n, "session", "sessions"),
+      directions: {
+        higher: "higher than the 7 days before",
+        lower: "lower than the 7 days before",
+        same: "the same as the 7 days before",
+      } satisfies Record<Direction, string>,
+      empty: "Food, water and exercise you log appear here as weekly averages.",
+      footnote: "Averages count only the days with something logged.",
+    },
+  },
+  measure: {
+    sites: {
+      waist: "Waist",
+      hip: "Hip",
+      chest: "Chest",
+      neck: "Neck",
+      arm: "Upper arm",
+      thigh: "Thigh",
+    } satisfies Record<MeasurementSite, string>,
+    addTitle: "Add measurements",
+    readingsTitle: "Measurements",
+    intro: "Fill in only what you measured. The readings are saved together, on the day you pick.",
+    fieldLabel: (site: string, unit: string) => `${site} in ${unit}`,
+    last: (value: string, when: string) => `Last: ${value}, ${when}`,
+    notANumber: (example: string) => `Enter a number like ${example}`,
+    outOfRange: (min: string, max: string) => `Enter a length between ${min} and ${max}`,
+    save: "Save measurements",
+    hint: "Measure at the same spot each time, with the tape snug but not tight.",
+    readings: (n: number) => plural(n, "reading", "readings"),
+    /** `change` is signed ("−0.5 cm"). */
+    fromPrevious: (change: string) => `${change} from the reading before`,
+    noReadings: "No readings for this site yet.",
+    deleteTitle: "Delete this reading?",
+    deleteHint: "Long press a reading to delete it.",
+  },
+  historyLog: {
+    meals: { breakfast: "Breakfast", lunch: "Lunch", dinner: "Dinner", snack: "Snacks" } satisfies Record<Meal, string>,
+    foods: (n: number) => plural(n, "food", "foods"),
+    water: (amount: string) => `Water · ${amount}`,
+    entries: (n: number) => plural(n, "entry", "entries"),
+    measurements: "Measurements",
+    exerciseKinds: {
+      walking: "Walking",
+      running: "Running",
+      cycling: "Cycling",
+      swimming: "Swimming",
+      strength: "Strength training",
+      yoga: "Yoga and stretching",
+      sports: "Sports",
+      other: "Other exercise",
+    } satisfies Record<ExerciseKind, string>,
+    intensities: { light: "Light", moderate: "Moderate", vigorous: "Vigorous" } satisfies Record<Intensity, string>,
+    minutes: (n: string) => `${n} min`,
+    /** Energy Tenulo estimated (never stored), marked as such. */
+    estimate: (kcal: string) => `≈ ${kcal} (estimate)`,
+    openFood: "Opens this day's food diary",
+    openWater: "Opens this day's water",
+    deleteWaterTitle: "Delete this day's water?",
+    deleteSittingTitle: "Delete these measurements?",
+  },
+  reportLog: {
+    foodDays: "Days with food logged",
+    waterDays: "Days with water logged",
+    measuredSites: "Measured sites",
+    exerciseSessions: "Exercise sessions",
+    pdf: {
+      nutrition: "Nutrition",
+      ofDays: (n: string, total: string) => `${n} of ${total}`,
+      energyPerDay: "Average energy per logged day",
+      proteinPerDay: "Average protein per logged day",
+      nutritionNote:
+        "Energy and protein are added up from the foods and amounts the patient logged. Days without a food entry are not counted.",
+      proteinIncomplete: "Some logged foods had no protein value; the protein average counts only the foods that had one.",
+      water: "Water",
+      waterPerDay: "Average per logged day",
+      measurements: "Body measurements",
+      first: "First",
+      last: "Last",
+      exercise: "Exercise",
+      sessions: "Sessions",
+      totalTime: "Total time",
+      exerciseNote: "Type and duration as the patient logged them. Energy burned is not included.",
+    },
+  },
+};
+
+export type ProgressMessages = typeof progressEn;
+
+export const progressTr: ProgressMessages = {
+  progress: {
+    tab: "İlerleme",
+    title: "İlerleme",
+    weight: "Kilo",
+    weightEmpty: "Birkaç tartımdan sonra trend grafiğin burada görünür.",
+    logWeight: "Kilonu kaydet",
+    measurements: "Ölçümler",
+    addMeasurements: "Ölçüm ekle",
+    measurementsEmpty: "Bel, kalça ve diğer mezura ölçümlerin burada, her biri kendi küçük trendiyle görünür.",
+    sinceFirst: (change) => `ilk ölçümden beri ${change}`,
+    firstReading: "İlk ölçüm",
+    measured: (when) => `Ölçüm: ${when}`,
+    openReadings: "Bu bölgenin tüm ölçümlerini açar",
+    week: {
+      title: "Haftalık karşılaştırma",
+      current: "Son 7 gün",
+      previous: "Önceki 7 gün",
+      energy: "Enerji, günlük ortalama",
+      protein: "Protein, günlük ortalama",
+      water: "Su, günlük ortalama",
+      exercise: "Egzersiz",
+      daysLogged: (n) => `Kayıtlı gün: ${n} / 7`,
+      notLogged: "Kayıt yok",
+      times: (n) => `${n} kez`,
+      directions: {
+        higher: "önceki 7 günden yüksek",
+        lower: "önceki 7 günden düşük",
+        same: "önceki 7 günle aynı",
+      },
+      empty: "Kaydettiğin yiyecek, su ve egzersizler burada haftalık ortalamalar olarak görünür.",
+      footnote: "Ortalamalar yalnızca kayıt girdiğin günleri sayar.",
+    },
+  },
+  measure: {
+    sites: {
+      waist: "Bel",
+      hip: "Kalça",
+      chest: "Göğüs",
+      neck: "Boyun",
+      arm: "Kol",
+      thigh: "Uyluk",
+    },
+    addTitle: "Ölçüm ekle",
+    readingsTitle: "Ölçümler",
+    intro: "Yalnızca ölçtüklerini doldur. Ölçümler, seçtiğin günle birlikte kaydedilir.",
+    fieldLabel: (site, unit) => `${site}, ${unit} cinsinden`,
+    last: (value, when) => `Son: ${value}, ${when}`,
+    notANumber: (example) => `${example} gibi bir sayı gir`,
+    outOfRange: (min, max) => `${min} ile ${max} arasında bir uzunluk gir`,
+    save: "Ölçümleri kaydet",
+    hint: "Her seferinde aynı yerden ölç; mezura sıkmadan tene otursun.",
+    readings: (n) => `${n} ölçüm`,
+    fromPrevious: (change) => `bir önceki ölçüme göre ${change}`,
+    noReadings: "Bu bölge için henüz ölçüm yok.",
+    deleteTitle: "Bu ölçüm silinsin mi?",
+    deleteHint: "Bir ölçümü silmek için üzerine basılı tut.",
+  },
+  historyLog: {
+    meals: { breakfast: "Kahvaltı", lunch: "Öğle yemeği", dinner: "Akşam yemeği", snack: "Ara öğün" },
+    foods: (n) => `${n} yiyecek`,
+    water: (amount) => `Su · ${amount}`,
+    entries: (n) => `${n} kayıt`,
+    measurements: "Ölçümler",
+    exerciseKinds: {
+      walking: "Yürüyüş",
+      running: "Koşu",
+      cycling: "Bisiklet",
+      swimming: "Yüzme",
+      strength: "Kuvvet antrenmanı",
+      yoga: "Yoga ve esneme",
+      sports: "Spor",
+      other: "Diğer egzersiz",
+    },
+    intensities: { light: "Hafif", moderate: "Orta", vigorous: "Yoğun" },
+    minutes: (n) => `${n} dk`,
+    estimate: (kcal) => `≈ ${kcal} (tahmini)`,
+    openFood: "Bu günün yiyecek günlüğünü açar",
+    openWater: "Bu günün su kaydını açar",
+    deleteWaterTitle: "Bu günün su kayıtları silinsin mi?",
+    deleteSittingTitle: "Bu ölçümler silinsin mi?",
+  },
+  reportLog: {
+    foodDays: "Yiyecek kaydı olan gün",
+    waterDays: "Su kaydı olan gün",
+    measuredSites: "Ölçülen bölge",
+    exerciseSessions: "Egzersiz sayısı",
+    pdf: {
+      nutrition: "Beslenme",
+      ofDays: (n, total) => `${n} / ${total}`,
+      energyPerDay: "Kayıtlı gün başına ortalama enerji",
+      proteinPerDay: "Kayıtlı gün başına ortalama protein",
+      nutritionNote:
+        "Enerji ve protein, hastanın kaydettiği yiyecek ve miktarlardan toplanmıştır. Yiyecek kaydı olmayan günler sayılmaz.",
+      proteinIncomplete: "Kaydedilen bazı yiyeceklerin protein değeri yoktu; protein ortalaması yalnızca değeri olan yiyecekleri içerir.",
+      water: "Su",
+      waterPerDay: "Kayıtlı gün başına ortalama",
+      measurements: "Vücut ölçüleri",
+      first: "İlk",
+      last: "Son",
+      exercise: "Egzersiz",
+      sessions: "Egzersiz sayısı",
+      totalTime: "Toplam süre",
+      exerciseNote: "Tür ve süre, hastanın kaydettiği gibidir. Harcanan enerji dahil edilmemiştir.",
+    },
+  },
+};

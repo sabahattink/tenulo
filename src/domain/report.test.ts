@@ -11,6 +11,10 @@ const base: ReportInput = {
   planSteps: [],
   injections: [],
   sideEffects: [],
+  foodDays: [],
+  waterDays: [],
+  measurements: [],
+  exercises: [],
 };
 
 describe("reportStart", () => {
@@ -33,6 +37,10 @@ describe("buildReport", () => {
     expect(r.injections.count).toBe(0);
     expect(r.injections.gaps).toBeUndefined();
     expect(r.sideEffects.total).toBe(0);
+    expect(r.nutrition).toEqual({ daysLogged: 0, energyKcalPerDay: undefined, proteinMgPerDay: undefined, proteinIncomplete: false });
+    expect(r.water).toEqual({ daysLogged: 0, mlPerDay: undefined });
+    expect(r.measurements).toEqual([]);
+    expect(r.exercise).toEqual({ sessions: 0, minutes: 0, byKind: [] });
   });
 
   it("summarizes weight inside the period, using earlier readings only for the trend", () => {
@@ -103,5 +111,97 @@ describe("buildReport", () => {
     });
     expect(r.planSteps.map((s) => s.doseMcg)).toEqual([250, 500]);
     expect(r.medicationName).toBe("My pen");
+  });
+
+  it("averages energy and protein over the days with food logged in the period", () => {
+    const r = buildReport({
+      ...base,
+      foodDays: [
+        { date: d("2026-10-01"), energyKcal: 1500, proteinMg: 80_000, proteinUnknown: 0 },
+        { date: d("2026-10-02"), energyKcal: 1801, proteinMg: 70_001, proteinUnknown: 0 },
+        { date: d("2026-09-29"), energyKcal: 4000, proteinMg: 10_000, proteinUnknown: 3 },
+      ],
+    });
+    expect(r.nutrition).toEqual({ daysLogged: 2, energyKcalPerDay: 1651, proteinMgPerDay: 75_001, proteinIncomplete: false });
+  });
+
+  it("adds up rows of the same day and says when some protein values were missing", () => {
+    const r = buildReport({
+      ...base,
+      foodDays: [
+        { date: d("2026-10-01"), energyKcal: 900, proteinMg: 40_000, proteinUnknown: 0 },
+        { date: d("2026-10-01"), energyKcal: 600, proteinMg: 20_000, proteinUnknown: 1 },
+        { date: d("2026-10-03"), energyKcal: 1700, proteinMg: 90_000, proteinUnknown: 0 },
+      ],
+    });
+    expect(r.nutrition).toEqual({ daysLogged: 2, energyKcalPerDay: 1600, proteinMgPerDay: 75_000, proteinIncomplete: true });
+  });
+
+  it("leaves a day without any protein value out of the protein average", () => {
+    const r = buildReport({
+      ...base,
+      foodDays: [
+        { date: d("2026-10-01"), energyKcal: 1500, proteinMg: 90_000, proteinUnknown: 0 },
+        { date: d("2026-10-02"), energyKcal: 1700, proteinMg: null, proteinUnknown: 4 },
+      ],
+    });
+    expect(r.nutrition).toEqual({ daysLogged: 2, energyKcalPerDay: 1600, proteinMgPerDay: 90_000, proteinIncomplete: true });
+  });
+
+  it("averages water over the days with water logged", () => {
+    const r = buildReport({
+      ...base,
+      waterDays: [
+        { date: d("2026-10-01"), amountMl: 1750 },
+        { date: d("2026-10-05"), amountMl: 2250 },
+        { date: d("2026-10-30"), amountMl: 9000 },
+      ],
+    });
+    expect(r.water).toEqual({ daysLogged: 2, mlPerDay: 2000 });
+  });
+
+  it("gives each site its first and last reading inside the period", () => {
+    const r = buildReport({
+      ...base,
+      measurements: [
+        { site: "hip", date: d("2026-10-01"), measuredAt: 1, lengthMm: 1100 },
+        { site: "waist", date: d("2026-10-20"), measuredAt: 3, lengthMm: 965 },
+        { site: "waist", date: d("2026-09-01"), measuredAt: 0, lengthMm: 1020 },
+        { site: "waist", date: d("2026-10-01"), measuredAt: 1, lengthMm: 990 },
+        { site: "waist", date: d("2026-10-10"), measuredAt: 2, lengthMm: 975 },
+      ],
+    });
+    expect(r.measurements).toEqual([
+      {
+        site: "waist",
+        first: { date: "2026-10-01", lengthMm: 990 },
+        last: { date: "2026-10-20", lengthMm: 965 },
+        readings: 3,
+        changeMm: -25,
+      },
+      { site: "hip", first: { date: "2026-10-01", lengthMm: 1100 }, last: { date: "2026-10-01", lengthMm: 1100 }, readings: 1, changeMm: undefined },
+    ]);
+  });
+
+  it("counts exercise sessions and minutes, by kind with the most minutes first", () => {
+    const r = buildReport({
+      ...base,
+      exercises: [
+        { date: d("2026-10-02"), kind: "walking", durationMin: 30 },
+        { date: d("2026-10-04"), kind: "strength", durationMin: 45 },
+        { date: d("2026-10-06"), kind: "walking", durationMin: 40 },
+        { date: d("2026-10-08"), kind: "yoga", durationMin: 45 },
+        { date: d("2026-09-01"), kind: "running", durationMin: 60 },
+      ],
+    });
+    expect(r.exercise).toEqual({
+      sessions: 4,
+      minutes: 160,
+      byKind: [
+        { kind: "walking", sessions: 2, minutes: 70 },
+        { kind: "strength", sessions: 1, minutes: 45 },
+        { kind: "yoga", sessions: 1, minutes: 45 },
+      ],
+    });
   });
 });

@@ -6,14 +6,13 @@ import { useI18n } from "@/i18n/provider";
 import { Icon, type IconName } from "@/ui/icons";
 import { useTheme } from "@/ui/theme";
 
-/** A key of `t.tabs`, or a function for a tab whose title lives in a slice's own messages. */
-type TabTitle = keyof Messages["tabs"] | ((t: Messages) => string);
-
-const TABS: readonly { name: string; title: TabTitle; icon: IconName }[] = [
-  { name: "index", title: "today", icon: "today" },
+/** In order: Today, Food, Progress, History, Settings. A tab's title comes from its own messages. */
+const TABS: readonly { name: string; title: (t: Messages) => string; icon: IconName }[] = [
+  { name: "index", title: (t) => t.tabs.today, icon: "today" },
   { name: "food", title: (t) => t.food.tab, icon: "food" },
-  { name: "history", title: "history", icon: "history" },
-  { name: "settings", title: "settings", icon: "settings" },
+  { name: "progress", title: (t) => t.progress.tab, icon: "progress" },
+  { name: "history", title: (t) => t.tabs.history, icon: "history" },
+  { name: "settings", title: (t) => t.tabs.settings, icon: "settings" },
 ];
 
 export default function TabsLayout() {
@@ -37,7 +36,7 @@ export default function TabsLayout() {
           <Tabs.Screen
             key={tab.name}
             name={tab.name}
-            options={{ title: typeof tab.title === "function" ? tab.title(t) : t.tabs[tab.title], tabBarIcon: ({ color }) => <Icon name={tab.icon} color={color} size={24} /> }}
+            options={{ title: tab.title(t), tabBarIcon: ({ color }) => <Icon name={tab.icon} color={color} size={24} /> }}
           />
         ))}
       </Tabs>

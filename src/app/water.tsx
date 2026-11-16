@@ -161,7 +161,7 @@ export default function Water() {
                 style={[styles.row, i < entries.length - 1 && { borderBottomColor: theme.border, borderBottomWidth: StyleSheet.hairlineWidth }]}
               >
                 <View style={[styles.rowIcon, { backgroundColor: theme.accentSoft }]}>
-                  <Icon name="drop" color={theme.accent} size={20} />
+                  <Icon name="glass" color={theme.accent} size={20} />
                 </View>
                 <View
                   style={styles.rowText}
