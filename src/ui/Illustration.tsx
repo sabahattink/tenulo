@@ -11,6 +11,10 @@ const SOURCES = {
   private: require("../../assets/illustrations/private.webp"),
   journal: require("../../assets/illustrations/journal.webp"),
   report: require("../../assets/illustrations/report.webp"),
+  food: require("../../assets/illustrations/food.webp"),
+  water: require("../../assets/illustrations/water.webp"),
+  measure: require("../../assets/illustrations/measure.webp"),
+  exercise: require("../../assets/illustrations/exercise.webp"),
 } as const;
 
 export type IllustrationName = keyof typeof SOURCES;
