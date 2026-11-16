@@ -208,6 +208,11 @@ export default function SettingsScreen() {
         <GoalEditor theme={theme} unit={unit} goalG={settings.goalWeightG} />
       </Section>
 
+      <Section theme={theme} title={t.food.settings.section}>
+        <ListRow theme={theme} icon="target" title={t.food.settings.goals} detail={t.food.settings.goalsDetail} onPress={() => router.push("/goals")} />
+        <ListRow theme={theme} icon="food" title={t.food.settings.mine} detail={t.food.settings.mineDetail} last onPress={() => router.push("/food/mine")} />
+      </Section>
+
       <Section
         theme={theme}
         title={t.settings.reminders.title}

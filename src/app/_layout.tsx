@@ -100,6 +100,14 @@ function Navigator({ theme, welcomed }: { theme: Theme; welcomed: boolean }) {
           <Stack.Screen name="pro" options={{ title: t.screens.pro, ...modal }} />
           <Stack.Screen name="medication" options={{ title: t.screens.medication }} />
           <Stack.Screen name="privacy" options={{ title: t.screens.privacy }} />
+          {/* Food & goals. The portion step, quick add and the custom-food form set their own titles. */}
+          <Stack.Screen name="food/add" options={{ title: t.food.add.title, ...modal }} />
+          <Stack.Screen name="food/portion" options={{ title: t.food.add.title }} />
+          <Stack.Screen name="food/quick" options={{ title: t.food.quick.title }} />
+          <Stack.Screen name="food/entry" options={{ title: t.food.entry.title, ...modal }} />
+          <Stack.Screen name="food/mine" options={{ title: t.food.mine.title }} />
+          <Stack.Screen name="food/custom" options={{ title: t.food.custom.newTitle }} />
+          <Stack.Screen name="goals" options={{ title: t.goals.title }} />
         </Stack.Protected>
         <Stack.Protected guard={!welcomed}>
           <Stack.Screen name="welcome" options={{ headerShown: false, animation: "fade" }} />

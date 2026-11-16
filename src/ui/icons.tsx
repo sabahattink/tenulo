@@ -24,7 +24,11 @@ export type IconName =
   | "chevron"
   | "trash"
   | "shield"
-  | "calendar";
+  | "calendar"
+  | "food"
+  | "target"
+  | "search"
+  | "minus";
 
 const PATHS: Record<IconName, string[]> = {
   today: ["M3.5 15.5c3-0.2 4.6-6 8-6s4.6 4 9 3.6", "M3.5 20h17"],
@@ -46,6 +50,10 @@ const PATHS: Record<IconName, string[]> = {
   trash: ["M5 7h14", "M9.5 7V5h5v2", "M7 7l0.8 12.2a1 1 0 0 0 1 0.8h6.4a1 1 0 0 0 1-0.8L17 7"],
   shield: ["M12 3.5l7 2.8v5.2c0 4.3-3 7.6-7 9-4-1.4-7-4.7-7-9V6.3z", "M9 12l2.2 2.2L15.5 10"],
   calendar: ["M5 6h14a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1z", "M4 10h16", "M8.5 4v4", "M15.5 4v4"],
+  food: ["M5.5 3.5V8a2.5 2.5 0 0 0 5 0V3.5", "M8 3.5v17", "M17.5 20.5v-17c-2 1.5-3.2 4.2-3.2 8h3.2"],
+  target: ["M3.5 12a8.5 8.5 0 1 0 17 0a8.5 8.5 0 1 0-17 0", "M7.5 12a4.5 4.5 0 1 0 9 0a4.5 4.5 0 1 0-9 0", "M12 12h0.01"],
+  search: ["M4.5 10.5a6 6 0 1 0 12 0a6 6 0 1 0-12 0", "M15 15l5 5"],
+  minus: ["M5 12h14"],
 };
 
 export function Icon({ name, color, size = 24 }: { name: IconName; color: ColorValue; size?: number }) {
