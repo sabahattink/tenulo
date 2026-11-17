@@ -119,10 +119,10 @@ function chart(r: Report, unit: WeightUnit, { t, f }: I18n): string {
     { width: CHART_W, height: CHART_H, padLeft: CHART_PAD_LEFT, padRight: 6, padTop: 8, padBottom: 8 },
     null,
     r.days,
+    unit,
   );
   if (g === undefined) return "";
-  const stepG = (g.ticks[1]?.valueG ?? 0) - (g.ticks[0]?.valueG ?? 0);
-  const decimals = fromGrams(stepG, unit) >= 1 ? 0 : 1;
+  const decimals = g.tickDecimals;
   const ticks = g.ticks
     .map(
       (tick) =>
