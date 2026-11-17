@@ -75,3 +75,9 @@ package `com.kalkansoftware.tenulo`.
     screenshot replaced the whole inherited TR set for en-US; the TR listing kept its own.
   - Uploading several screenshots back to back drops some of them. Upload one, wait until it shows
     in the slot, then upload the next.
+- **Internal testing release 2 (1.0.0) published at 01:16** (console time, 2026-11-18). It replaces
+  release 1 on the track.
+  - versionCode 2. Release 1's bundle is not carried over.
+  - Device support is unchanged from release 1: 11,546 phones, no device lost or added.
+  - Release notes in tr-TR and en-US: data is no longer copied by device-to-device transfer, and
+    moves to a new phone only with a backup file the user makes.
