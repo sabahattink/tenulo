@@ -32,6 +32,7 @@ const data: BackupData = {
     proteinGoalG: 110,
     waterGoalMl: 2500,
     waterServingMl: 300,
+    bodyFigure: "male",
   },
   weights: [
     {
@@ -208,7 +209,7 @@ describe("backup round trip", () => {
     v1.version = 1;
     for (const key of ["customFoods", "foodEntries", "waterEntries", "measurements", "exercises"]) delete v1.data[key];
     const settings = v1.data.settings as Record<string, unknown>;
-    for (const key of ["language", "energyGoalKcal", "proteinGoalG", "waterGoalMl", "waterServingMl"]) delete settings[key];
+    for (const key of ["language", "energyGoalKcal", "proteinGoalG", "waterGoalMl", "waterServingMl", "bodyFigure"]) delete settings[key];
 
     const r = parseBackup(JSON.stringify(v1));
     expect(r.ok).toBe(true);
@@ -217,6 +218,20 @@ describe("backup round trip", () => {
     expect(r.backup.data.exercises).toEqual([]);
     expect(r.backup.data.weights).toEqual(data.weights);
     expect(r.backup.data.settings).toMatchObject({ language: "system", energyGoalKcal: null, waterServingMl: 250, weightUnit: "kg" });
+    expect(r.backup.data.settings?.bodyFigure).toBe("female");
+  });
+
+  it("reads a version 2 file from before the body figure as the woman's figure", () => {
+    const v2 = JSON.parse(serializeBackup(createBackup(data, t, "1.0.0"))) as { data: { settings: Record<string, unknown> } };
+    delete v2.data.settings.bodyFigure;
+    const r = parseBackup(JSON.stringify(v2));
+    expect(r.ok && r.backup.data.settings?.bodyFigure).toBe("female");
+  });
+
+  it("rejects a body figure it does not draw", () => {
+    const bad = JSON.parse(serializeBackup(createBackup(data, t, "1.0.0"))) as { data: { settings: Record<string, unknown> } };
+    bad.data.settings.bodyFigure = "robot";
+    expect(parseBackup(JSON.stringify(bad)).ok).toBe(false);
   });
 
   it("names the file after the local date", () => {

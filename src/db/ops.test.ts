@@ -193,6 +193,7 @@ const backup = (): BackupData => ({
     proteinGoalG: 100,
     waterGoalMl: 2000,
     waterServingMl: 330,
+    bodyFigure: "male",
   },
   weights: [0, 1, 2].map((i) => ({
     id: id(10 + i),
@@ -293,7 +294,7 @@ describe("restoreData", () => {
     expect(
       t.sqlite
         .prepare(
-          "SELECT weight_unit, goal_weight_g, injection_reminder_enabled, language, energy_goal_kcal, protein_goal_g, water_goal_ml, water_serving_ml FROM settings",
+          "SELECT weight_unit, goal_weight_g, injection_reminder_enabled, language, energy_goal_kcal, protein_goal_g, water_goal_ml, water_serving_ml, body_figure FROM settings",
         )
         .get(),
     ).toEqual({
@@ -305,6 +306,7 @@ describe("restoreData", () => {
       protein_goal_g: 100,
       water_goal_ml: 2000,
       water_serving_ml: 330,
+      body_figure: "male",
     });
     expect(t.sqlite.prepare("SELECT custom_food_id FROM food_entry").get()).toEqual({ custom_food_id: id(5) });
   });

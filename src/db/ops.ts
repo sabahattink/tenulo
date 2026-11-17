@@ -121,6 +121,7 @@ export function readBackupData(database: SyncDb): BackupData {
               proteinGoalG: s.proteinGoalG,
               waterGoalMl: s.waterGoalMl,
               waterServingMl: s.waterServingMl,
+              bodyFigure: s.bodyFigure,
             },
       weights: tx.select().from(weightEntries).all(),
       medications: tx.select().from(medications).all(),
@@ -238,6 +239,7 @@ export function restoreData(database: SyncDb, data: BackupData, now: number): Re
           proteinGoalG: s.proteinGoalG,
           waterGoalMl: s.waterGoalMl,
           waterServingMl: s.waterServingMl,
+          bodyFigure: s.bodyFigure,
           updatedAt: now,
         })
         .where(eq(settings.id, 1))

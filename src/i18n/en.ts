@@ -216,6 +216,10 @@ export const en = {
     save: "Save injection",
   },
   bodyMap: {
+    /** Which figure the map draws; a display choice. */
+    figure: "Figure",
+    female: "Woman",
+    male: "Man",
     prompt: "Tap where you injected",
     selected: "Selected",
     longestAgo: "Used longest ago",

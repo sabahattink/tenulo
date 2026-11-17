@@ -21,6 +21,7 @@ import {
 import { ENERGY_GOAL_KCAL, PROTEIN_GOAL_G, WATER_GOAL_ML, WATER_SERVING_ML } from "./goals";
 import { ULID_PATTERN } from "./id";
 import { INJECTION_SITES } from "./injection";
+import { BODY_FIGURES, DEFAULT_BODY_FIGURE } from "./body-figure";
 import { LANGUAGE_PREFERENCES } from "./language";
 import { MAX_LENGTH_MM, MEASUREMENT_SITES, MIN_LENGTH_MM } from "./measurement";
 import { MAX_DOSE_MCG, MIN_DOSE_MCG } from "./parse";
@@ -75,6 +76,8 @@ const settingsSchema = z.object({
   proteinGoalG: wholeIn(PROTEIN_GOAL_G).nullable().default(null),
   waterGoalMl: wholeIn(WATER_GOAL_ML).nullable().default(null),
   waterServingMl: wholeIn(WATER_SERVING_ML).default(WATER_SERVING_ML.default),
+  // Added within version 2: a file without it was made before the figure could be chosen.
+  bodyFigure: z.enum(BODY_FIGURES).default(DEFAULT_BODY_FIGURE),
 });
 
 const weightSchema = z

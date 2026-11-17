@@ -2,7 +2,9 @@ import { router } from "expo-router";
 import { useState } from "react";
 import { ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { logInjection, useActiveMedication, useInjections, usePlanSteps } from "@/data/injections";
+import { setBodyFigure, useSettings } from "@/data/repo";
 import { useToday } from "@/data/use-today";
+import { type BodyFigure, DEFAULT_BODY_FIGURE } from "@/domain/body-figure";
 import { parseLocalDate } from "@/domain/date";
 import { type InjectionSite, injectionStatus } from "@/domain/injection";
 import { parseDoseInput } from "@/domain/parse";
@@ -20,6 +22,7 @@ export default function LogInjection() {
   const medication = useActiveMedication();
   const history = useInjections(medication?.id);
   const steps = usePlanSteps(medication?.id);
+  const settings = useSettings();
 
   const status = injectionStatus(
     history.map((i) => ({ date: parseLocalDate(i.localDate), site: i.site, doseMcg: i.doseMcg })),
@@ -34,6 +37,11 @@ export default function LogInjection() {
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | undefined>();
+
+  const figure = settings?.bodyFigure ?? DEFAULT_BODY_FIGURE;
+  const chooseFigure = (next: BodyFigure) => {
+    setBodyFigure(next).catch((e: unknown) => setError(e instanceof Error ? e.message : t.common.couldNotSave));
+  };
 
   const expected = status.expectedDoseMcg;
   const doseText = typedDose ?? (expected === undefined ? "" : f.doseNumber(expected));
@@ -80,6 +88,8 @@ export default function LogInjection() {
       <Label theme={theme}>{t.logInjection.site}</Label>
       <BodyMap
         theme={theme}
+        figure={figure}
+        onFigureChange={chooseFigure}
         selected={site}
         lastSite={status.lastSite}
         longestAgoSite={status.longestAgoSite}

@@ -6,6 +6,7 @@ import { settings, weightEntries } from "@/db/schema";
 import { purgeDeletedData, wipeAll } from "@/db/ops";
 import { type LocalDate, localDateOf } from "@/domain/date";
 import { ulid } from "@/domain/id";
+import { BODY_FIGURES, type BodyFigure } from "@/domain/body-figure";
 import { LANGUAGE_PREFERENCES, type LanguagePreference } from "@/domain/language";
 import { isMinuteOfDay } from "@/domain/reminder";
 import { type WeightUnit, isPlausibleWeight } from "@/domain/weight";
@@ -49,6 +50,11 @@ export async function setWeightUnit(unit: WeightUnit): Promise<void> {
 export async function setLanguage(language: LanguagePreference): Promise<void> {
   if (!LANGUAGE_PREFERENCES.includes(language)) throw new RangeError(`Not a language: ${String(language)}`);
   await db.update(settings).set({ language, updatedAt: Date.now() }).where(eq(settings.id, 1));
+}
+
+export async function setBodyFigure(figure: BodyFigure): Promise<void> {
+  if (!BODY_FIGURES.includes(figure)) throw new RangeError(`Not a body figure: ${String(figure)}`);
+  await db.update(settings).set({ bodyFigure: figure, updatedAt: Date.now() }).where(eq(settings.id, 1));
 }
 
 export async function setGoalWeight(goalG: number | null): Promise<void> {

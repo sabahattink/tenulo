@@ -20,6 +20,7 @@
  */
 import { sql } from "drizzle-orm";
 import { type SQLiteColumn, check, index, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
+import { BODY_FIGURES, DEFAULT_BODY_FIGURE } from "../domain/body-figure";
 import { EXERCISE_KINDS, INTENSITIES, MAX_DURATION_MIN, MAX_EXERCISE_KCAL } from "../domain/exercise";
 import {
   MAX_ENTRY_KCAL,
@@ -80,6 +81,8 @@ export const settings = sqliteTable(
     waterGoalMl: integer("water_goal_ml"),
     /** What one tap of "+ glass" adds. */
     waterServingMl: integer("water_serving_ml").notNull().default(WATER_SERVING_ML.default),
+    /** Which figure the injection-site map draws. */
+    bodyFigure: text("body_figure", { enum: BODY_FIGURES }).notNull().default(DEFAULT_BODY_FIGURE),
     updatedAt: updatedAt(),
   },
   (t) => [
@@ -89,6 +92,7 @@ export const settings = sqliteTable(
     check("settings_injection_minute", sql`${t.injectionReminderMinute} BETWEEN 0 AND 1439`),
     check("settings_weigh_in_minute", sql`${t.weighInReminderMinute} BETWEEN 0 AND 1439`),
     check("settings_language", sql`${t.language} IN (${oneOf(LANGUAGE_PREFERENCES)})`),
+    check("settings_body_figure", sql`${t.bodyFigure} IN (${oneOf(BODY_FIGURES)})`),
     check(
       "settings_energy_goal",
       sql`${t.energyGoalKcal} IS NULL OR ${t.energyGoalKcal} BETWEEN ${num(ENERGY_GOAL_KCAL.min)} AND ${num(ENERGY_GOAL_KCAL.max)}`,

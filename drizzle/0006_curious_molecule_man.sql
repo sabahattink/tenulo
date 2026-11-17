@@ -1,0 +1,1 @@
+ALTER TABLE `settings` ADD `body_figure` text DEFAULT 'female' NOT NULL;

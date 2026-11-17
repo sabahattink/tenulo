@@ -60,6 +60,8 @@ describe("schema constraints", () => {
     db.prepare("INSERT INTO settings (id, updated_at) VALUES (1, ?)").run(now);
     expect(() => db.prepare("INSERT INTO settings (id, updated_at) VALUES (2, ?)").run(now)).toThrow(/CHECK/);
     expect(() => db.prepare("UPDATE settings SET weight_unit = 'stone' WHERE id = 1").run()).toThrow(/CHECK/);
+    expect(db.prepare("SELECT body_figure FROM settings").get()).toEqual({ body_figure: "female" });
+    expect(() => db.prepare("UPDATE settings SET body_figure = 'robot' WHERE id = 1").run()).toThrow(/CHECK/);
   });
 
   it("protects injections, sites and medication references", () => {

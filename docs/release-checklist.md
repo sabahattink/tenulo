@@ -15,8 +15,8 @@ Everything in code is done; these steps need the Play Console account owner.
   prints `200`. Its source is the kalkansoftware.com site repo; change it there first, then here.
 - The policy describes everything the app stores, in Turkish and English: weigh-ins, injections,
   plan, side effects, and the daily log (food entries and the user's own foods, water,
-  body measurements, exercise, daily goals, language). All of it stays on the phone; nothing about
-  Health Connect changes (Weight, read-only).
+  body measurements, exercise, daily goals, language, which body figure the site map shows). All
+  of it stays on the phone; nothing about Health Connect changes (Weight, read-only).
 
 ## 1. Build
 
