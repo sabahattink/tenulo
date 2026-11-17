@@ -48,7 +48,8 @@ Tenulo is a local-first GLP-1 and weight log for Android (`com.kalkansoftware.te
 
 - No network calls from app code. No analytics, crash reporting, ads, remote config or Firebase. Google Play Billing is the only component that talks to a server.
 - No RevenueCat or any other purchase backend: use Play Billing directly.
-- `android.allowBackup` stays `false`. `com.google.android.gms.permission.AD_ID` stays in `android.blockedPermissions`.
+- `android.allowBackup` stays `false`, and `plugins/with-no-data-extraction.js` keeps every storage domain out of
+  cloud backup and device-to-device transfer (on Android 12+ `allowBackup` alone does not stop the transfer). `com.google.android.gms.permission.AD_ID` stays in `android.blockedPermissions`.
 - Health Connect: read `Weight` only. Never write. Adding any other record type requires updating the privacy policy first.
 - Data leaves the device only when the user exports it themselves (PDF report, backup file).
 - "Delete all data" in Settings must remove every row in every table.
