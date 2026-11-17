@@ -22,7 +22,7 @@ interface Props {
  */
 export const TimelineRow = memo(function TimelineRow({ theme, row, now, last, onOpen, onDelete }: Props) {
   const { t, f } = useI18n();
-  const tint = row.tint === "warn" ? theme.warn : theme.accent;
+  const { ink, soft } = theme.kinds[row.color];
   const when = f.relativeDay(row.date, now);
   const removable = row.remove !== undefined;
   const hint = [row.open?.hint, removable ? t.history.deleteHint : undefined].filter((h) => h !== undefined).join(". ");
@@ -43,8 +43,8 @@ export const TimelineRow = memo(function TimelineRow({ theme, row, now, last, on
         { opacity: pressed ? 0.7 : 1 },
       ]}
     >
-      <View style={[styles.icon, { backgroundColor: row.tint === "warn" ? theme.surfaceAlt : theme.accentSoft }]}>
-        <Icon name={row.icon} color={tint} size={20} />
+      <View style={[styles.icon, { backgroundColor: soft }]}>
+        <Icon name={row.icon} color={ink} size={20} />
       </View>
       <View style={styles.text}>
         <Text style={[type.bodyStrong, { color: theme.text }]}>{row.title}</Text>

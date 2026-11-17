@@ -13,7 +13,7 @@ import { Illustration } from "@/ui/Illustration";
 import { ProgressRing } from "@/ui/ProgressRing";
 import { Icon } from "@/ui/icons";
 import { Card, Label } from "@/ui/kit";
-import { type Theme, space, type } from "@/ui/theme";
+import { type KindColors, type Theme, space, type } from "@/ui/theme";
 import { FoodRow, RoundButton, StatTile } from "./parts";
 import { GRAM, KCAL, decimalMark, gramsFromMg, kcalText } from "./units";
 
@@ -111,6 +111,7 @@ function DayTotals({
       <View style={styles.rings}>
         <GoalRing
           theme={theme}
+          colors={theme.kinds.food}
           label={t.food.nutrients.energy}
           value={f.integer(sum.energyKcal)}
           unit={KCAL}
@@ -119,6 +120,7 @@ function DayTotals({
         />
         <GoalRing
           theme={theme}
+          colors={theme.kinds.protein}
           label={t.food.nutrients.protein}
           value={atLeast(gramsText(sum.proteinMg, decimalMark(i18n)), sum.incomplete.proteinMg)}
           unit={GRAM}
@@ -139,6 +141,7 @@ function DayTotals({
 /** Value in a ring filled towards the user's own goal; without a goal, the value and a quiet link. */
 function GoalRing({
   theme,
+  colors,
   label,
   value,
   unit,
@@ -146,25 +149,28 @@ function GoalRing({
   goal,
 }: {
   theme: Theme;
+  /** The ring in the color of what it counts: food's honey for energy, berry for protein. */
+  colors: KindColors;
   label: string;
   value: string;
   unit: string;
   fraction: number | undefined;
   goal: string | undefined;
 }) {
-  const { t } = useI18n();
+  const i18n = useI18n();
+  const { t } = i18n;
   const router = useRouter();
   return (
     <View style={styles.ringBlock}>
       <View accessible accessibilityLabel={[label, `${value} ${unit}`, goal === undefined ? "" : t.food.day.goal(goal)].filter(Boolean).join(", ")}>
-        <ProgressRing size={RING} stroke={RING_STROKE} fraction={fraction ?? 0} color={theme.accent} track={theme.surfaceAlt}>
+        <ProgressRing size={RING} stroke={RING_STROKE} fraction={fraction ?? 0} color={colors.ink} track={colors.soft}>
           <Text style={[styles.ringValue, { color: theme.text }]} numberOfLines={1} adjustsFontSizeToFit>
             {value}
           </Text>
           <Text style={[type.small, { color: theme.muted }]}>{unit}</Text>
         </ProgressRing>
       </View>
-      <Label theme={theme}>{label}</Label>
+      <Text style={[type.caption, { color: colors.ink }]}>{i18n.f.upper(label)}</Text>
       {goal === undefined ? (
         <Pressable accessibilityRole="link" onPress={() => router.push("/goals")} style={styles.setGoal}>
           <Text style={[type.small, styles.link, { color: theme.accent }]}>{t.food.day.setGoal}</Text>
@@ -237,9 +243,9 @@ function MealSection({
           onPress={copy}
           style={({ pressed }) => [styles.copy, { borderColor: theme.border, opacity: copying ? 0.45 : pressed ? 0.6 : 1 }]}
         >
-          <Icon name="history" color={theme.accent} size={20} />
+          <Icon name="history" color={theme.kinds.food.ink} size={20} />
           <View style={styles.copyText}>
-            <Text style={[type.bodyStrong, { color: theme.accent }]}>
+            <Text style={[type.bodyStrong, { color: theme.kinds.food.ink }]}>
               {date === today ? t.food.day.copyFromYesterday : t.food.day.copyFromDayBefore}
             </Text>
             <Text style={[type.small, { color: theme.muted }]} numberOfLines={1}>

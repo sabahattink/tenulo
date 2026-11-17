@@ -7,7 +7,7 @@ import { useToday } from "@/data/use-today";
 import { type LocalDate, parseLocalDate, toDayNumber } from "@/domain/date";
 import { type LengthUnit, MEASUREMENT_SITES, type MeasurementPoint, type MeasurementSite, lengthUnitFor } from "@/domain/measurement";
 import { useI18n } from "@/i18n/provider";
-import { Button, Card, Chip, useScrollEndPadding } from "@/ui/kit";
+import { Button, Card, Chip, raisedSurface, useScrollEndPadding } from "@/ui/kit";
 import { Sparkline } from "@/ui/progress/Sparkline";
 import { formatLength, formatLengthChange } from "@/ui/progress/length";
 import { type Theme, radius, space, type, useTheme } from "@/ui/theme";
@@ -82,7 +82,7 @@ export default function MeasurementReadings() {
             <Text style={[type.small, { color: theme.muted }]}>{t.measure.readings(series.length)}</Text>
             <Sparkline points={series.map((p) => ({ date: p.date, value: p.lengthMm }))} theme={theme} />
           </Card>
-          <View style={[styles.group, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <View style={[styles.group, raisedSurface(theme)]}>
             {[...series].reverse().map((r, i, newestFirst) => (
               <ReadingRow
                 key={r.id}

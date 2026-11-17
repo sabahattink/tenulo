@@ -20,7 +20,7 @@ import {
 import type { I18n } from "@/i18n";
 import { useI18n } from "@/i18n/provider";
 import { DayPicker } from "@/ui/DayPicker";
-import { Button, Label, useScrollEndPadding } from "@/ui/kit";
+import { Button, Label, raisedSurface, useScrollEndPadding } from "@/ui/kit";
 import { formatLength, formatLengthNumber } from "@/ui/progress/length";
 import { type Theme, radius, space, type, useTheme } from "@/ui/theme";
 
@@ -109,7 +109,7 @@ export default function AddMeasurement() {
     <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={[styles.screen, { backgroundColor: theme.background }]}>
       <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.body, { paddingBottom: endPadding }]}>
         <Text style={[type.body, { color: theme.muted }]}>{t.measure.intro}</Text>
-        <View style={[styles.group, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        <View style={[styles.group, raisedSurface(theme)]}>
           {parsed.map(({ site, result }, index) => (
             <SiteField
               key={site}

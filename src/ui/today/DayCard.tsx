@@ -8,11 +8,11 @@ import { Button, Card } from "../kit";
 import { type Theme, space, type } from "../theme";
 import { IconButton } from "./IconButton";
 import { routes } from "./routes";
-import { type RingKind, mlText, ringTexts } from "./texts";
+import { RING_COLORS, type RingKind, mlText, ringTexts } from "./texts";
 import type { WaterActions } from "./use-water-actions";
 
 const RING_MAX = 92;
-const RING_STROKE = 8;
+const RING_STROKE = 10;
 const RING_KINDS: readonly RingKind[] = ["energy", "protein", "water"];
 
 /**
@@ -78,11 +78,19 @@ export function DayCard({
       <View style={[styles.divider, { backgroundColor: theme.border }]} />
       <View style={styles.waterRow}>
         <View style={styles.flex}>
-          <Button theme={theme} kind="quiet" icon="plus" label={t.daily.addGlass(mlText(i18n, servingMl))} onPress={() => water.add(servingMl)} />
+          <Button
+            theme={theme}
+            kind="quiet"
+            tint={theme.kinds.water}
+            icon="plus"
+            label={t.daily.addGlass(mlText(i18n, servingMl))}
+            onPress={() => water.add(servingMl)}
+          />
         </View>
-        {canUndo && <IconButton theme={theme} icon="undo" label={t.daily.undoGlass} onPress={water.undoLast} />}
+        {canUndo && <IconButton theme={theme} tint={theme.kinds.water} icon="undo" label={t.daily.undoGlass} onPress={water.undoLast} />}
         <IconButton
           theme={theme}
+          tint={theme.kinds.water}
           icon="chevron"
           label={t.daily.otherAmount}
           hint={t.daily.openWater}
@@ -113,6 +121,7 @@ function RingColumn({
 }) {
   const i18n = useI18n();
   const texts = ringTexts(i18n, kind, ring);
+  const colors = theme.kinds[RING_COLORS[kind]];
   return (
     <Pressable
       accessibilityRole="button"
@@ -121,13 +130,13 @@ function RingColumn({
       onPress={onPress}
       style={({ pressed }) => [styles.column, { opacity: pressed ? 0.7 : 1 }]}
     >
-      <ProgressRing size={size} stroke={RING_STROKE} fraction={ring.fraction ?? 0} color={theme.accent} track={theme.surfaceAlt}>
+      <ProgressRing size={size} stroke={RING_STROKE} fraction={ring.fraction ?? 0} color={colors.ink} track={colors.soft}>
         <Text style={[styles.value, { color: theme.text }]} numberOfLines={1} adjustsFontSizeToFit>
           {texts.value}
         </Text>
         <Text style={[styles.unit, { color: theme.muted }]}>{texts.unit}</Text>
       </ProgressRing>
-      <Text style={[type.caption, { color: theme.muted }]} numberOfLines={1}>
+      <Text style={[type.caption, { color: colors.ink }]} numberOfLines={1}>
         {i18n.f.upper(texts.label)}
       </Text>
       {goalLine && (

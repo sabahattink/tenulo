@@ -3,7 +3,7 @@ import { StyleSheet, Text, TextInput, View } from "react-native";
 import { type PortionOption, amountAfterPortionChange } from "@/domain/food-entry";
 import { type Meal, type ParseQuantityResult, formatQuantity, parseQuantity, stepQuantity } from "@/domain/food-log";
 import { useI18n } from "@/i18n/provider";
-import { Label } from "@/ui/kit";
+import { Label, raisedSurface } from "@/ui/kit";
 import { type Theme, radius, space, type } from "@/ui/theme";
 import { ChoiceChip, MealChips, RoundButton, StatTile } from "./parts";
 import { GRAM, decimalMark, gramsFromMg, kcalText } from "./units";
@@ -87,7 +87,7 @@ export function PortionEditor({
 
   return (
     <View style={styles.editor}>
-      <View style={[styles.preview, { backgroundColor: theme.card, borderColor: theme.border }]}>
+      <View style={[styles.preview, raisedSurface(theme)]}>
         <Text style={[styles.kcal, { color: theme.text }]} accessibilityLiveRegion="polite">
           {preview === undefined ? t.common.noValue : kcalText(i18n, preview.energyKcal)}
         </Text>

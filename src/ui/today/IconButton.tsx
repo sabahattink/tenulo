@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet } from "react-native";
 import { Icon, type IconName } from "../icons";
-import { type Theme, radius } from "../theme";
+import { raisedSurface } from "../kit";
+import { type KindColors, type Theme, radius } from "../theme";
 
 /** A square, icon-only button the height of a kit Button (50 dp), labelled for screen readers. */
 export function IconButton({
@@ -10,6 +11,7 @@ export function IconButton({
   hint,
   onPress,
   disabled = false,
+  tint,
 }: {
   theme: Theme;
   icon: IconName;
@@ -17,6 +19,8 @@ export function IconButton({
   hint?: string;
   onPress: () => void;
   disabled?: boolean;
+  /** Colors of the kind of record the button acts on; the brand accent otherwise. */
+  tint?: KindColors;
 }) {
   return (
     <Pressable
@@ -28,14 +32,17 @@ export function IconButton({
       onPress={onPress}
       style={({ pressed }) => [
         styles.button,
-        { borderColor: theme.border, backgroundColor: theme.card, opacity: disabled ? 0.45 : pressed ? 0.7 : 1 },
+        tint === undefined ? raisedSurface(theme) : { backgroundColor: tint.soft, borderColor: tint.soft },
+        { opacity: disabled ? 0.45 : pressed ? 0.75 : 1 },
+        pressed && !disabled && styles.pressed,
       ]}
     >
-      <Icon name={icon} color={theme.accent} size={22} />
+      <Icon name={icon} color={tint?.ink ?? theme.accent} size={22} />
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   button: { width: 50, height: 50, borderRadius: radius.m, borderWidth: 1.5, alignItems: "center", justifyContent: "center" },
+  pressed: { transform: [{ scale: 0.96 }] },
 });

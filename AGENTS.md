@@ -81,6 +81,10 @@ Tenulo is a local-first GLP-1 and weight log for Android (`com.kalkansoftware.te
 - `src/db/` holds the Drizzle schema, client and migration tests (run against real SQLite via `node:sqlite`).
 - `src/app/` holds Expo Router screens only.
 - `src/platform/` wraps native code (reminders, billing, Health Connect) behind small typed adapters.
+- `src/ui/palette.ts` holds every color: the base roles and one ink/tint pair per kind of record (weight, food, protein,
+  water, injection, measurement, exercise, side effect), in light and dark, with contrast tests. A record wears its
+  kind's color everywhere (rings, quick-log tiles, History, its own screen); sage stays the brand and the primary
+  action. Never hard-code a color in a screen.
 - `modules/tenulo-native/` is Tenulo's own Kotlin module. Reminders live there on purpose:
   `expo-notifications` ships Firebase Cloud Messaging (see `docs/adr/0001`). Do not add it.
 - Pro is checked with Play on every start (`src/platform/billing.ts`); never store it in the database.

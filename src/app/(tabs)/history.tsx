@@ -12,7 +12,7 @@ import { parseLocalDate } from "@/domain/date";
 import { useI18n } from "@/i18n/provider";
 import { Illustration } from "@/ui/Illustration";
 import { Icon } from "@/ui/icons";
-import { Chip, ScreenTitle } from "@/ui/kit";
+import { Chip, ScreenTitle, raisedSurface } from "@/ui/kit";
 import { radius, space, type, useTheme } from "@/ui/theme";
 import { TIMELINE_FILTERS, type TimelineFilter, type TimelineKind, timeline } from "@/ui/timeline";
 import { TimelineRow } from "@/ui/timeline-row";
@@ -129,7 +129,7 @@ export default function History() {
         <Text style={[type.caption, styles.month, { color: theme.muted }]}>
           {f.upper(f.monthTitle(parseLocalDate(`${section.month}-01`)))}
         </Text>
-        <View style={[styles.group, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        <View style={[styles.group, raisedSurface(theme)]}>
           {section.rows.map((row, i) => (
             <TimelineRow
               key={`${row.kind}-${row.id}`}

@@ -3,6 +3,7 @@
  * what a long press deletes. One builder per kind, so the screen rebuilds only the kind whose
  * records changed. Pure, so both languages are tested without a screen.
  */
+import type { Kind } from "./palette";
 import { type LocalDate, parseLocalDate } from "../domain/date";
 import { type ExerciseKind, type Intensity, estimateExerciseKcal } from "../domain/exercise";
 import type { InjectionSite } from "../domain/injection";
@@ -28,8 +29,8 @@ export interface TimelineRow extends TimelineItem {
   readonly title: string;
   readonly detail: string;
   readonly icon: IconName;
-  /** Side effects are drawn in the warning tint, everything else in the accent. */
-  readonly tint: "accent" | "warn";
+  /** The kind's color pair (theme.kinds), the same as in the quick-log tiles and the rings. */
+  readonly color: Kind;
   /** A tap opens the day where these records are kept. */
   readonly open?: { readonly screen: "food" | "water"; readonly date: LocalDate; readonly hint: string };
   /** A long press deletes these records, after asking `question`. */
@@ -95,7 +96,7 @@ export function weightRows(weights: readonly WeightLogRow[], unit: WeightUnit, {
     title: f.weight(w.weightG, unit),
     detail: w.source === "health_connect" ? t.history.fromHealthConnect : t.history.weighIn,
     icon: "scale",
-    tint: "accent",
+    color: "weight",
     remove: { ids: [w.id], question: t.history.deleteTitle },
   }));
 }
@@ -109,7 +110,7 @@ export function injectionRows(injections: readonly InjectionLogRow[], { t, f }: 
     title: t.history.injection(f.dose(s.doseMcg)),
     detail: joined([s.site ? t.sites[s.site] : t.history.siteNotRecorded, s.note]),
     icon: "pen",
-    tint: "accent",
+    color: "injection",
     remove: { ids: [s.id], question: t.history.deleteTitle },
   }));
 }
@@ -123,7 +124,7 @@ export function sideEffectRows(effects: readonly SideEffectLogRow[], { t }: I18n
     title: t.sideEffects[e.type],
     detail: joined([isSeverity(e.severity) ? t.severity[e.severity] : "", e.note]),
     icon: "face",
-    tint: "warn",
+    color: "sideEffect",
     remove: { ids: [e.id], question: t.history.deleteTitle },
   }));
 }
@@ -138,7 +139,7 @@ export function foodRows(food: readonly FoodLogRow[], { t, f }: I18n): TimelineR
     title: t.food.meals[m.meal],
     detail: joined([t.historyLog.foods(m.foods), `${f.integer(m.energyKcal)} kcal`]),
     icon: "food",
-    tint: "accent",
+    color: "food",
     open: { screen: "food", date: m.date, hint: t.historyLog.openFood },
   }));
 }
@@ -152,7 +153,7 @@ export function waterRows(water: readonly WaterLogRow[], { t, f }: I18n): Timeli
     title: t.historyLog.water(`${f.integer(w.totalMl)} ml`),
     detail: t.historyLog.entries(w.entryIds.length),
     icon: "glass",
-    tint: "accent",
+    color: "water",
     open: { screen: "water", date: w.date, hint: t.historyLog.openWater },
     remove: { ids: w.entryIds, question: t.historyLog.deleteWaterTitle },
   }));
@@ -168,7 +169,7 @@ export function measurementRows(measurements: readonly MeasurementRow[], unit: W
     title: t.historyLog.measurements,
     detail: joined(s.readings.map((r) => `${t.measure.sites[r.site]} ${formatLength(f, r.lengthMm, lengthUnit)}`)),
     icon: "tape",
-    tint: "accent",
+    color: "measurement",
     remove: { ids: s.readings.map((r) => r.id), question: t.historyLog.deleteSittingTitle },
   }));
 }
@@ -193,7 +194,7 @@ export function exerciseRows(exercise: readonly ExerciseLogRow[], weights: reado
       title: joined([t.exerciseLog.kinds[x.kind], t.historyLog.minutes(f.integer(x.durationMin))]),
       detail: joined([t.exerciseLog.intensities[x.intensity], energy, x.note]),
       icon: EXERCISE_ICONS[x.kind],
-      tint: "accent",
+      color: "exercise",
       remove: { ids: [x.id], question: t.history.deleteTitle },
     };
   });

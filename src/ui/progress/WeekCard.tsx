@@ -2,7 +2,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { type Direction, type LoggedAverage, type WeeklyComparison, direction } from "@/domain/weekly";
 import { useI18n } from "@/i18n/provider";
 import { Card } from "../kit";
-import { type Theme, space, type } from "../theme";
+import { type Kind, type Theme, space, type } from "../theme";
 
 /** A neutral glyph for which way a number moved; "same" shows none. Drawn muted, never red or green. */
 const ARROWS: Record<Direction, string> = { higher: "↑", lower: "↓", same: "" };
@@ -16,6 +16,8 @@ interface Side {
 
 interface Metric {
   readonly label: string;
+  /** Whose color the label wears, as in the rings and the quick-log tiles. */
+  readonly kind: Kind;
   readonly current: Side;
   readonly previous: Side;
 }
@@ -37,10 +39,10 @@ export function WeekCard({ theme, week }: { theme: Theme; week: WeeklyComparison
   });
 
   const metrics: Metric[] = [
-    { label: w.energy, current: average(week.energyKcal.current, "kcal"), previous: average(week.energyKcal.previous, "kcal") },
-    { label: w.protein, current: average(week.proteinG.current, "g"), previous: average(week.proteinG.previous, "g") },
-    { label: w.water, current: average(week.waterMl.current, "ml"), previous: average(week.waterMl.previous, "ml") },
-    { label: w.exercise, current: exercise(week.exercise.current), previous: exercise(week.exercise.previous) },
+    { label: w.energy, kind: "food", current: average(week.energyKcal.current, "kcal"), previous: average(week.energyKcal.previous, "kcal") },
+    { label: w.protein, kind: "protein", current: average(week.proteinG.current, "g"), previous: average(week.proteinG.previous, "g") },
+    { label: w.water, kind: "water", current: average(week.waterMl.current, "ml"), previous: average(week.waterMl.previous, "ml") },
+    { label: w.exercise, kind: "exercise", current: exercise(week.exercise.current), previous: exercise(week.exercise.previous) },
   ];
 
   if (metrics.every((m) => m.current.amount === undefined && m.previous.amount === undefined)) {
@@ -84,7 +86,7 @@ function MetricRow({ theme, metric, last }: { theme: Theme; metric: Metric; last
       accessibilityLabel={label}
       style={[styles.metric, !last && { borderBottomColor: theme.border, borderBottomWidth: StyleSheet.hairlineWidth }]}
     >
-      <Text style={[type.small, styles.label, { color: theme.muted }]}>{metric.label}</Text>
+      <Text style={[type.small, styles.label, { color: theme.kinds[metric.kind].ink }]}>{metric.label}</Text>
       <View style={styles.columns}>
         <View style={styles.column}>
           <View style={styles.valueRow}>

@@ -7,7 +7,7 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
-    "backgroundColor": "#F4F1EA",
+    "backgroundColor": "#F3F6F4",
     "android": {
       "package": "com.kalkansoftware.tenulo",
       "versionCode": 1,
@@ -44,7 +44,7 @@
           "image": "./assets/splash-icon.png",
           "imageWidth": 160,
           "resizeMode": "contain",
-          "backgroundColor": "#F4F1EA",
+          "backgroundColor": "#F3F6F4",
           "dark": {
             "image": "./assets/splash-icon-dark.png",
             "backgroundColor": "#101412"

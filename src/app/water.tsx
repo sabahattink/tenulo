@@ -11,7 +11,7 @@ import { DayPicker } from "@/ui/DayPicker";
 import { Illustration } from "@/ui/Illustration";
 import { ProgressRing } from "@/ui/ProgressRing";
 import { Icon } from "@/ui/icons";
-import { Button, Card, Label, useScrollEndPadding } from "@/ui/kit";
+import { Button, Card, Label, raisedSurface, useScrollEndPadding } from "@/ui/kit";
 import { radius, space, type, useTheme } from "@/ui/theme";
 import { WATER_CHIPS_ML, formatLitres, loggedMinuteOn, parseWaterMl } from "@/ui/today/amounts";
 import { dateFromParam } from "@/ui/today/params";
@@ -77,8 +77,8 @@ export default function Water() {
             size={RING}
             stroke={10}
             fraction={goalFraction(total, goalMl) ?? 0}
-            color={theme.accent}
-            track={theme.surfaceAlt}
+            color={theme.kinds.water.ink}
+            track={theme.kinds.water.soft}
           >
             <Text style={[styles.total, { color: theme.text }]} numberOfLines={1} adjustsFontSizeToFit>
               {litres}
@@ -110,11 +110,12 @@ export default function Water() {
             onPress={() => actions.add(ml)}
             style={({ pressed }) => [
               styles.chip,
-              { borderColor: theme.accentSoft, backgroundColor: theme.accentSoft, opacity: pressed ? 0.7 : 1 },
+              { borderColor: theme.kinds.water.soft, backgroundColor: theme.kinds.water.soft, opacity: pressed ? 0.8 : 1 },
+              pressed && { transform: [{ scale: 0.96 }] },
             ]}
           >
-            <Icon name="plus" color={theme.accent} size={16} />
-            <Text style={[styles.chipText, { color: theme.accent }]}>{mlText(i18n, ml)}</Text>
+            <Icon name="plus" color={theme.kinds.water.ink} size={16} />
+            <Text style={[styles.chipText, { color: theme.kinds.water.ink }]}>{mlText(i18n, ml)}</Text>
           </Pressable>
         ))}
       </View>
@@ -150,7 +151,7 @@ export default function Water() {
           <Text style={[type.small, { color: theme.muted, textAlign: "center" }]}>{t.waterLog.empty}</Text>
         </View>
       ) : (
-        <View style={[styles.group, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        <View style={[styles.group, raisedSurface(theme)]}>
           {[...entries].reverse().map((entry, i) => {
             const minute = loggedMinuteOn(entry.loggedAt, date);
             const time = minute === undefined ? undefined : f.time(minute);
@@ -160,8 +161,8 @@ export default function Water() {
                 key={entry.id}
                 style={[styles.row, i < entries.length - 1 && { borderBottomColor: theme.border, borderBottomWidth: StyleSheet.hairlineWidth }]}
               >
-                <View style={[styles.rowIcon, { backgroundColor: theme.accentSoft }]}>
-                  <Icon name="glass" color={theme.accent} size={20} />
+                <View style={[styles.rowIcon, { backgroundColor: theme.kinds.water.soft }]}>
+                  <Icon name="glass" color={theme.kinds.water.ink} size={20} />
                 </View>
                 <View
                   style={styles.rowText}

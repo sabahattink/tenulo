@@ -28,7 +28,8 @@ export default function TabsLayout() {
           tabBarActiveTintColor: theme.accent,
           tabBarInactiveTintColor: theme.muted,
           tabBarStyle: { backgroundColor: theme.tabBar, borderTopColor: theme.border },
-          tabBarLabelStyle: { fontSize: 12, fontWeight: "600" },
+          tabBarLabelStyle: { fontSize: 12, fontWeight: "600", marginTop: 2 },
+          tabBarIconStyle: { width: INDICATOR_WIDTH },
           tabBarHideOnKeyboard: true,
         }}
       >
@@ -36,17 +37,29 @@ export default function TabsLayout() {
           <Tabs.Screen
             key={tab.name}
             name={tab.name}
-            options={{ title: tab.title(t), tabBarIcon: ({ color }) => <Icon name={tab.icon} color={color} size={24} /> }}
+            options={{
+              title: tab.title(t),
+              tabBarIcon: ({ color, focused }) => (
+                <View style={[styles.indicator, focused && { backgroundColor: theme.accentSoft }]}>
+                  <Icon name={tab.icon} color={color} size={24} />
+                </View>
+              ),
+            }}
           />
         ))}
       </Tabs>
-      {/* The tabs draw edge to edge; without this, scrolled cards slide under the clock and icons. */}
-      <View style={[styles.statusBar, { height: insets.top, backgroundColor: theme.background }]} />
+      {/* The tabs draw edge to edge; without this, scrolled cards slide under the clock and icons. It
+          has the color the title's wash starts with, so at rest the two meet without a seam. */}
+      <View style={[styles.statusBar, { height: insets.top, backgroundColor: theme.wash }]} />
     </View>
   );
 }
 
+/** Material 3's active indicator: a pill behind the selected destination's icon. */
+const INDICATOR_WIDTH = 60;
+
 const styles = StyleSheet.create({
   fill: { flex: 1 },
+  indicator: { width: INDICATOR_WIDTH, height: 32, borderRadius: 16, alignItems: "center", justifyContent: "center" },
   statusBar: { position: "absolute", top: 0, left: 0, right: 0, pointerEvents: "none" },
 });

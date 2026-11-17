@@ -64,9 +64,9 @@ describe("timelineRows", () => {
   });
 
   it("keeps the older kinds as they were", () => {
-    expect(byId(rows, "w1")).toMatchObject({ title: "80.0 kg", detail: "Weigh-in", tint: "accent", remove: { ids: ["w1"] } });
+    expect(byId(rows, "w1")).toMatchObject({ title: "80.0 kg", detail: "Weigh-in", color: "weight", remove: { ids: ["w1"] } });
     expect(byId(rows, "i1")).toMatchObject({ title: "Injection · 2.5 mg", detail: "Site not recorded" });
-    expect(byId(rows, "s1")).toMatchObject({ title: "Nausea", detail: "Moderate · evening", tint: "warn" });
+    expect(byId(rows, "s1")).toMatchObject({ title: "Nausea", detail: "Moderate · evening", color: "sideEffect" });
   });
 
   it("builds only the kind a filter asks for", () => {
