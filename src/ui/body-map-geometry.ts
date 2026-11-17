@@ -1,11 +1,14 @@
+import type { BodyFigure } from "../domain/body-figure";
 import type { InjectionSite } from "../domain/injection";
 
 /**
- * Front view of a body, drawn in a 200 x 420 box. Front view means the person's LEFT side is on
- * the viewer's RIGHT, so "abdomen-left" sits right of centre.
+ * The two figures (assets/illustrations/body-female.webp and body-male.webp) are drawn on a
+ * 504 x 1200 picture, seen from the front: the person's LEFT side is on the viewer's RIGHT, so
+ * "abdomen-left" sits right of centre. Zones are ellipses in picture pixels, placed by hand on each
+ * figure: the upper arm below the sleeve, either side of the navel, the front of each thigh.
  */
-export const VIEW_W = 200;
-export const VIEW_H = 420;
+export const FIGURE_W = 504;
+export const FIGURE_H = 1200;
 
 export interface Zone {
   readonly cx: number;
@@ -14,13 +17,23 @@ export interface Zone {
   readonly ry: number;
 }
 
-export const BODY_ZONES: Record<InjectionSite, Zone> = {
-  "arm-right": { cx: 44, cy: 122, rx: 10, ry: 22 },
-  "arm-left": { cx: 156, cy: 122, rx: 10, ry: 22 },
-  "abdomen-right": { cx: 84, cy: 168, rx: 13, ry: 20 },
-  "abdomen-left": { cx: 116, cy: 168, rx: 13, ry: 20 },
-  "thigh-right": { cx: 85, cy: 262, rx: 12, ry: 28 },
-  "thigh-left": { cx: 115, cy: 262, rx: 12, ry: 28 },
+export const BODY_ZONES: Readonly<Record<BodyFigure, Readonly<Record<InjectionSite, Zone>>>> = {
+  female: {
+    "arm-right": { cx: 146, cy: 410, rx: 22, ry: 48 },
+    "arm-left": { cx: 364, cy: 410, rx: 22, ry: 48 },
+    "abdomen-right": { cx: 215, cy: 460, rx: 26, ry: 32 },
+    "abdomen-left": { cx: 287, cy: 460, rx: 26, ry: 32 },
+    "thigh-right": { cx: 205, cy: 690, rx: 30, ry: 54 },
+    "thigh-left": { cx: 300, cy: 690, rx: 30, ry: 54 },
+  },
+  male: {
+    "arm-right": { cx: 121, cy: 440, rx: 22, ry: 48 },
+    "arm-left": { cx: 386, cy: 440, rx: 22, ry: 48 },
+    "abdomen-right": { cx: 215, cy: 485, rx: 28, ry: 32 },
+    "abdomen-left": { cx: 290, cy: 485, rx: 28, ry: 32 },
+    "thigh-right": { cx: 198, cy: 690, rx: 32, ry: 54 },
+    "thigh-left": { cx: 312, cy: 690, rx: 32, ry: 54 },
+  },
 };
 
 /** Viewer's left to right, top to bottom: the order a screen reader walks the map. */
@@ -53,14 +66,15 @@ interface Box {
 }
 
 /**
- * Touch targets laid over the zones at `scale` (pixels per view unit). Each zone is grown to the
+ * Touch targets laid over the figure's zones at `scale` (dp per picture pixel). Each zone is grown to the
  * minimum touch size, then any two targets that would overlap are split at the middle of their
  * overlap, along the axis where they overlap least. A tap therefore always lands on exactly one
  * site: two sites a finger-width apart can never both claim it.
  */
-export function siteTargets(scale: number, minTarget: number = MIN_TARGET): Target[] {
+export function siteTargets(figure: BodyFigure, scale: number, minTarget: number = MIN_TARGET): Target[] {
+  const zones = BODY_ZONES[figure];
   const boxes: Box[] = ZONE_ORDER.map((site) => {
-    const z = BODY_ZONES[site];
+    const z = zones[site];
     const w = Math.max(z.rx * 2 * scale, minTarget);
     const h = Math.max(z.ry * 2 * scale, minTarget);
     const cx = z.cx * scale;

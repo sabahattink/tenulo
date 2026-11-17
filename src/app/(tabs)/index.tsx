@@ -72,7 +72,7 @@ export default function Today() {
       style={{ backgroundColor: theme.background }}
       contentContainerStyle={[styles.content, { paddingTop: insets.top + space.l }]}
     >
-      <ScreenTitle theme={theme} eyebrow={f.longWeekday(now)} title={t.today.title} />
+      <ScreenTitle theme={theme} subtitle={f.longWeekday(now)} title={t.today.title} />
       <DayCard
         theme={theme}
         rings={rings}

@@ -49,7 +49,7 @@ export default function FoodScreen() {
       style={{ backgroundColor: theme.background }}
       contentContainerStyle={[styles.content, { paddingTop: insets.top + space.l }]}
     >
-      <ScreenTitle theme={theme} eyebrow={f.longWeekday(date)} title={t.food.title} />
+      <ScreenTitle theme={theme} subtitle={f.longWeekday(date)} title={t.food.title} />
       <FoodDay
         theme={theme}
         date={date}

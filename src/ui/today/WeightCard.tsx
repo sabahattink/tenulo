@@ -6,7 +6,7 @@ import { type WeightSummary, goalProgress } from "@/domain/summary";
 import type { WeightUnit } from "@/domain/weight";
 import { useI18n } from "@/i18n/provider";
 import { Icon } from "../icons";
-import { Button, Card, Label } from "../kit";
+import { Button, Card, KindLabel } from "../kit";
 import { type Theme, radius, space, type } from "../theme";
 import { routes } from "./routes";
 
@@ -35,7 +35,9 @@ export function WeightCard({
   return (
     <Card theme={theme} style={styles.card}>
       <View style={styles.head}>
-        <Label theme={theme}>{t.today.yourTrend}</Label>
+        <KindLabel theme={theme} kind="weight" icon="scale">
+          {t.today.yourTrend}
+        </KindLabel>
         <Pressable
           accessibilityRole="button"
           onPress={() => router.push(routes.progress())}
@@ -56,7 +58,7 @@ export function WeightCard({
           </View>
           <Text style={[type.small, { color: theme.muted }]}>{t.today.weighed(f.relativeDayInline(summary.latestDate, now))}</Text>
         </View>
-        <View style={[styles.stat, { backgroundColor: theme.surfaceAlt }]}>
+        <View style={[styles.stat, { backgroundColor: theme.kinds.weight.soft }]}>
           <Text style={[styles.statLabel, { color: theme.muted }]}>{f.upper(t.today.sevenDays)}</Text>
           <Text style={[type.number, { color: theme.text }]}>
             {summary.weekChangeG === undefined ? t.common.noValue : f.weightChange(summary.weekChangeG, unit)}

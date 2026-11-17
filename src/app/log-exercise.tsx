@@ -202,13 +202,13 @@ function KindChip({
       style={({ pressed }) => [
         styles.chip,
         {
-          borderColor: selected ? theme.accent : theme.border,
-          backgroundColor: selected ? theme.accent : theme.card,
+          borderColor: selected ? theme.kinds.exercise.ink : theme.border,
+          backgroundColor: selected ? theme.kinds.exercise.ink : theme.card,
           opacity: pressed ? 0.8 : 1,
         },
       ]}
     >
-      <Icon name={EXERCISE_ICONS[kind]} color={selected ? theme.accentText : theme.accent} size={20} />
+      <Icon name={EXERCISE_ICONS[kind]} color={selected ? theme.accentText : theme.kinds.exercise.ink} size={20} />
       <Text style={[styles.chipText, { color: fg }]}>{label}</Text>
     </Pressable>
   );

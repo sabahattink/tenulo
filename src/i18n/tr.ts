@@ -218,6 +218,9 @@ export const tr: Messages = {
     save: "Enjeksiyonu kaydet",
   },
   bodyMap: {
+    figure: "Figür",
+    female: "Kadın",
+    male: "Erkek",
     prompt: "Enjeksiyon yaptığın yere dokun",
     selected: "Seçili",
     longestAgo: "En uzun süre önce kullanılan",

@@ -97,9 +97,13 @@ export function RoundButton({
       accessibilityState={{ disabled }}
       disabled={disabled}
       onPress={onPress}
-      style={({ pressed }) => [styles.round, { backgroundColor: theme.accentSoft, opacity: disabled ? 0.4 : pressed ? 0.7 : 1 }]}
+      style={({ pressed }) => [
+        styles.round,
+        { backgroundColor: theme.kinds.food.soft, opacity: disabled ? 0.4 : pressed ? 0.8 : 1 },
+        pressed && !disabled && styles.pressed,
+      ]}
     >
-      <Icon name={icon} color={theme.accent} size={22} />
+      <Icon name={icon} color={theme.kinds.food.ink} size={22} />
     </Pressable>
   );
 }
@@ -176,11 +180,11 @@ export function ActionRow({
         { opacity: pressed ? 0.6 : 1 },
       ]}
     >
-      <View style={[styles.actionIcon, { backgroundColor: theme.accentSoft }]}>
-        <Icon name={icon} color={theme.accent} size={20} />
+      <View style={[styles.actionIcon, { backgroundColor: theme.kinds.food.soft }]}>
+        <Icon name={icon} color={theme.kinds.food.ink} size={20} />
       </View>
       <View style={styles.rowText}>
-        <Text style={[type.bodyStrong, { color: theme.accent }]}>{title}</Text>
+        <Text style={[type.bodyStrong, { color: theme.kinds.food.ink }]}>{title}</Text>
         {detail !== undefined && <Text style={[type.small, { color: theme.muted }]}>{detail}</Text>}
       </View>
     </Pressable>
@@ -273,6 +277,7 @@ export function Group({ theme, title, children }: { theme: Theme; title: string;
 }
 
 const styles = StyleSheet.create({
+  pressed: { transform: [{ scale: 0.94 }] },
   group: { gap: space.s },
   wrap: { flexDirection: "row", flexWrap: "wrap", gap: space.s },
   chip: { borderWidth: 1.5, borderRadius: radius.pill, paddingHorizontal: space.l, minHeight: 40, justifyContent: "center" },

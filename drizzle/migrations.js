@@ -7,6 +7,8 @@ import m0002 from './0002_long_selene.sql';
 import m0003 from './0003_date_format_triggers.sql';
 import m0004 from './0004_perfect_lorna_dane.sql';
 import m0005 from './0005_early_silver_centurion.sql';
+import m0006 from './0006_curious_molecule_man.sql';
+import m0007 from './0007_pale_blindfold.sql';
 
   export default {
     journal,
@@ -16,7 +18,9 @@ m0001,
 m0002,
 m0003,
 m0004,
-m0005
+m0005,
+m0006,
+m0007
     }
   }
   

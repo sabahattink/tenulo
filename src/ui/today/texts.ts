@@ -2,6 +2,7 @@
  * The words and numbers Today, water and exercise show, built from the pure day model
  * (src/domain/day-summary.ts) and the active language. No React Native, so it is unit-tested.
  */
+import type { Kind } from "../palette";
 import type { DayRings, ExerciseDay, ExerciseEnergy, ExerciseLike, Ring } from "../../domain/day-summary";
 import type { I18n } from "../../i18n";
 import { formatLitres } from "./amounts";
@@ -10,6 +11,9 @@ import { formatLitres } from "./amounts";
 export const UNITS = { kcal: "kcal", g: "g", ml: "ml", litre: "L" } as const;
 
 export type RingKind = keyof DayRings;
+
+/** Each ring in the color of what it counts: energy is food's honey, protein berry, water blue. */
+export const RING_COLORS: Readonly<Record<RingKind, Kind>> = { energy: "food", protein: "protein", water: "water" };
 
 export interface RingTexts {
   /** "Energy" / "Enerji". */

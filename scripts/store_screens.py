@@ -25,7 +25,7 @@ OUT = ROOT / "docs" / "store" / "screenshots"
 
 W, H = 1080, 1920
 SUPERSAMPLE = 2
-PAPER = (244, 241, 234)
+PAPER = (243, 246, 244)
 SAGE = (47, 107, 91)
 INK = (28, 33, 30)
 MUTED = (91, 97, 92)

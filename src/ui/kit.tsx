@@ -1,9 +1,10 @@
 import type { ReactNode } from "react";
-import { Pressable, StyleSheet, Switch, Text, View, type ViewStyle } from "react-native";
+import { Platform, Pressable, StyleSheet, Switch, Text, View, type ViewStyle, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import { useI18n } from "@/i18n/provider";
 import { Icon, type IconName } from "./icons";
-import { type Theme, radius, space, type } from "./theme";
+import { type Kind, type KindColors, type Theme, radius, space, type } from "./theme";
 
 /**
  * Bottom padding for a scrolling stack screen. Screens draw edge to edge, so the end of the
@@ -13,9 +14,30 @@ export function useScrollEndPadding(): number {
   return useSafeAreaInsets().bottom + space.xxl;
 }
 
+/** Android draws `boxShadow` from 9 (API 28); before that a card keeps its hairline instead. */
+const DRAWS_BOX_SHADOW = Platform.OS !== "android" || Number(Platform.Version) >= 28;
+
+/**
+ * The surface of a card: lifted by a soft shadow in the light theme, by tone and a hairline in the
+ * dark one (see palette.ts).
+ */
+export function raisedSurface(theme: Theme): ViewStyle {
+  return theme.shadow === undefined || !DRAWS_BOX_SHADOW
+    ? { backgroundColor: theme.card, borderColor: theme.border }
+    : { backgroundColor: theme.card, borderColor: "transparent", boxShadow: theme.shadow };
+}
+
 export function Card({ theme, children, style }: { theme: Theme; children: ReactNode; style?: ViewStyle }) {
+  return <View style={[styles.card, raisedSurface(theme), style]}>{children}</View>;
+}
+
+/** A kind of record's icon on its own tint: the color that tells food from water at a glance. */
+export function KindIcon({ theme, kind, icon, size = 40 }: { theme: Theme; kind: Kind; icon: IconName; size?: number }) {
+  const { ink, soft } = theme.kinds[kind];
   return (
-    <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }, style]}>{children}</View>
+    <View style={[styles.kindIcon, { width: size, height: size, borderRadius: size / 2, backgroundColor: soft }]}>
+      <Icon name={icon} color={ink} size={Math.round(size * 0.55)} />
+    </View>
   );
 }
 
@@ -28,6 +50,7 @@ export function Button({
   kind = "primary",
   disabled = false,
   icon,
+  tint,
 }: {
   theme: Theme;
   label: string;
@@ -35,10 +58,14 @@ export function Button({
   kind?: ButtonKind;
   disabled?: boolean;
   icon?: IconName;
+  /** For a quiet button that belongs to one kind of record, e.g. the water glass: its ink and tint. */
+  tint?: KindColors;
 }) {
-  const bg = kind === "primary" ? theme.accent : kind === "quiet" ? theme.accentSoft : "transparent";
-  const fg = kind === "primary" ? theme.accentText : kind === "danger" ? theme.danger : theme.accent;
-  const border = kind === "primary" ? theme.accent : kind === "danger" ? theme.danger : kind === "quiet" ? theme.accentSoft : theme.border;
+  const soft = tint?.soft ?? theme.accentSoft;
+  const ink = tint?.ink ?? theme.accent;
+  const bg = kind === "primary" ? theme.accent : kind === "quiet" ? soft : "transparent";
+  const fg = kind === "primary" ? theme.accentText : kind === "danger" ? theme.danger : ink;
+  const border = kind === "primary" ? theme.accent : kind === "danger" ? theme.danger : kind === "quiet" ? soft : theme.border;
   return (
     <Pressable
       accessibilityRole="button"
@@ -47,7 +74,8 @@ export function Button({
       disabled={disabled}
       style={({ pressed }) => [
         styles.button,
-        { backgroundColor: bg, borderColor: border, opacity: disabled ? 0.45 : pressed ? 0.8 : 1 },
+        { backgroundColor: bg, borderColor: border, opacity: disabled ? 0.45 : pressed ? 0.85 : 1 },
+        pressed && !disabled && styles.pressed,
       ]}
     >
       {icon && <Icon name={icon} color={fg} size={20} />}
@@ -62,12 +90,50 @@ export function Label({ theme, children }: { theme: Theme; children: string }) {
   return <Text style={[type.caption, { color: theme.muted }]}>{f.upper(children)}</Text>;
 }
 
-/** Large page title with an optional line above it (e.g. today's date). */
-export function ScreenTitle({ theme, title, eyebrow }: { theme: Theme; title: string; eyebrow?: string }) {
+/** A card's caption in its kind's color, after the kind's icon: whose card this is, at a glance. */
+export function KindLabel({ theme, kind, icon, children }: { theme: Theme; kind: Kind; icon: IconName; children: string }) {
+  const { f } = useI18n();
+  return (
+    <View style={styles.kindLabel}>
+      <KindIcon theme={theme} kind={kind} icon={icon} size={28} />
+      <Text style={[type.caption, { color: theme.kinds[kind].ink }]}>{f.upper(children)}</Text>
+    </View>
+  );
+}
+
+/** How far down the screen the title's wash fades out. */
+const WASH_HEIGHT = 300;
+
+/**
+ * Large page title, with an optional line under it (e.g. the day it shows). Behind it, a soft sage
+ * wash runs from under the status bar and fades into the background; it scrolls away with the page.
+ * Every tab screen starts with this title inside the same padding (the inset plus space.l on top,
+ * space.l at the sides), which the wash reaches back over.
+ */
+export function ScreenTitle({ theme, title, subtitle }: { theme: Theme; title: string; subtitle?: string }) {
+  const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
   return (
     <View style={styles.screenTitle} accessibilityRole="header">
-      {eyebrow !== undefined && <Text style={[type.small, { color: theme.muted }]}>{eyebrow}</Text>}
+      <Svg
+        width={width}
+        height={WASH_HEIGHT}
+        style={[styles.wash, { top: -(insets.top + space.l) }]}
+        pointerEvents="none"
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+      >
+        <Defs>
+          <LinearGradient id="title-wash" x1="0" y1="0" x2="0" y2="1">
+            <Stop offset="0" stopColor={theme.wash} stopOpacity={1} />
+            <Stop offset="0.35" stopColor={theme.wash} stopOpacity={0.85} />
+            <Stop offset="1" stopColor={theme.wash} stopOpacity={0} />
+          </LinearGradient>
+        </Defs>
+        <Rect width="100%" height="100%" fill="url(#title-wash)" />
+      </Svg>
       <Text style={[type.title, { color: theme.text }]}>{title}</Text>
+      {subtitle !== undefined && <Text style={[styles.subtitle, { color: theme.muted }]}>{subtitle}</Text>}
     </View>
   );
 }
@@ -79,7 +145,7 @@ export function Section({ theme, title, children, footer }: { theme: Theme; titl
       <View style={styles.sectionHead}>
         <Label theme={theme}>{title}</Label>
       </View>
-      <View style={[styles.sectionBody, { backgroundColor: theme.card, borderColor: theme.border }]}>{children}</View>
+      <View style={[styles.sectionBody, raisedSurface(theme)]}>{children}</View>
       {footer !== undefined && <Text style={[type.small, styles.sectionFooter, { color: theme.muted }]}>{footer}</Text>}
     </View>
   );
@@ -247,7 +313,13 @@ const styles = StyleSheet.create({
     gap: space.s,
   },
   buttonText: { fontSize: 16, fontWeight: "600" },
+  // Pressed controls sink a little, an acknowledgment that does not wait for the next screen.
+  pressed: { transform: [{ scale: 0.98 }] },
+  kindIcon: { alignItems: "center", justifyContent: "center" },
+  kindLabel: { flexDirection: "row", alignItems: "center", gap: space.s },
   screenTitle: { gap: 2, paddingTop: space.s, paddingBottom: space.xs },
+  subtitle: { fontSize: 16, lineHeight: 22, fontWeight: "500" },
+  wash: { position: "absolute", left: -space.l },
   section: { gap: space.s },
   sectionHead: { paddingHorizontal: space.xs },
   sectionBody: { borderWidth: 1, borderRadius: radius.l, paddingHorizontal: space.l },

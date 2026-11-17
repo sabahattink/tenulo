@@ -5,7 +5,7 @@ import { exerciseDay, exerciseEnergy } from "@/domain/day-summary";
 import type { LocalDate } from "@/domain/date";
 import { useI18n } from "@/i18n/provider";
 import { Icon } from "../icons";
-import { Button, Card, Label } from "../kit";
+import { Button, Card, KindLabel } from "../kit";
 import { type Theme, space, type } from "../theme";
 import { EXERCISE_ICONS } from "./exercise-icons";
 import { routes } from "./routes";
@@ -47,7 +47,9 @@ export function ExerciseCard({
   return (
     <Card theme={theme} style={styles.card}>
       <View style={styles.head}>
-        <Label theme={theme}>{t.daily.exercise}</Label>
+        <KindLabel theme={theme} kind="exercise" icon="run">
+          {t.daily.exercise}
+        </KindLabel>
         {summary !== undefined && <Text style={[type.small, styles.summary, { color: theme.muted }]}>{summary}</Text>}
       </View>
       {entries.length === 0 ? (
@@ -72,8 +74,8 @@ export function ExerciseCard({
                   { opacity: pressed ? 0.7 : 1 },
                 ]}
               >
-                <View style={[styles.icon, { backgroundColor: theme.accentSoft }]}>
-                  <Icon name={EXERCISE_ICONS[entry.kind]} color={theme.accent} size={20} />
+                <View style={[styles.icon, { backgroundColor: theme.kinds.exercise.soft }]}>
+                  <Icon name={EXERCISE_ICONS[entry.kind]} color={theme.kinds.exercise.ink} size={20} />
                 </View>
                 <View style={styles.text}>
                   <Text style={[type.bodyStrong, { color: theme.text }]}>{texts.title}</Text>
@@ -90,7 +92,14 @@ export function ExerciseCard({
           <Text style={[type.small, styles.hint, { color: theme.muted }]}>{t.daily.longPressHint}</Text>
         </View>
       )}
-      <Button theme={theme} kind="quiet" icon="plus" label={t.daily.addExercise} onPress={() => router.push(routes.logExercise(date))} />
+      <Button
+        theme={theme}
+        kind="quiet"
+        tint={theme.kinds.exercise}
+        icon="plus"
+        label={t.daily.addExercise}
+        onPress={() => router.push(routes.logExercise(date))}
+      />
     </Card>
   );
 }

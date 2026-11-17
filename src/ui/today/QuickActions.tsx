@@ -5,20 +5,21 @@ import type { Messages } from "@/i18n";
 import { useI18n } from "@/i18n/provider";
 import { Icon, type IconName } from "../icons";
 import { Label } from "../kit";
-import { type Theme, radius, space } from "../theme";
+import { type Kind, type Theme, radius, space } from "../theme";
 import { routes } from "./routes";
 import { mlText } from "./texts";
 import type { WaterActions } from "./use-water-actions";
 
 type Action = keyof Messages["daily"]["actions"];
 
-const ACTIONS: readonly { action: Action; icon: IconName }[] = [
-  { action: "food", icon: "food" },
-  { action: "water", icon: "glass" },
-  { action: "weight", icon: "scale" },
-  { action: "measurement", icon: "tape" },
-  { action: "exercise", icon: "run" },
-  { action: "sideEffect", icon: "face" },
+/** Each tile wears its kind's tint, the same color the record has in rings and in History. */
+const ACTIONS: readonly { action: Action; icon: IconName; kind: Kind }[] = [
+  { action: "food", icon: "food", kind: "food" },
+  { action: "water", icon: "glass", kind: "water" },
+  { action: "weight", icon: "scale", kind: "weight" },
+  { action: "measurement", icon: "tape", kind: "measurement" },
+  { action: "exercise", icon: "run", kind: "exercise" },
+  { action: "sideEffect", icon: "face", kind: "sideEffect" },
 ];
 
 /** Every log one tap away. Water logs a glass right here; the others open their screen. */
@@ -59,27 +60,25 @@ export function QuickActions({
         <Label theme={theme}>{t.daily.quickLog}</Label>
       </View>
       <View style={styles.grid}>
-        {ACTIONS.map(({ action, icon }) => {
+        {ACTIONS.map(({ action, icon, kind }) => {
           const isWater = action === "water";
+          const { ink, soft } = theme.kinds[kind];
           return (
             <Pressable
               key={action}
               accessibilityRole="button"
               accessibilityLabel={isWater ? t.daily.addGlassLabel(mlText(i18n, servingMl)) : t.daily.actions[action]}
               onPress={() => run(action)}
-              style={({ pressed }) => [
-                styles.tile,
-                { backgroundColor: theme.card, borderColor: theme.border, opacity: pressed ? 0.7 : 1 },
-              ]}
+              style={({ pressed }) => [styles.tile, { backgroundColor: soft, opacity: pressed ? 0.85 : 1 }, pressed && styles.pressed]}
             >
-              <View style={[styles.icon, { backgroundColor: theme.accentSoft }]}>
-                <Icon name={icon} color={theme.accent} size={22} />
+              <View style={[styles.icon, { backgroundColor: theme.card }]}>
+                <Icon name={icon} color={ink} size={22} />
               </View>
               <Text style={[styles.label, { color: theme.text }]} numberOfLines={1}>
                 {t.daily.actions[action]}
               </Text>
               {isWater && (
-                <Text style={[styles.detail, { color: theme.muted }]} numberOfLines={1}>
+                <Text style={[styles.detail, { color: ink }]} numberOfLines={1}>
                   +{mlText(i18n, servingMl)}
                 </Text>
               )}
@@ -98,16 +97,16 @@ const styles = StyleSheet.create({
   tile: {
     flexBasis: "30%",
     flexGrow: 1,
-    minHeight: 92,
-    borderWidth: 1,
-    borderRadius: radius.m,
+    minHeight: 96,
+    borderRadius: radius.l,
     alignItems: "center",
     justifyContent: "center",
     gap: space.xs,
     paddingVertical: space.m,
     paddingHorizontal: space.xs,
   },
-  icon: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" },
+  pressed: { transform: [{ scale: 0.97 }] },
+  icon: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center" },
   label: { fontSize: 14, lineHeight: 18, fontWeight: "600" },
-  detail: { fontSize: 12, lineHeight: 14, fontVariant: ["tabular-nums"] },
+  detail: { fontSize: 12, lineHeight: 14, fontWeight: "600", fontVariant: ["tabular-nums"] },
 });

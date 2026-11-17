@@ -5,8 +5,7 @@ import { type LocalDate, parseLocalDate } from "@/domain/date";
 import { cycleProgress, injectionStatus } from "@/domain/injection";
 import { useI18n } from "@/i18n/provider";
 import { ProgressRing } from "./ProgressRing";
-import { Icon } from "./icons";
-import { Button, Card } from "./kit";
+import { Button, Card, KindIcon } from "./kit";
 import { type Theme, space, type } from "./theme";
 
 export function InjectionCard({ theme, today }: { theme: Theme; today: LocalDate }) {
@@ -19,15 +18,20 @@ export function InjectionCard({ theme, today }: { theme: Theme; today: LocalDate
     return (
       <Card theme={theme}>
         <View style={styles.emptyHead}>
-          <View style={[styles.emptyIcon, { backgroundColor: theme.accentSoft }]}>
-            <Icon name="pen" color={theme.accent} />
-          </View>
+          <KindIcon theme={theme} kind="injection" icon="pen" size={44} />
           <View style={styles.flex}>
             <Text style={[type.heading, { color: theme.text }]}>{t.injectionCard.title}</Text>
             <Text style={[type.small, { color: theme.muted }]}>{t.injectionCard.emptyBody}</Text>
           </View>
         </View>
-        <Button theme={theme} kind="quiet" icon="plus" label={t.injectionCard.addMedication} onPress={() => router.push("/setup-medication")} />
+        <Button
+          theme={theme}
+          kind="quiet"
+          tint={theme.kinds.injection}
+          icon="plus"
+          label={t.injectionCard.addMedication}
+          onPress={() => router.push("/setup-medication")}
+        />
       </Card>
     );
   }
@@ -45,9 +49,12 @@ export function InjectionCard({ theme, today }: { theme: Theme; today: LocalDate
     <Card theme={theme}>
       <View style={styles.top}>
         <View style={styles.flex}>
-          <Text style={[type.small, styles.name, { color: theme.muted }]} numberOfLines={1}>
-            {medication.name}
-          </Text>
+          <View style={styles.nameRow}>
+            <KindIcon theme={theme} kind="injection" icon="pen" size={28} />
+            <Text style={[type.small, styles.name, { color: theme.kinds.injection.ink }]} numberOfLines={1}>
+              {medication.name}
+            </Text>
+          </View>
           <Text style={[type.heading, { color: overdue ? theme.warn : theme.text }]}>
             {f.due(status.daysUntilDue, status.nextDue, today)}
           </Text>
@@ -68,8 +75,8 @@ export function InjectionCard({ theme, today }: { theme: Theme; today: LocalDate
             size={84}
             stroke={8}
             fraction={ring.fraction}
-            color={overdue || due === 0 ? theme.warn : theme.accent}
-            track={theme.surfaceAlt}
+            color={overdue || due === 0 ? theme.warn : theme.kinds.injection.ink}
+            track={theme.kinds.injection.soft}
           >
             <Text style={[styles.ringDay, { color: theme.text }]}>{ring.day}</Text>
             <Text style={[styles.ringOf, { color: theme.muted }]}>{t.injectionCard.ringOf(status.intervalDays)}</Text>
@@ -81,7 +88,13 @@ export function InjectionCard({ theme, today }: { theme: Theme; today: LocalDate
           <Button theme={theme} icon="plus" label={t.injectionCard.logInjection} onPress={() => router.push("/log-injection")} />
         </View>
         <View style={styles.flex}>
-          <Button theme={theme} kind="quiet" label={t.injectionCard.logSideEffect} onPress={() => router.push("/log-side-effect")} />
+          <Button
+            theme={theme}
+            kind="quiet"
+            tint={theme.kinds.sideEffect}
+            label={t.injectionCard.logSideEffect}
+            onPress={() => router.push("/log-side-effect")}
+          />
         </View>
       </View>
     </Card>
@@ -92,8 +105,8 @@ const styles = StyleSheet.create({
   flex: { flex: 1, gap: 2 },
   top: { flexDirection: "row", gap: space.l, alignItems: "center" },
   emptyHead: { flexDirection: "row", gap: space.m, alignItems: "flex-start", marginBottom: space.s },
-  emptyIcon: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center" },
-  name: { fontWeight: "600" },
+  nameRow: { flexDirection: "row", alignItems: "center", gap: space.s, marginBottom: space.xs },
+  name: { flex: 1, fontWeight: "700" },
   ringDay: { fontSize: 24, fontWeight: "700", fontVariant: ["tabular-nums"], lineHeight: 26 },
   ringOf: { fontSize: 11, fontWeight: "600" },
   actions: { flexDirection: "row", gap: space.s, marginTop: space.m },
