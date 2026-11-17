@@ -47,3 +47,17 @@ package `com.kalkansoftware.tenulo`.
     the store listing goes in.
   - Then: store listing (`docs/store/listing.md`), app content forms, the in-app product
     `tenulo_pro`, and the closed test.
+
+## 2026-11-18
+
+- **Privacy policy live in both languages.** The site deploy is `20261117-202422-9be6e91`.
+  - Effective date 2026-11-18.
+  - It lists the daily log, the user's own goals, the language and the body figure, and names the
+    USDA source. The Turkish page's headings are Turkish now.
+  - Checked live: both URLs return 200, and every resource comes from kalkansoftware.com.
+- **Device-to-device transfer closed.** The site's review found that `allowBackup="false"` does not
+  stop device-to-device transfer for apps targeting API 31+, so the database would have been copied
+  to a new phone during setup. `plugins/with-no-data-extraction.js` now excludes every storage
+  domain from both cloud backup and device transfer.
+- **versionCode 2.** Release 1 on internal testing does not have the transfer fix. The next upload
+  is versionCode 2.
