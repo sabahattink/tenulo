@@ -38,7 +38,7 @@ Günlük kilo su ve tuzla oynar. Tenulo tartımlarını bir trend çizgisine dö
 yeterli olduğunda hedefine ne zaman varacağını tahmin eder, yetmediğinde uydurmaz.
 
 ÖLÇÜLER VE EGZERSİZ
-Bel, kalça, göğüs, boyun, kol ve bacak ölçülerini kaydet, değişimi gör. Yürüyüş, koşu, ağırlık
+Bel, kalça, göğüs, boyun, kol ve uyluk ölçülerini kaydet, değişimi gör. Yürüyüş, koşu, ağırlık
 antrenmanı, yoga… süresiyle ve yoğunluğuyla not et.
 
 İĞNELERİN, SENİN PLANIN

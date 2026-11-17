@@ -61,3 +61,17 @@ package `com.kalkansoftware.tenulo`.
   domain from both cloud backup and device transfer.
 - **versionCode 2.** Release 1 on internal testing does not have the transfer fix. The next upload
   is versionCode 2.
+- **versionCode 2 AAB built** (`tenulo-1.0.0-2.aab`, 66.9 MB). Checked before upload:
+  - Signed with the same upload key, SHA-256 `EB:11:C5:53:…:0F:71:67:0A`.
+  - The bundle manifest has `versionCode="2"`, `allowBackup="false"` and
+    `dataExtractionRules="@xml/data_extraction_rules"`.
+- **Default store listing saved as a draft.** Nothing is published yet.
+  - Default language: tr-TR. Name "Tenulo: GLP-1, Kilo, Beslenme"; short and full description from
+    `docs/store/listing.md`; `icon-512.png`, `feature-graphic-tr.png` and the five TR screenshots in
+    order (today, food, trend, injection, private).
+  - en-US translation added. Name "Tenulo: GLP-1, Weight & Food"; EN texts from `listing.md`;
+    `feature-graphic.png` and the five EN screenshots in the same order.
+  - A translation without its own graphics shows the default language's. Adding the first EN
+    screenshot replaced the whole inherited TR set for en-US; the TR listing kept its own.
+  - Uploading several screenshots back to back drops some of them. Upload one, wait until it shows
+    in the slot, then upload the next.
