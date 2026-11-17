@@ -78,8 +78,10 @@ Answers that match the code (re-check against Google's current definitions befor
 ## 5. Store listing
 
 - Text: `docs/store/listing.md`, Turkish (default listing language) and English.
-- Graphics: `docs/store/icon-512.png`, `docs/store/feature-graphic.png` (regenerate with
-  `python scripts/brand.py <Roboto.ttf>`).
+- Graphics: `docs/store/icon-512.png`; the feature graphic per store language,
+  `docs/store/feature-graphic-tr.png` (Turkish, the default listing) and
+  `docs/store/feature-graphic.png` (English). Regenerate them, with the app icon, splash and
+  notification icon, by `python scripts/brand.py <Roboto.ttf>`.
 - Screenshots: the five screens and captions in `docs/store/listing.md` (1080 × 1920), once with
   the app in Turkish and once in English. Sample data only, never real data. To redo them, per
   language (`tr-TR`, then `en-US`) on the emulator:
