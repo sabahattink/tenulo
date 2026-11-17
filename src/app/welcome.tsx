@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Alert, Animated, type FlatList, Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { Animated, type FlatList, Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { finishWelcome } from "@/data/repo";
 import { WEIGHT_UNITS, type WeightUnit, defaultWeightUnit } from "@/domain/weight";
@@ -9,6 +9,7 @@ import { useI18n } from "@/i18n/provider";
 import { Illustration, type IllustrationName } from "@/ui/Illustration";
 import { Button, Label, Segmented } from "@/ui/kit";
 import { type Theme, radius, space, type, useTheme } from "@/ui/theme";
+import { notify } from "@/ui/notice";
 
 /**
  * Each page is named by its illustration; its words are `t.welcome.pages[name]`, and for the daily
@@ -51,7 +52,7 @@ export default function Welcome() {
     setSaving(true);
     finishWelcome(unit).catch((e: unknown) => {
       setSaving(false);
-      Alert.alert(t.common.didNotWork, e instanceof Error ? e.message : t.common.tryAgain);
+      notify(t, t.common.didNotWork, e instanceof Error ? e.message : t.common.tryAgain);
     });
   };
 

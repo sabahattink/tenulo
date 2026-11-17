@@ -10,6 +10,7 @@ import { type Theme, space, type } from "../theme";
 import { EXERCISE_ICONS } from "./exercise-icons";
 import { routes } from "./routes";
 import { exerciseDayText, exerciseRowTexts } from "./texts";
+import { notify } from "@/ui/notice";
 
 /**
  * The day's exercise: what, how long, how hard, and its energy: the user's own number, or an
@@ -38,7 +39,7 @@ export function ExerciseCard({
         style: "destructive",
         onPress: () => {
           deleteExercise(entry.id).catch((e: unknown) =>
-            Alert.alert(t.common.didNotWork, e instanceof Error ? e.message : t.common.tryAgain),
+            notify(t, t.common.didNotWork, e instanceof Error ? e.message : t.common.tryAgain),
           );
         },
       },

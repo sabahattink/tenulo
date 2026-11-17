@@ -34,6 +34,7 @@ import { TimeStepper } from "@/ui/TimeStepper";
 import { PUBLISHER } from "@/ui/copy";
 import { Button, ListRow, ProBadge, ScreenTitle, Section, Segmented, SwitchRow } from "@/ui/kit";
 import { type Theme, radius, space, type, useTheme } from "@/ui/theme";
+import { notify } from "@/ui/notice";
 
 /** Each language is named in itself, so it can be found from either one. */
 const LANGUAGE_NAMES = { tr: "Türkçe", en: "English" } as const;
@@ -69,7 +70,7 @@ export default function SettingsScreen() {
 
   /** Fire-and-forget writes still report failure instead of silently doing nothing. */
   const save = (task: Promise<unknown>) => {
-    task.catch((e: unknown) => Alert.alert(t.common.didNotWork, errorText(e)));
+    task.catch((e: unknown) => notify(t, t.common.didNotWork, errorText(e)));
   };
 
   /** Turns a reminder on only once Android lets Tenulo show notifications. */
@@ -90,7 +91,7 @@ export default function SettingsScreen() {
     try {
       await task();
     } catch (e) {
-      Alert.alert(t.common.didNotWork, errorText(e));
+      notify(t, t.common.didNotWork, errorText(e));
     } finally {
       setBusy(undefined);
     }
@@ -112,7 +113,7 @@ export default function SettingsScreen() {
       }
       await setHealthConnectEnabled(true);
       const result = await syncHealthConnect();
-      if (result.kind === "synced") Alert.alert(t.settings.healthConnect.title, f.healthSync(result));
+      if (result.kind === "synced") notify(t, t.settings.healthConnect.title, f.healthSync(result));
     });
 
   const restore = () =>
@@ -120,7 +121,7 @@ export default function SettingsScreen() {
       const picked = await pickBackup();
       if (picked.canceled) return;
       if (!picked.ok) {
-        Alert.alert(t.settings.data.cannotRestore, f.backupProblem(picked));
+        notify(t, t.settings.data.cannotRestore, f.backupProblem(picked));
         return;
       }
       const { backup } = picked;
@@ -132,9 +133,9 @@ export default function SettingsScreen() {
             try {
               const summary = restoreBackup(backup);
               const inactive = summary.inactiveMedications === 0 ? [] : [t.settings.data.inactiveMedications(summary.inactiveMedications)];
-              Alert.alert(t.settings.data.restoredTitle, [f.restoreSummary(summary), ...inactive].join(" "));
+              notify(t, t.settings.data.restoredTitle, [f.restoreSummary(summary), ...inactive].join(" "));
             } catch (e) {
-              Alert.alert(t.settings.data.restoreFailedTitle, t.settings.data.restoreFailedBody(errorText(e)));
+              notify(t, t.settings.data.restoreFailedTitle, t.settings.data.restoreFailedBody(errorText(e)));
             }
           },
         },
@@ -156,7 +157,7 @@ export default function SettingsScreen() {
               onPress: () =>
                 void run("delete", async () => {
                   const { filesCleared } = await deleteAllData();
-                  Alert.alert(
+                  notify(t, 
                     t.settings.data.deletedTitle,
                     filesCleared ? t.settings.data.deletedBody : t.settings.data.deletedPendingBody,
                   );
@@ -295,8 +296,8 @@ export default function SettingsScreen() {
               onPress={() =>
                 void run("hc-sync", async () => {
                   const r = await syncHealthConnect();
-                  if (r.kind === "no-access") Alert.alert(t.settings.healthConnect.noAccessTitle, t.settings.healthConnect.noAccessBody);
-                  else if (r.kind === "synced") Alert.alert(t.settings.healthConnect.title, f.healthSync(r));
+                  if (r.kind === "no-access") notify(t, t.settings.healthConnect.noAccessTitle, t.settings.healthConnect.noAccessBody);
+                  else if (r.kind === "synced") notify(t, t.settings.healthConnect.title, f.healthSync(r));
                 })
               }
             />
@@ -414,7 +415,7 @@ function GoalEditor({ theme, unit, goalG }: { theme: Theme; unit: WeightUnit; go
     setGoalWeight(goal)
       .then(() => setDraft(undefined))
       .catch((e: unknown) =>
-        Alert.alert(t.settings.goal.couldNotSave, e instanceof Error ? e.message : t.common.somethingWentWrong),
+        notify(t, t.settings.goal.couldNotSave, e instanceof Error ? e.message : t.common.somethingWentWrong),
       );
   };
   return (

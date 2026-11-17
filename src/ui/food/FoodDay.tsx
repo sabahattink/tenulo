@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { type FoodEntry, copyMeal } from "@/data/food";
 import { type LocalDate, addDays } from "@/domain/date";
 import { QUICK_ADD_PORTION_ID, amountPhrase, gramsText } from "@/domain/food-entry";
@@ -16,6 +16,7 @@ import { Card, Label } from "@/ui/kit";
 import { type KindColors, type Theme, space, type } from "@/ui/theme";
 import { FoodRow, RoundButton, StatTile } from "./parts";
 import { GRAM, KCAL, decimalMark, gramsFromMg, kcalText } from "./units";
+import { notify } from "@/ui/notice";
 
 /** The pager goes back as far as anyone keeps a diary; never ahead of today. */
 const MAX_DAYS_BACK = 3650;
@@ -210,7 +211,7 @@ function MealSection({
     if (copying) return;
     setCopying(true);
     copyMeal(addDays(date, -1), date, meal)
-      .catch((e: unknown) => Alert.alert(t.food.day.couldNotCopy, e instanceof Error ? e.message : t.common.tryAgain))
+      .catch((e: unknown) => notify(t, t.food.day.couldNotCopy, e instanceof Error ? e.message : t.common.tryAgain))
       .finally(() => setCopying(false));
   };
 

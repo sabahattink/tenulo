@@ -26,6 +26,7 @@ import {
   waterRows,
   weightRows,
 } from "@/ui/timeline-rows";
+import { notify } from "@/ui/notice";
 
 /** One calendar month of the timeline, drawn as one card. */
 interface MonthSection {
@@ -109,7 +110,7 @@ export default function History() {
           style: "destructive",
           onPress: () =>
             void removeRecords(row.kind, remove.ids).catch((e: unknown) =>
-              Alert.alert(t.common.didNotWork, e instanceof Error ? e.message : t.common.somethingWentWrong),
+              notify(t, t.common.didNotWork, e instanceof Error ? e.message : t.common.somethingWentWrong),
             ),
         },
       ]);

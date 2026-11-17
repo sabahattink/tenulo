@@ -20,6 +20,7 @@ import { Field, type FieldKind, Group, problemText } from "@/ui/food/parts";
 import { GRAM, KCAL, decimalMark } from "@/ui/food/units";
 import { Button, Card, useScrollEndPadding } from "@/ui/kit";
 import { type Theme, space, type, useTheme } from "@/ui/theme";
+import { notify } from "@/ui/notice";
 
 const KINDS: Readonly<Record<CustomFoodField, FieldKind>> = {
   name: { kind: "text", max: MAX_FOOD_NAME },
@@ -109,7 +110,7 @@ function CustomFoodEditor({
         onPress: () => {
           deleteCustomFood(food.id)
             .then(() => router.back())
-            .catch((e: unknown) => Alert.alert(t.common.didNotWork, e instanceof Error ? e.message : t.common.tryAgain));
+            .catch((e: unknown) => notify(t, t.common.didNotWork, e instanceof Error ? e.message : t.common.tryAgain));
         },
       },
     ]);

@@ -14,6 +14,7 @@ import { Field, type FieldKind, MealChips, problemText } from "@/ui/food/parts";
 import { GRAM, KCAL, decimalMark } from "@/ui/food/units";
 import { Button, useScrollEndPadding } from "@/ui/kit";
 import { type Theme, space, type, useTheme } from "@/ui/theme";
+import { notify } from "@/ui/notice";
 
 /** `/food/entry?id=`: change a logged food's amount, portion or meal, or delete it. */
 export default function EntryScreen() {
@@ -72,7 +73,7 @@ function EditEntry({ theme, entry, source }: { theme: Theme; entry: FoodEntry; s
         onPress: () => {
           deleteFoodEntry(entry.id)
             .then(() => router.back())
-            .catch((e: unknown) => Alert.alert(t.common.didNotWork, e instanceof Error ? e.message : t.common.tryAgain));
+            .catch((e: unknown) => notify(t, t.common.didNotWork, e instanceof Error ? e.message : t.common.tryAgain));
         },
       },
     ]);

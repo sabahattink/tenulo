@@ -1,8 +1,9 @@
-import { AccessibilityInfo, Alert } from "react-native";
+import { AccessibilityInfo } from "react-native";
 import { addWater, deleteWater, removeLastWater } from "@/data/water";
 import type { LocalDate } from "@/domain/date";
 import { useI18n } from "@/i18n/provider";
 import { litresText, mlText } from "./texts";
+import { notify } from "@/ui/notice";
 
 export interface WaterActions {
   /** Logs `ml` on the day and tells a screen reader the new total. */
@@ -19,7 +20,7 @@ export interface WaterActions {
 export function useWaterActions(date: LocalDate, totalMl: number): WaterActions {
   const i18n = useI18n();
   const { t } = i18n;
-  const fail = (e: unknown) => Alert.alert(t.common.couldNotSave, e instanceof Error ? e.message : t.common.tryAgain);
+  const fail = (e: unknown) => notify(t, t.common.couldNotSave, e instanceof Error ? e.message : t.common.tryAgain);
   return {
     add: (ml) => {
       addWater(ml, date)

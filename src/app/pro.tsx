@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { Alert, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import type { StoreProduct } from "../../modules/tenulo-native";
 import type { Messages } from "@/i18n";
 import { useI18n } from "@/i18n/provider";
@@ -9,6 +9,7 @@ import { Illustration } from "@/ui/Illustration";
 import { Icon, type IconName } from "@/ui/icons";
 import { Button, useScrollEndPadding } from "@/ui/kit";
 import { type Theme, radius, space, type, useTheme } from "@/ui/theme";
+import { notify } from "@/ui/notice";
 
 const FEATURES: readonly { key: keyof Messages["pro"]["features"]; icon: IconName }[] = [
   { key: "report", icon: "report" },
@@ -47,10 +48,10 @@ export default function ProScreen() {
       const outcome = await buyPro();
       if (outcome === "purchased") router.back();
       else if (outcome === "pending") {
-        Alert.alert(t.pro.pendingTitle, t.pro.pendingBody);
+        notify(t, t.pro.pendingTitle, t.pro.pendingBody);
       }
     } catch (e) {
-      Alert.alert(t.pro.failedTitle, t.pro.failedBody(errorCode(e), e instanceof Error ? e.message : undefined));
+      notify(t, t.pro.failedTitle, t.pro.failedBody(errorCode(e), e instanceof Error ? e.message : undefined));
     } finally {
       setBusy(false);
     }
@@ -60,7 +61,7 @@ export default function ProScreen() {
     setBusy(true);
     try {
       const { title, body } = t.pro.restoreResult[await refreshPro()];
-      Alert.alert(title, body);
+      notify(t, title, body);
     } finally {
       setBusy(false);
     }
