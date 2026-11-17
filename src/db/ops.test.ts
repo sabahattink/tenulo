@@ -39,6 +39,11 @@ function seedLinkedRows(): void {
     INSERT INTO plan_step (id, medication_id, start_date, dose_mcg, created_at, updated_at) VALUES ('p', 'm', '2026-10-01', 250, ${now}, ${now});
     INSERT INTO injection (id, medication_id, taken_at, local_date, dose_mcg, created_at, updated_at) VALUES ('i', 'm', ${now}, '2026-10-18', 250, ${now}, ${now});
     INSERT INTO side_effect (id, local_date, type, severity, injection_id, created_at, updated_at) VALUES ('s', '2026-10-18', 'nausea', 1, 'i', ${now}, ${now});
+    INSERT INTO custom_food (id, name, serving_label, energy_kcal, created_at, updated_at) VALUES ('c', 'Mantı', '1 tabak', 450, ${now}, ${now});
+    INSERT INTO food_entry (id, local_date, logged_at, meal, custom_food_id, name, portion_label, quantity_milli, energy_kcal, created_at, updated_at) VALUES ('f', '2026-10-18', ${now}, 'dinner', 'c', 'Mantı', '1 tabak', 1000, 450, ${now}, ${now});
+    INSERT INTO water_entry (id, local_date, logged_at, amount_ml, created_at, updated_at) VALUES ('wa', '2026-10-18', ${now}, 250, ${now}, ${now});
+    INSERT INTO measurement_entry (id, local_date, measured_at, site, length_mm, created_at, updated_at) VALUES ('me', '2026-10-18', ${now}, 'waist', 925, ${now}, ${now});
+    INSERT INTO exercise_entry (id, local_date, logged_at, kind, duration_min, intensity, created_at, updated_at) VALUES ('e', '2026-10-18', ${now}, 'walking', 30, 'moderate', ${now}, ${now});
   `);
 }
 
@@ -183,6 +188,11 @@ const backup = (): BackupData => ({
     injectionReminderMinute: 540,
     weighInReminderEnabled: true,
     weighInReminderMinute: 450,
+    language: "tr",
+    energyGoalKcal: 1700,
+    proteinGoalG: 100,
+    waterGoalMl: 2000,
+    waterServingMl: 330,
   },
   weights: [0, 1, 2].map((i) => ({
     id: id(10 + i),
@@ -203,17 +213,108 @@ const backup = (): BackupData => ({
   sideEffects: [
     { id: id(4), localDate: d("2026-10-09"), type: "nausea", severity: 2, injectionId: id(3), note: null, createdAt: now, updatedAt: now },
   ],
+  customFoods: [
+    {
+      id: id(5),
+      name: "Mantı",
+      servingLabel: "1 tabak",
+      servingGrams: 300,
+      energyKcal: 450,
+      proteinMg: 20_000,
+      carbMg: null,
+      fatMg: null,
+      fiberMg: null,
+      createdAt: now,
+      updatedAt: now,
+    },
+  ],
+  foodEntries: [
+    {
+      id: id(6),
+      localDate: d("2026-10-09"),
+      loggedAt: now,
+      meal: "dinner",
+      catalogFoodId: null,
+      customFoodId: id(5),
+      name: "Mantı",
+      portionId: null,
+      portionLabel: "1 tabak",
+      quantityMilli: 1000,
+      grams: 300,
+      energyKcal: 450,
+      proteinMg: 20_000,
+      carbMg: null,
+      fatMg: null,
+      fiberMg: null,
+      createdAt: now,
+      updatedAt: now,
+    },
+  ],
+  waterEntries: [{ id: id(7), localDate: d("2026-10-09"), loggedAt: now, amountMl: 330, createdAt: now, updatedAt: now }],
+  measurements: [
+    { id: id(8), localDate: d("2026-10-09"), measuredAt: now, site: "waist", lengthMm: 950, note: null, createdAt: now, updatedAt: now },
+  ],
+  exercises: [
+    {
+      id: id(9),
+      localDate: d("2026-10-09"),
+      loggedAt: now,
+      kind: "walking",
+      durationMin: 45,
+      intensity: "moderate",
+      energyKcal: 210,
+      note: null,
+      createdAt: now,
+      updatedAt: now,
+    },
+  ],
 });
 
+/** What restoring backup() into an empty phone adds. */
+const ALL_ADDED = {
+  weights: 3,
+  injections: 1,
+  sideEffects: 1,
+  medications: 1,
+  planSteps: 1,
+  inactiveMedications: 0,
+  customFoods: 1,
+  foodEntries: 1,
+  waterEntries: 1,
+  measurements: 1,
+  exercises: 1,
+};
+const NONE_ADDED = Object.fromEntries(Object.keys(ALL_ADDED).map((k) => [k, 0]));
+
 describe("restoreData", () => {
-  it("adds everything to an empty phone and adopts its unit and goal", () => {
+  it("adds everything to an empty phone and adopts its unit, goals and language", () => {
     const summary = restoreData(t.database, backup(), now);
-    expect(summary).toEqual({ weights: 3, injections: 1, sideEffects: 1, medications: 1, planSteps: 1, inactiveMedications: 0 });
-    expect(t.sqlite.prepare("SELECT weight_unit, goal_weight_g, injection_reminder_enabled FROM settings").get()).toEqual({
+    expect(summary).toEqual(ALL_ADDED);
+    expect(
+      t.sqlite
+        .prepare(
+          "SELECT weight_unit, goal_weight_g, injection_reminder_enabled, language, energy_goal_kcal, protein_goal_g, water_goal_ml, water_serving_ml FROM settings",
+        )
+        .get(),
+    ).toEqual({
       weight_unit: "lb",
       goal_weight_g: 75000,
       injection_reminder_enabled: 0,
+      language: "tr",
+      energy_goal_kcal: 1700,
+      protein_goal_g: 100,
+      water_goal_ml: 2000,
+      water_serving_ml: 330,
     });
+    expect(t.sqlite.prepare("SELECT custom_food_id FROM food_entry").get()).toEqual({ custom_food_id: id(5) });
+  });
+
+  it("treats a phone with only a food diary as one already in use: its settings stay", () => {
+    t.sqlite.exec(
+      `INSERT INTO water_entry (id, local_date, logged_at, amount_ml, created_at, updated_at) VALUES ('${id(60)}', '2026-11-01', ${now}, 250, ${now}, ${now})`,
+    );
+    restoreData(t.database, backup(), now);
+    expect(t.sqlite.prepare("SELECT weight_unit, energy_goal_kcal FROM settings").get()).toEqual({ weight_unit: "kg", energy_goal_kcal: null });
   });
 
   it("is idempotent and never overwrites what is already on the phone", () => {
@@ -221,7 +322,7 @@ describe("restoreData", () => {
     t.sqlite.prepare("UPDATE weight_entry SET weight_g = 70000 WHERE id = ?").run(id(10));
     t.sqlite.exec("UPDATE settings SET weight_unit = 'kg'");
     const again = restoreData(t.database, backup(), now);
-    expect(again).toEqual({ weights: 0, injections: 0, sideEffects: 0, medications: 0, planSteps: 0, inactiveMedications: 0 });
+    expect(again).toEqual(NONE_ADDED);
     expect(t.sqlite.prepare("SELECT weight_g FROM weight_entry WHERE id = ?").get(id(10))).toEqual({ weight_g: 70000 });
     expect(t.sqlite.prepare("SELECT weight_unit FROM settings").get()).toEqual({ weight_unit: "kg" });
   });

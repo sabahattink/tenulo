@@ -5,17 +5,15 @@ import { loadReport, shareReportPdf } from "@/data/report";
 import { useSettings } from "@/data/repo";
 import { useToday } from "@/data/use-today";
 import { REPORT_PERIODS, type Report, type ReportPeriod } from "@/domain/report";
-import { formatWeight, formatWeightChange } from "@/domain/weight";
+import { useI18n } from "@/i18n/provider";
 import { useIsPro } from "@/platform/billing";
-import { longDate } from "@/ui/copy";
 import { Button, Card, Label, Segmented, useScrollEndPadding } from "@/ui/kit";
 import { type Theme, radius, space, type, useTheme } from "@/ui/theme";
 
-const PERIOD_LABELS: Record<string, string> = { "30": "30 days", "90": "90 days", "180": "6 months", all: "All" };
-const OPTIONS = REPORT_PERIODS.map((p) => ({ value: p, label: PERIOD_LABELS[String(p)] ?? String(p) }));
-
 export default function ReportScreen() {
   const theme = useTheme();
+  const i18n = useI18n();
+  const { t, f } = i18n;
   const endPadding = useScrollEndPadding();
   const isPro = useIsPro();
   const unit = useSettings()?.weightUnit ?? "kg";
@@ -34,17 +32,17 @@ export default function ReportScreen() {
         setReport(r);
         setLoadError(undefined);
       })
-      .catch((e: unknown) => alive && setLoadError(e instanceof Error ? e.message : "Could not read your log"));
+      .catch((e: unknown) => alive && setLoadError(e instanceof Error ? e.message : t.report.couldNotRead));
     return () => {
       alive = false;
     };
-  }, [period, now, isPro]);
+  }, [period, now, isPro, t]);
 
   if (!isPro) {
     return (
       <View style={[styles.center, { backgroundColor: theme.background }]}>
-        <Text style={[type.body, { color: theme.text, textAlign: "center" }]}>The doctor report is part of Tenulo Pro.</Text>
-        <Button theme={theme} label="See Pro" onPress={() => router.replace("/pro")} />
+        <Text style={[type.body, { color: theme.text, textAlign: "center" }]}>{t.report.proOnly}</Text>
+        <Button theme={theme} label={t.common.seePro} onPress={() => router.replace("/pro")} />
       </View>
     );
   }
@@ -53,9 +51,9 @@ export default function ReportScreen() {
     if (report === undefined || sharing) return;
     setSharing(true);
     try {
-      await shareReportPdf(report, now);
+      await shareReportPdf(report, now, i18n);
     } catch (e) {
-      Alert.alert("Could not create the PDF", e instanceof Error ? e.message : "Unknown error");
+      Alert.alert(t.report.couldNotCreate, e instanceof Error ? e.message : t.common.unknownError);
     } finally {
       setSharing(false);
     }
@@ -64,11 +62,14 @@ export default function ReportScreen() {
   const w = report?.weight;
   return (
     <ScrollView style={{ backgroundColor: theme.background }} contentContainerStyle={[styles.content, { paddingBottom: endPadding }]}>
-      <Text style={[type.body, { color: theme.muted }]}>
-        A summary of what you logged, for your doctor or pharmacist. It is created on this phone; you choose where
-        to send it.
-      </Text>
-      <Segmented theme={theme} label="Report period" options={OPTIONS} value={period} onChange={setPeriod} />
+      <Text style={[type.body, { color: theme.muted }]}>{t.report.intro}</Text>
+      <Segmented
+        theme={theme}
+        label={t.report.periodLabel}
+        options={REPORT_PERIODS.map((p) => ({ value: p, label: t.report.periods[p] }))}
+        value={period}
+        onChange={setPeriod}
+      />
 
       {loadError !== undefined ? (
         <Text style={[type.body, { color: theme.danger }]}>{loadError}</Text>
@@ -76,17 +77,34 @@ export default function ReportScreen() {
         <ActivityIndicator color={theme.accent} style={styles.loading} />
       ) : (
         <Card theme={theme} style={styles.preview}>
-          <Label theme={theme}>Preview</Label>
+          <Label theme={theme}>{t.report.preview}</Label>
           <Text style={[type.heading, { color: theme.text }]}>
-            {longDate(report.from)} – {longDate(report.to)}
+            {f.longDate(report.from)} – {f.longDate(report.to)}
           </Text>
           <View style={styles.grid}>
-            <Fact theme={theme} label="Trend" value={w ? `${formatWeight(w.startTrendG, unit)} → ${formatWeight(w.endTrendG, unit)}` : "No weigh-ins"} />
-            <Fact theme={theme} label="Change" value={w ? formatWeightChange(w.changeG, unit) : "–"} />
-            <Fact theme={theme} label="Weigh-in days" value={String(w?.weighIns ?? 0)} />
-            <Fact theme={theme} label="Injections" value={String(report.injections.count)} />
-            <Fact theme={theme} label="Side effects" value={String(report.sideEffects.total)} />
-            <Fact theme={theme} label="Medication" value={report.medicationName ?? "Not set up"} />
+            <Fact
+              theme={theme}
+              label={t.report.trend}
+              value={w ? `${f.weight(w.startTrendG, unit)} → ${f.weight(w.endTrendG, unit)}` : t.report.noWeighIns}
+            />
+            <Fact theme={theme} label={t.report.change} value={w ? f.weightChange(w.changeG, unit) : t.common.noValue} />
+            <Fact theme={theme} label={t.report.weighInDays} value={f.integer(w?.weighIns ?? 0)} />
+            <Fact theme={theme} label={t.report.injections} value={f.integer(report.injections.count)} />
+            <Fact theme={theme} label={t.report.sideEffects} value={f.integer(report.sideEffects.total)} />
+            <Fact theme={theme} label={t.report.medication} value={report.medicationName ?? t.report.notSetUp} />
+            {/* The daily-log sections are in the PDF only when the period has them; so is their preview. */}
+            {report.nutrition.daysLogged > 0 && (
+              <Fact theme={theme} label={t.reportLog.foodDays} value={f.integer(report.nutrition.daysLogged)} />
+            )}
+            {report.water.daysLogged > 0 && (
+              <Fact theme={theme} label={t.reportLog.waterDays} value={f.integer(report.water.daysLogged)} />
+            )}
+            {report.measurements.length > 0 && (
+              <Fact theme={theme} label={t.reportLog.measuredSites} value={f.integer(report.measurements.length)} />
+            )}
+            {report.exercise.sessions > 0 && (
+              <Fact theme={theme} label={t.reportLog.exerciseSessions} value={f.integer(report.exercise.sessions)} />
+            )}
           </View>
         </Card>
       )}
@@ -94,22 +112,21 @@ export default function ReportScreen() {
       <Button
         theme={theme}
         icon="report"
-        label={sharing ? "Creating PDF…" : "Create PDF and share"}
+        label={sharing ? t.report.creating : t.report.create}
         onPress={() => void share()}
         disabled={report === undefined || sharing}
       />
-      <Text style={[type.small, { color: theme.muted }]}>
-        The report shows your entries as you made them. It contains no advice and no assessment.
-      </Text>
+      <Text style={[type.small, { color: theme.muted }]}>{t.report.footnote}</Text>
     </ScrollView>
   );
 
 }
 
 function Fact({ theme, label, value }: { theme: Theme; label: string; value: string }) {
+  const { f } = useI18n();
   return (
     <View style={[styles.fact, { backgroundColor: theme.surfaceAlt }]}>
-      <Text style={[type.caption, { color: theme.muted }]}>{label}</Text>
+      <Text style={[type.caption, { color: theme.muted }]}>{f.upper(label)}</Text>
       <Text style={[type.bodyStrong, { color: theme.text }]} numberOfLines={2}>
         {value}
       </Text>

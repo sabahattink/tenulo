@@ -1,4 +1,16 @@
-import { injections, medications, planSteps, settings, sideEffects, weightEntries } from "./schema";
+import {
+  customFoods,
+  exerciseEntries,
+  foodEntries,
+  injections,
+  measurementEntries,
+  medications,
+  planSteps,
+  settings,
+  sideEffects,
+  waterEntries,
+  weightEntries,
+} from "./schema";
 
 /**
  * Every table, children before parents, so deleting in this order never trips a foreign key.
@@ -10,5 +22,10 @@ export const ALL_TABLES_DELETE_ORDER = [
   planSteps,
   medications,
   weightEntries,
+  foodEntries,
+  customFoods,
+  waterEntries,
+  measurementEntries,
+  exerciseEntries,
   settings,
 ] as const;

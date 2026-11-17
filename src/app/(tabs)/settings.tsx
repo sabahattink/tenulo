@@ -11,14 +11,17 @@ import {
   setGoalWeight,
   setHealthConnectEnabled,
   setInjectionReminder,
+  setLanguage,
   setWeighInReminder,
   setWeightUnit,
   today,
   useSettings,
 } from "@/data/repo";
 import { seedSampleData } from "@/data/sample";
+import type { LanguagePreference } from "@/domain/language";
 import { parseWeightInput } from "@/domain/parse";
-import { type WeightUnit, weightNumber } from "@/domain/weight";
+import { WEIGHT_UNITS, type WeightUnit } from "@/domain/weight";
+import { useI18n } from "@/i18n/provider";
 import { setDevUnlocked, useIsPro, useProState } from "@/platform/billing";
 import {
   type HealthConnectAvailability,
@@ -28,19 +31,16 @@ import {
 } from "@/platform/health";
 import { canNotify, remindersAvailable, requestNotificationPermission } from "@/platform/reminders";
 import { TimeStepper } from "@/ui/TimeStepper";
-import { PUBLISHER, backupProblem, healthSyncText, restoreSummaryText, syncedText } from "@/ui/copy";
+import { PUBLISHER } from "@/ui/copy";
 import { Button, ListRow, ProBadge, ScreenTitle, Section, Segmented, SwitchRow } from "@/ui/kit";
 import { type Theme, radius, space, type, useTheme } from "@/ui/theme";
 
-const UNITS: readonly { value: WeightUnit; label: string }[] = [
-  { value: "kg", label: "Kilograms" },
-  { value: "lb", label: "Pounds" },
-];
-
-const errorText = (e: unknown) => (e instanceof Error ? e.message : "Something went wrong");
+/** Each language is named in itself, so it can be found from either one. */
+const LANGUAGE_NAMES = { tr: "Türkçe", en: "English" } as const;
 
 export default function SettingsScreen() {
   const theme = useTheme();
+  const { t, f } = useI18n();
   const insets = useSafeAreaInsets();
   const settings = useSettings();
   const medication = useActiveMedication();
@@ -60,15 +60,16 @@ export default function SettingsScreen() {
   if (settings === undefined) {
     return (
       <View style={[styles.content, { paddingTop: insets.top + space.l, backgroundColor: theme.background, flex: 1 }]}>
-        <ScreenTitle theme={theme} title="Settings" />
+        <ScreenTitle theme={theme} title={t.settings.title} />
       </View>
     );
   }
   const unit = settings.weightUnit;
+  const errorText = (e: unknown) => (e instanceof Error ? e.message : t.common.somethingWentWrong);
 
   /** Fire-and-forget writes still report failure instead of silently doing nothing. */
   const save = (task: Promise<unknown>) => {
-    task.catch((e: unknown) => Alert.alert("That did not work", errorText(e)));
+    task.catch((e: unknown) => Alert.alert(t.common.didNotWork, errorText(e)));
   };
 
   /** Turns a reminder on only once Android lets Tenulo show notifications. */
@@ -77,14 +78,10 @@ export default function SettingsScreen() {
       await save();
       return;
     }
-    Alert.alert(
-      "Notifications are off",
-      "Allow notifications for Tenulo in Android settings to get reminders.",
-      [
-        { text: "Not now", style: "cancel" },
-        { text: "Open settings", onPress: () => void Linking.openSettings() },
-      ],
-    );
+    Alert.alert(t.settings.reminders.notificationsOffTitle, t.settings.reminders.notificationsOffBody, [
+      { text: t.settings.reminders.notNow, style: "cancel" },
+      { text: t.settings.reminders.openSettings, onPress: () => void Linking.openSettings() },
+    ]);
   };
 
   const run = async (key: string, task: () => Promise<void>) => {
@@ -93,7 +90,7 @@ export default function SettingsScreen() {
     try {
       await task();
     } catch (e) {
-      Alert.alert("That did not work", errorText(e));
+      Alert.alert(t.common.didNotWork, errorText(e));
     } finally {
       setBusy(undefined);
     }
@@ -110,14 +107,12 @@ export default function SettingsScreen() {
         return;
       }
       if (!(await requestWeightAccess())) {
-        Alert.alert("No access yet", "Allow Tenulo to read Weight in Health Connect, then turn this on again.", [
-          { text: "OK" },
-        ]);
+        Alert.alert(t.settings.healthConnect.noAccessYetTitle, t.settings.healthConnect.noAccessYetBody, [{ text: t.common.ok }]);
         return;
       }
       await setHealthConnectEnabled(true);
       const result = await syncHealthConnect();
-      if (result.kind === "synced") Alert.alert("Health Connect", healthSyncText(result));
+      if (result.kind === "synced") Alert.alert(t.settings.healthConnect.title, f.healthSync(result));
     });
 
   const restore = () =>
@@ -125,66 +120,58 @@ export default function SettingsScreen() {
       const picked = await pickBackup();
       if (picked.canceled) return;
       if (!picked.ok) {
-        Alert.alert("Cannot restore this file", backupProblem(picked));
+        Alert.alert(t.settings.data.cannotRestore, f.backupProblem(picked));
         return;
       }
       const { backup } = picked;
-      Alert.alert(
-        "Restore this backup?",
-        `Records in the backup that are not on this phone will be added. Nothing on this phone is changed or removed.`,
-        [
-          { text: "Cancel", style: "cancel" },
-          {
-            text: "Restore",
-            onPress: () => {
-              try {
-                const summary = restoreBackup(backup);
-                const inactive =
-                  summary.inactiveMedications === 0
-                    ? ""
-                    : ` ${summary.inactiveMedications === 1 ? "One medication" : `${summary.inactiveMedications} medications`} from the backup ${summary.inactiveMedications === 1 ? "was" : "were"} added as inactive: Tenulo keeps one current medication. Their injections are in History.`;
-                Alert.alert("Backup restored", `${restoreSummaryText(summary)}${inactive}`);
-              } catch (e) {
-                Alert.alert("Restore failed", `Nothing was changed. ${errorText(e)}`);
-              }
-            },
+      Alert.alert(t.settings.data.restoreTitle, t.settings.data.restoreBody, [
+        { text: t.common.cancel, style: "cancel" },
+        {
+          text: t.settings.data.restoreAction,
+          onPress: () => {
+            try {
+              const summary = restoreBackup(backup);
+              const inactive = summary.inactiveMedications === 0 ? [] : [t.settings.data.inactiveMedications(summary.inactiveMedications)];
+              Alert.alert(t.settings.data.restoredTitle, [f.restoreSummary(summary), ...inactive].join(" "));
+            } catch (e) {
+              Alert.alert(t.settings.data.restoreFailedTitle, t.settings.data.restoreFailedBody(errorText(e)));
+            }
           },
-        ],
-      );
+        },
+      ]);
     });
 
   const confirmDeleteAll = () =>
-    Alert.alert(
-      "Delete all data?",
-      "Every weigh-in, injection, note, reminder and setting on this phone will be erased. This cannot be undone.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete everything",
-          style: "destructive",
-          onPress: () =>
-            Alert.alert("Are you sure?", "There is no copy anywhere else unless you made a backup.", [
-              { text: "Keep my data", style: "cancel" },
-              {
-                text: "Erase",
-                style: "destructive",
-                onPress: () =>
-                  void run("delete", async () => {
-                    const { filesCleared } = await deleteAllData();
-                    Alert.alert(
-                      "All data deleted",
-                      filesCleared
-                        ? "Tenulo is empty again. Reminders were cancelled too."
-                        : "Tenulo is empty again. Reminders were cancelled too. Old copies in its database file are cleared the next time Tenulo starts.",
-                    );
-                  }),
-              },
-            ]),
-        },
-      ],
-    );
+    Alert.alert(t.settings.data.deleteAllTitle, t.settings.data.deleteAllBody, [
+      { text: t.common.cancel, style: "cancel" },
+      {
+        text: t.settings.data.deleteEverything,
+        style: "destructive",
+        onPress: () =>
+          Alert.alert(t.settings.data.sureTitle, t.settings.data.sureBody, [
+            { text: t.settings.data.keep, style: "cancel" },
+            {
+              text: t.settings.data.erase,
+              style: "destructive",
+              onPress: () =>
+                void run("delete", async () => {
+                  const { filesCleared } = await deleteAllData();
+                  Alert.alert(
+                    t.settings.data.deletedTitle,
+                    filesCleared ? t.settings.data.deletedBody : t.settings.data.deletedPendingBody,
+                  );
+                }),
+            },
+          ]),
+      },
+    ]);
 
   const reminders = remindersAvailable();
+  const languages: readonly { value: LanguagePreference; label: string }[] = [
+    { value: "system", label: t.settings.language.system },
+    { value: "tr", label: LANGUAGE_NAMES.tr },
+    { value: "en", label: LANGUAGE_NAMES.en },
+  ];
 
   return (
     <ScrollView
@@ -192,31 +179,50 @@ export default function SettingsScreen() {
       contentContainerStyle={[styles.content, { paddingTop: insets.top + space.l }]}
       keyboardShouldPersistTaps="handled"
     >
-      <ScreenTitle theme={theme} title="Settings" />
+      <ScreenTitle theme={theme} title={t.settings.title} />
 
       {!isPro && <ProBanner theme={theme} pending={pro.pending} />}
 
-      <Section theme={theme} title="Weight">
+      <Section theme={theme} title={t.settings.language.title} footer={t.settings.language.footer}>
         <View style={styles.block}>
-          <Segmented theme={theme} label="Weight unit" options={UNITS} value={unit} onChange={(u) => save(setWeightUnit(u))} />
+          <Segmented
+            theme={theme}
+            label={t.settings.language.title}
+            options={languages}
+            value={settings.language}
+            onChange={(l) => save(setLanguage(l))}
+          />
+        </View>
+      </Section>
+
+      <Section theme={theme} title={t.settings.weight}>
+        <View style={styles.block}>
+          <Segmented
+            theme={theme}
+            label={t.settings.weightUnit}
+            options={WEIGHT_UNITS.map((u) => ({ value: u, label: t.settings.units[u] }))}
+            value={unit}
+            onChange={(u) => save(setWeightUnit(u))}
+          />
         </View>
         <GoalEditor theme={theme} unit={unit} goalG={settings.goalWeightG} />
       </Section>
 
+      <Section theme={theme} title={t.food.settings.section}>
+        <ListRow theme={theme} icon="target" title={t.food.settings.goals} detail={t.food.settings.goalsDetail} onPress={() => router.push("/goals")} />
+        <ListRow theme={theme} icon="food" title={t.food.settings.mine} detail={t.food.settings.mineDetail} last onPress={() => router.push("/food/mine")} />
+      </Section>
+
       <Section
         theme={theme}
-        title="Reminders"
-        footer={
-          reminders
-            ? "Shown by this phone at the time you choose. The injection reminder follows your own schedule."
-            : "Reminders need the installed app; they are not available in this build."
-        }
+        title={t.settings.reminders.title}
+        footer={reminders ? t.settings.reminders.footer : t.settings.reminders.footerUnavailable}
       >
         <SwitchRow
           theme={theme}
           icon="bell"
-          title="Injection day"
-          detail={medication ? "On the day your schedule has your next shot" : "Add your medication first"}
+          title={t.settings.reminders.injection}
+          detail={medication ? t.settings.reminders.injectionDetail : t.settings.reminders.addMedicationFirst}
           value={settings.injectionReminderEnabled}
           disabled={!reminders || medication === undefined}
           onChange={(on) =>
@@ -230,7 +236,7 @@ export default function SettingsScreen() {
         {settings.injectionReminderEnabled && (
           <TimeStepper
             theme={theme}
-            label="Injection reminder time"
+            label={t.settings.reminders.injectionTime}
             minute={settings.injectionReminderMinute}
             onChange={(m) => save(setInjectionReminder(true, m))}
           />
@@ -238,8 +244,8 @@ export default function SettingsScreen() {
         <SwitchRow
           theme={theme}
           icon="scale"
-          title="Daily weigh-in"
-          detail="Same time every day"
+          title={t.settings.reminders.weighIn}
+          detail={t.settings.reminders.weighInDetail}
           value={settings.weighInReminderEnabled}
           disabled={!reminders}
           last={!settings.weighInReminderEnabled}
@@ -254,30 +260,26 @@ export default function SettingsScreen() {
         {settings.weighInReminderEnabled && (
           <TimeStepper
             theme={theme}
-            label="Weigh-in reminder time"
+            label={t.settings.reminders.weighInTime}
             minute={settings.weighInReminderMinute}
             onChange={(m) => save(setWeighInReminder(true, m))}
           />
         )}
       </Section>
 
-      <Section
-        theme={theme}
-        title="Health Connect"
-        footer="Read-only: Tenulo reads Weight and never writes to Health Connect. Manual entry keeps working either way."
-      >
+      <Section theme={theme} title={t.settings.healthConnect.title} footer={t.settings.healthConnect.footer}>
         <SwitchRow
           theme={theme}
           icon="heart"
-          title="Read weight from Health Connect"
+          title={t.settings.healthConnect.read}
           detail={
             hc === "unavailable"
-              ? "Health Connect is not available on this phone"
+              ? t.settings.healthConnect.unavailable
               : hc === "needs-update"
-                ? "Update Health Connect from the Play Store first"
+                ? t.settings.healthConnect.needsUpdate
                 : isPro
-                  ? syncedText(settings.healthConnectEnabled, settings.healthConnectSyncedAt)
-                  : "Smart-scale readings in your log · Pro"
+                  ? f.synced(settings.healthConnectEnabled, settings.healthConnectSyncedAt)
+                  : t.settings.healthConnect.proDetail
           }
           value={settings.healthConnectEnabled && isPro}
           disabled={hc !== "available" || busy !== undefined}
@@ -288,92 +290,101 @@ export default function SettingsScreen() {
           <>
             <ListRow
               theme={theme}
-              title="Sync now"
+              title={t.settings.healthConnect.syncNow}
               disabled={busy !== undefined}
               onPress={() =>
                 void run("hc-sync", async () => {
                   const r = await syncHealthConnect();
-                  if (r.kind === "no-access") Alert.alert("No access", "Tenulo can no longer read Weight in Health Connect.");
-                  else if (r.kind === "synced") Alert.alert("Health Connect", healthSyncText(r));
+                  if (r.kind === "no-access") Alert.alert(t.settings.healthConnect.noAccessTitle, t.settings.healthConnect.noAccessBody);
+                  else if (r.kind === "synced") Alert.alert(t.settings.healthConnect.title, f.healthSync(r));
                 })
               }
             />
-            <ListRow theme={theme} title="Manage access" last onPress={openHealthConnect} />
+            <ListRow theme={theme} title={t.settings.healthConnect.manageAccess} last onPress={openHealthConnect} />
           </>
         )}
       </Section>
 
-      <Section theme={theme} title="Your data" footer="Files are created on this phone and go only where you send them.">
+      <Section theme={theme} title={t.settings.data.title} footer={t.settings.data.footer}>
         <ListRow
           theme={theme}
           icon="report"
-          title="Doctor report (PDF)"
-          detail="Trend, injections and side effects for a period"
+          title={t.settings.data.report}
+          detail={t.settings.data.reportDetail}
           right={isPro ? undefined : <ProBadge theme={theme} />}
           onPress={() => router.push(isPro ? "/report" : "/pro")}
         />
         <ListRow
           theme={theme}
           icon="upload"
-          title="Back up to a file"
-          detail="Everything, as one file you keep"
+          title={t.settings.data.backup}
+          detail={t.settings.data.backupDetail}
           disabled={busy !== undefined}
-          onPress={() => void run("backup", exportBackup)}
+          onPress={() => void run("backup", () => exportBackup(t.settings.data.backupShareTitle))}
         />
         <ListRow
           theme={theme}
           icon="download"
-          title="Restore from a file"
-          detail="Adds what is missing; changes nothing else"
+          title={t.settings.data.restore}
+          detail={t.settings.data.restoreDetail}
           disabled={busy !== undefined}
           onPress={restore}
         />
-        <ListRow theme={theme} icon="trash" title="Delete all data" danger last onPress={confirmDeleteAll} />
+        <ListRow theme={theme} icon="trash" title={t.settings.data.deleteAll} danger last onPress={confirmDeleteAll} />
       </Section>
 
-      <Section theme={theme} title="Medication">
+      <Section theme={theme} title={t.settings.medication.title}>
         <ListRow
           theme={theme}
           icon="pen"
-          title={medication ? medication.name : "Add your medication"}
-          detail={medication ? "Your plan, dose changes and name" : "To track injections and your schedule"}
+          title={medication ? medication.name : t.settings.medication.add}
+          detail={medication ? t.settings.medication.detail : t.settings.medication.addDetail}
           last
           onPress={() => router.push(medication ? "/medication" : "/setup-medication")}
         />
       </Section>
 
-      <Section theme={theme} title="About">
-        <ListRow theme={theme} icon="shield" title="Privacy" detail="No account, no servers, no tracking" onPress={() => router.push("/privacy")} />
-        {isPro && <ListRow theme={theme} icon="sparkle" title="Tenulo Pro" detail="Unlocked. Thank you for supporting Tenulo." />}
+      <Section theme={theme} title={t.settings.about.title}>
+        <ListRow
+          theme={theme}
+          icon="shield"
+          title={t.settings.about.privacy}
+          detail={t.settings.about.privacyDetail}
+          onPress={() => router.push("/privacy")}
+        />
+        {isPro && <ListRow theme={theme} icon="sparkle" title="Tenulo Pro" detail={t.settings.about.proDetail} />}
         {__DEV__ && (
           <>
             <SwitchRow
               theme={theme}
-              title="Unlock Pro (development build)"
-              detail="Not in release builds"
+              title={t.settings.about.devUnlock}
+              detail={t.settings.about.devUnlockDetail}
               value={pro.devUnlocked}
               onChange={setDevUnlocked}
             />
             <ListRow
               theme={theme}
-              title="Load sample data (development build)"
-              detail="Nine weeks of made-up entries, for trying the app"
+              title={t.settings.about.devSample}
+              detail={t.settings.about.devSampleDetail}
               onPress={() => void run("sample", async () => seedSampleData(today()))}
             />
           </>
         )}
-        <ListRow theme={theme} title="Version" detail={`Tenulo ${Constants.expoConfig?.version ?? ""} · ${PUBLISHER}`} last />
+        <ListRow
+          theme={theme}
+          title={t.settings.about.version}
+          detail={`Tenulo ${Constants.expoConfig?.version ?? ""} · ${PUBLISHER}`}
+          last
+        />
       </Section>
 
-      <Text style={[type.small, styles.disclaimer, { color: theme.muted }]}>
-        Tenulo is a personal log. It does not give medical advice and does not recommend medications or doses. Always
-        follow your doctor or pharmacist.
-      </Text>
+      <Text style={[type.small, styles.disclaimer, { color: theme.muted }]}>{t.settings.disclaimer}</Text>
     </ScrollView>
   );
 }
 
 function ProBanner({ theme, pending }: { theme: Theme; pending: boolean }) {
+  const { t } = useI18n();
   return (
     <View style={[styles.banner, { backgroundColor: theme.accentSoft }]}>
       <View style={styles.bannerText}>
@@ -382,20 +393,19 @@ function ProBanner({ theme, pending }: { theme: Theme; pending: boolean }) {
           <ProBadge theme={theme} />
         </View>
         <Text style={[type.small, { color: theme.text }]}>
-          {pending
-            ? "Your purchase is pending with Google Play. Pro unlocks as soon as it is confirmed."
-            : "A PDF report for your doctor and Health Connect sync. One purchase, no subscription."}
+          {pending ? t.settings.proBanner.pending : t.settings.proBanner.pitch}
         </Text>
       </View>
-      <Button theme={theme} label="See Pro" onPress={() => router.push("/pro")} />
+      <Button theme={theme} label={t.common.seePro} onPress={() => router.push("/pro")} />
     </View>
   );
 }
 
 function GoalEditor({ theme, unit, goalG }: { theme: Theme; unit: WeightUnit; goalG: number | null }) {
+  const { t, f } = useI18n();
   // Undefined while not editing: the field shows the saved goal in the current unit.
   const [draft, setDraft] = useState<string | undefined>();
-  const text = draft ?? (goalG === null ? "" : weightNumber(goalG, unit));
+  const text = draft ?? (goalG === null ? "" : f.weightNumber(goalG, unit));
   const parsed = parseWeightInput(text, unit);
   const changed = text.trim() === "" ? goalG !== null : parsed.ok && parsed.grams !== goalG;
   const save = () => {
@@ -403,11 +413,13 @@ function GoalEditor({ theme, unit, goalG }: { theme: Theme; unit: WeightUnit; go
     if (goal === undefined) return;
     setGoalWeight(goal)
       .then(() => setDraft(undefined))
-      .catch((e: unknown) => Alert.alert("Could not save the goal", errorText(e)));
+      .catch((e: unknown) =>
+        Alert.alert(t.settings.goal.couldNotSave, e instanceof Error ? e.message : t.common.somethingWentWrong),
+      );
   };
   return (
     <View style={styles.block}>
-      <Text style={[type.bodyStrong, { color: theme.text }]}>Goal weight</Text>
+      <Text style={[type.bodyStrong, { color: theme.text }]}>{t.settings.goal.title}</Text>
       <View style={styles.goalRow}>
         <TextInput
           value={text}
@@ -415,18 +427,18 @@ function GoalEditor({ theme, unit, goalG }: { theme: Theme; unit: WeightUnit; go
           onSubmitEditing={save}
           keyboardType="decimal-pad"
           maxLength={6}
-          placeholder="Optional"
+          placeholder={t.settings.goal.placeholder}
           placeholderTextColor={theme.muted}
-          accessibilityLabel={`Goal weight in ${unit}`}
+          accessibilityLabel={t.settings.goal.label(unit)}
           style={[styles.goalInput, { color: theme.text, backgroundColor: theme.surfaceAlt }]}
         />
         <Text style={[type.bodyStrong, { color: theme.muted }]}>{unit}</Text>
-        <Button theme={theme} kind="quiet" label="Save" onPress={save} disabled={!changed} />
+        <Button theme={theme} kind="quiet" label={t.common.save} onPress={save} disabled={!changed} />
       </View>
       {text.trim() !== "" && !parsed.ok && (
-        <Text style={[type.small, { color: theme.danger }]}>Enter a body weight like 75 or 75.5</Text>
+        <Text style={[type.small, { color: theme.danger }]}>{t.settings.goal.invalid}</Text>
       )}
-      <Text style={[type.small, { color: theme.muted }]}>Used only to project a date from your trend. Leave empty to remove it.</Text>
+      <Text style={[type.small, { color: theme.muted }]}>{t.settings.goal.note}</Text>
     </View>
   );
 }

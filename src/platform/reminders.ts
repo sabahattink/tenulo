@@ -19,6 +19,23 @@ export interface ReminderPlan {
   readonly weighInMinute: number;
 }
 
+/**
+ * Everything a reminder shows, in the user's language (the `reminders` messages). The native side
+ * stores each reminder's title and body with its alarm, so a reminder fires in the language it was
+ * scheduled in; applyReminders runs again when the language changes.
+ */
+export interface ReminderTexts {
+  readonly injectionTitle: string;
+  readonly injectionBody: string;
+  readonly weighInTitle: string;
+  readonly weighInBody: string;
+  /** The notification channel, as listed in Android's notification settings for Tenulo. */
+  readonly channelName: string;
+  readonly channelDescription: string;
+  /** The only text a locked screen shows: what a reminder is about is health data. */
+  readonly lockedTitle: string;
+}
+
 export function remindersAvailable(): boolean {
   return Reminders !== null;
 }
@@ -32,29 +49,20 @@ export async function requestNotificationPermission(): Promise<boolean> {
 }
 
 /**
- * Makes the scheduled alarms match the plan. Idempotent: called whenever settings or the
- * injection log change, and on every app start.
+ * Makes the scheduled alarms match the plan, with texts in the user's language. Idempotent:
+ * called whenever settings, the language or the injection log change, and on every app start.
  */
-export function applyReminders(plan: ReminderPlan, now: Date = new Date()): void {
+export function applyReminders(plan: ReminderPlan, texts: ReminderTexts, now: Date = new Date()): void {
   if (Reminders === null) return;
+  Reminders.setTexts(texts.channelName, texts.channelDescription, texts.lockedTitle);
   const injectionAt = plan.injectionEnabled ? injectionReminderAt(plan.nextDue, plan.injectionMinute, now) : undefined;
   if (injectionAt === undefined) {
     Reminders.cancel(INJECTION_REMINDER_ID);
   } else {
-    Reminders.scheduleAt(
-      INJECTION_REMINDER_ID,
-      "Injection day",
-      "Your schedule has an injection due. Log it in Tenulo once it is done.",
-      injectionAt.getTime(),
-    );
+    Reminders.scheduleAt(INJECTION_REMINDER_ID, texts.injectionTitle, texts.injectionBody, injectionAt.getTime());
   }
   if (plan.weighInEnabled) {
-    Reminders.scheduleDaily(
-      WEIGH_IN_REMINDER_ID,
-      "Time to weigh in",
-      "Step on the scale and log it. Your trend smooths out the daily ups and downs.",
-      plan.weighInMinute,
-    );
+    Reminders.scheduleDaily(WEIGH_IN_REMINDER_ID, texts.weighInTitle, texts.weighInBody, plan.weighInMinute);
   } else {
     Reminders.cancel(WEIGH_IN_REMINDER_ID);
   }

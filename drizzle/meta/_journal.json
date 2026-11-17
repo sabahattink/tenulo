@@ -29,6 +29,20 @@
       "when": 1794768985554,
       "tag": "0003_date_format_triggers",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1794856945823,
+      "tag": "0004_perfect_lorna_dane",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1794856947222,
+      "tag": "0005_early_silver_centurion",
+      "breakpoints": true
     }
   ]
 }

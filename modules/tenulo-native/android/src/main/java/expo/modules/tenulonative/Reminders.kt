@@ -72,6 +72,18 @@ data class Reminder(
 object ReminderScheduler {
   private const val PREFS = "tenulo_reminders"
   private const val CHANNEL_ID = "reminders"
+  /**
+   * The texts Android shows outside a reminder: the channel in the system's notification settings
+   * and the title on a locked screen. Set from JS in the user's language; English until then.
+   * Kept apart from PREFS, whose keys are reminder ids.
+   */
+  private const val TEXT_PREFS = "tenulo_reminder_texts"
+  private const val CHANNEL_NAME = "channelName"
+  private const val CHANNEL_DESCRIPTION = "channelDescription"
+  private const val LOCKED_TITLE = "lockedTitle"
+  private const val DEFAULT_CHANNEL_NAME = "Reminders"
+  private const val DEFAULT_CHANNEL_DESCRIPTION = "Injection and weigh-in reminders you set in Tenulo"
+  private const val DEFAULT_LOCKED_TITLE = "Tenulo reminder"
   const val ACTION_FIRE = "expo.modules.tenulonative.REMINDER_FIRE"
   const val EXTRA_ID = "reminderId"
   /** Put on the launch intent when a reminder notification is tapped. */
@@ -171,15 +183,40 @@ object ReminderScheduler {
     )
   }
 
+  private fun textPrefs(context: Context) = context.getSharedPreferences(TEXT_PREFS, Context.MODE_PRIVATE)
+
+  /**
+   * Stores the channel's name and description and the locked-screen title in the user's language.
+   * An existing channel is renamed in place (createNotificationChannel updates name and
+   * description and keeps the user's own settings for it); a missing one is created later, when
+   * it is first needed, with these texts.
+   */
+  fun setTexts(context: Context, channelName: String, channelDescription: String, lockedTitle: String) {
+    textPrefs(context).edit()
+      .putString(CHANNEL_NAME, channelName)
+      .putString(CHANNEL_DESCRIPTION, channelDescription)
+      .putString(LOCKED_TITLE, lockedTitle)
+      .apply()
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+    val manager = context.getSystemService(NotificationManager::class.java)
+    if (manager.getNotificationChannel(CHANNEL_ID) != null) createChannel(context, manager)
+  }
+
+  private fun createChannel(context: Context, manager: NotificationManager) {
+    val texts = textPrefs(context)
+    val name = texts.getString(CHANNEL_NAME, null) ?: DEFAULT_CHANNEL_NAME
+    val channel = NotificationChannel(CHANNEL_ID, name, NotificationManager.IMPORTANCE_DEFAULT).apply {
+      description = texts.getString(CHANNEL_DESCRIPTION, null) ?: DEFAULT_CHANNEL_DESCRIPTION
+      lockscreenVisibility = NotificationCompat.VISIBILITY_PRIVATE
+    }
+    manager.createNotificationChannel(channel)
+  }
+
   private fun ensureChannel(context: Context) {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
     val manager = context.getSystemService(NotificationManager::class.java)
     if (manager.getNotificationChannel(CHANNEL_ID) != null) return
-    val channel = NotificationChannel(CHANNEL_ID, "Reminders", NotificationManager.IMPORTANCE_DEFAULT).apply {
-      description = "Injection and weigh-in reminders you set in Tenulo"
-      lockscreenVisibility = NotificationCompat.VISIBILITY_PRIVATE
-    }
-    manager.createNotificationChannel(channel)
+    createChannel(context, manager)
   }
 
   /** Creates the channel up front, so Android 13+ can show the notification permission prompt. */
@@ -204,7 +241,7 @@ object ReminderScheduler {
     // On a locked screen show only "Tenulo reminder": what the reminder is about is health data.
     val public = NotificationCompat.Builder(context, CHANNEL_ID)
       .setSmallIcon(R.drawable.tenulo_ic_notification)
-      .setContentTitle("Tenulo reminder")
+      .setContentTitle(textPrefs(context).getString(LOCKED_TITLE, null) ?: DEFAULT_LOCKED_TITLE)
       .build()
     val notification = NotificationCompat.Builder(context, CHANNEL_ID)
       .setSmallIcon(R.drawable.tenulo_ic_notification)

@@ -3,9 +3,9 @@ import { type LayoutChangeEvent, StyleSheet, Text, View } from "react-native";
 import Svg, { Circle, Defs, Line, LinearGradient, Path, Stop, Text as SvgText } from "react-native-svg";
 import type { LocalDate } from "@/domain/date";
 import type { TrendPoint } from "@/domain/trend";
-import { type WeightUnit, formatWeight, fromGrams } from "@/domain/weight";
+import { type WeightUnit, fromGrams } from "@/domain/weight";
+import { useI18n } from "@/i18n/provider";
 import { chartGeometry } from "./chart-geometry";
-import { shortDate } from "./copy";
 import { Segmented } from "./kit";
 import { type Theme, space, type } from "./theme";
 
@@ -13,12 +13,7 @@ const HEIGHT = 210;
 const PAD = { padLeft: 40, padRight: 10, padTop: 12, padBottom: 24 } as const;
 
 type Range = 30 | 90 | 365 | "all";
-const RANGES: readonly { value: Range; label: string }[] = [
-  { value: 30, label: "30D" },
-  { value: 90, label: "90D" },
-  { value: 365, label: "1Y" },
-  { value: "all", label: "All" },
-];
+const RANGES: readonly Range[] = [30, 90, 365, "all"];
 
 interface Props {
   readonly trend: readonly TrendPoint[];
@@ -30,6 +25,7 @@ interface Props {
 
 /** Daily readings as light dots, the smoothed trend as one strong line over a soft fill. */
 export function TrendChart({ trend, goalG, unit, theme, today }: Props) {
+  const { t, f } = useI18n();
   const [width, setWidth] = useState(0);
   const [range, setRange] = useState<Range>(90);
   const onLayout = (e: LayoutChangeEvent) => setWidth(Math.round(e.nativeEvent.layout.width));
@@ -49,14 +45,14 @@ export function TrendChart({ trend, goalG, unit, theme, today }: Props) {
   return (
     <View style={styles.wrap}>
       <View style={styles.head}>
-        <Text style={[type.heading, { color: theme.text }]}>Trend</Text>
+        <Text style={[type.heading, { color: theme.text }]}>{t.trendChart.title}</Text>
       </View>
       <View
         onLayout={onLayout}
         style={styles.canvas}
         accessibilityRole="image"
         accessibilityLabel={
-          lastPoint ? `Weight trend chart, latest trend ${formatWeight(Math.round(lastPoint.trendG), unit)}` : "Weight trend chart"
+          lastPoint ? t.trendChart.labelLatest(f.weight(Math.round(lastPoint.trendG), unit)) : t.trendChart.label
         }
       >
         {g && (
@@ -67,12 +63,12 @@ export function TrendChart({ trend, goalG, unit, theme, today }: Props) {
                 <Stop offset="1" stopColor={theme.trend} stopOpacity={0} />
               </LinearGradient>
             </Defs>
-            {g.ticks.map((t) => (
-              <Line key={`g${t.valueG}`} x1={PAD.padLeft} x2={width - PAD.padRight} y1={t.y} y2={t.y} stroke={theme.border} strokeWidth={1} />
+            {g.ticks.map((tick) => (
+              <Line key={`g${tick.valueG}`} x1={PAD.padLeft} x2={width - PAD.padRight} y1={tick.y} y2={tick.y} stroke={theme.border} strokeWidth={1} />
             ))}
-            {g.ticks.map((t) => (
-              <SvgText key={`l${t.valueG}`} x={PAD.padLeft - 8} y={t.y + 4} fontSize={11} fill={theme.muted} textAnchor="end">
-                {fromGrams(t.valueG, unit).toFixed(decimals)}
+            {g.ticks.map((tick) => (
+              <SvgText key={`l${tick.valueG}`} x={PAD.padLeft - 8} y={tick.y + 4} fontSize={11} fill={theme.muted} textAnchor="end">
+                {f.decimal(fromGrams(tick.valueG, unit), decimals)}
               </SvgText>
             ))}
             {g.goalY !== undefined && (
@@ -87,7 +83,7 @@ export function TrendChart({ trend, goalG, unit, theme, today }: Props) {
                   strokeDasharray="6 5"
                 />
                 <SvgText x={width - PAD.padRight} y={g.goalY - 5} fontSize={11} fontWeight="600" fill={theme.goal} textAnchor="end">
-                  Goal
+                  {t.trendChart.goal}
                 </SvgText>
               </>
             )}
@@ -105,19 +101,25 @@ export function TrendChart({ trend, goalG, unit, theme, today }: Props) {
               </>
             )}
             <SvgText x={PAD.padLeft} y={HEIGHT - 6} fontSize={11} fill={theme.muted}>
-              {shortDate(g.first, today)}
+              {f.shortDate(g.first, today)}
             </SvgText>
             <SvgText x={width - PAD.padRight} y={HEIGHT - 6} fontSize={11} fill={theme.muted} textAnchor="end">
-              {shortDate(g.last, today)}
+              {f.shortDate(g.last, today)}
             </SvgText>
           </Svg>
         )}
       </View>
-      <Segmented theme={theme} label="Chart range" options={RANGES} value={range} onChange={setRange} />
+      <Segmented
+        theme={theme}
+        label={t.trendChart.rangeLabel}
+        options={RANGES.map((r) => ({ value: r, label: t.trendChart.ranges[r] }))}
+        value={range}
+        onChange={setRange}
+      />
       <View style={styles.legend}>
-        <Legend color={theme.trend} label="Trend" theme={theme} />
-        <Legend color={theme.reading} label="Daily weigh-in" theme={theme} />
-        {goalG !== null && <Legend color={theme.goal} label="Goal" theme={theme} />}
+        <Legend color={theme.trend} label={t.trendChart.legendTrend} theme={theme} />
+        <Legend color={theme.reading} label={t.trendChart.legendDaily} theme={theme} />
+        {goalG !== null && <Legend color={theme.goal} label={t.trendChart.legendGoal} theme={theme} />}
       </View>
     </View>
   );

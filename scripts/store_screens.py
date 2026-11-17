@@ -1,12 +1,14 @@
 """
 Composes Tenulo's Play Store phone screenshots: a caption over the real app screen in a phone frame.
 
-Inputs are raw device captures (1080 x 2400) in docs/store/screenshots/raw/, taken from a release
-build with the sample backup restored, never real data. Output is 1080 x 1920 (9:16) PNGs in
-docs/store/screenshots/. Deterministic: same input, same pixels. Run from the repo root:
+One set per store language. Inputs are raw device captures (1080 x 2400) in
+docs/store/screenshots/raw/<lang>/, taken from a release build with the sample backup restored
+(never real data) and the phone set to that language. Output is 1080 x 1920 (9:16) PNGs in
+docs/store/screenshots/<lang>/. Captions match docs/store/listing.md. Deterministic: same input,
+same pixels. Run from the repo root:
     python scripts/store_screens.py path/to/Roboto.ttf
 
-No drug brand names and no medical claims in captions (AGENTS.md).
+No drug or food brand names and no medical claims in captions (AGENTS.md).
 """
 
 from __future__ import annotations
@@ -28,14 +30,23 @@ INK = (28, 33, 30)
 MUTED = (91, 97, 92)
 BEZEL = (28, 33, 30)
 
-# (raw file, output file, title, subtitle)
-SCREENS: list[tuple[str, str, str, str]] = [
-    ("today.png", "01-trend.png", "Your trend,\nnot the noise", "Daily weigh-ins smoothed into the line that matters."),
-    ("chart.png", "02-chart.png", "See where you\nare heading", "From 30 days to all time, with your goal in view."),
-    ("injection.png", "03-injection.png", "Your plan,\nyour sites", "Log each injection; see the site you used longest ago."),
-    ("history.png", "04-history.png", "One calm\ntimeline", "Weigh-ins, injections and side effects together."),
-    ("welcome-private.png", "05-private.png", "It stays on\nthis phone", "No account. No analytics. No ads."),
-]
+# Per store language: (raw file, output file, title, subtitle). Order and titles as in listing.md.
+SCREENS: dict[str, list[tuple[str, str, str, str]]] = {
+    "tr": [
+        ("today.png", "01-today.png", "Günün\ntek bakışta", "Kalori, protein ve su, kendi hedeflerinle."),
+        ("food.png", "02-food.png", "Ne yediğin,\nkolayca", "Öğünü seç, yiyeceği ara, porsiyonu seç."),
+        ("progress.png", "03-trend.png", "Gürültü değil,\ntrend", "Günlük tartımların, önemli olan çizgide."),
+        ("injection.png", "04-injection.png", "Senin planın,\nsenin bölgen", "Her iğneyi kaydet; en uzun süredir dinlenen bölgeyi gör."),
+        ("welcome-private.png", "05-private.png", "Her şey\nbu telefonda", "Hesap yok. Analitik yok. Reklam yok."),
+    ],
+    "en": [
+        ("today.png", "01-today.png", "Your day\nat a glance", "Energy, protein and water, against your own goals."),
+        ("food.png", "02-food.png", "What you eat,\nmade easy", "Pick the meal, find the food, choose the portion."),
+        ("progress.png", "03-trend.png", "Your trend,\nnot the noise", "Daily weigh-ins smoothed into the line that matters."),
+        ("injection.png", "04-injection.png", "Your plan,\nyour sites", "Log each injection; see the site you used longest ago."),
+        ("welcome-private.png", "05-private.png", "It stays on\nthis phone", "No account. No analytics. No ads."),
+    ],
+}
 
 # Phone geometry on the 1080 x 1920 canvas: the screen keeps the capture's 9:20 shape and the
 # whole phone, tab bar included, fits under the caption.
@@ -112,8 +123,10 @@ def main() -> None:
     if len(sys.argv) != 2:
         sys.exit("usage: python scripts/store_screens.py path/to/Roboto.ttf")
     font_path = Path(sys.argv[1])
-    for raw_name, out_name, title, subtitle in SCREENS:
-        compose(font_path, RAW / raw_name, title, subtitle).save(OUT / out_name)
+    for lang, screens in SCREENS.items():
+        (OUT / lang).mkdir(parents=True, exist_ok=True)
+        for raw_name, out_name, title, subtitle in screens:
+            compose(font_path, RAW / lang / raw_name, title, subtitle).save(OUT / lang / out_name)
 
 
 if __name__ == "__main__":

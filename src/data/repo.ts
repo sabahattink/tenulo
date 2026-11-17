@@ -6,6 +6,7 @@ import { settings, weightEntries } from "@/db/schema";
 import { purgeDeletedData, wipeAll } from "@/db/ops";
 import { type LocalDate, localDateOf } from "@/domain/date";
 import { ulid } from "@/domain/id";
+import { LANGUAGE_PREFERENCES, type LanguagePreference } from "@/domain/language";
 import { isMinuteOfDay } from "@/domain/reminder";
 import { type WeightUnit, isPlausibleWeight } from "@/domain/weight";
 import { cancelAllReminders } from "@/platform/reminders";
@@ -21,10 +22,19 @@ export async function ensureSettings(database: Db = db): Promise<void> {
     .onConflictDoNothing({ target: settings.id });
 }
 
-/** Whether the welcome screens are done, read once at start before the live query has data. */
-export async function readWelcomed(database: Db = db): Promise<boolean> {
-  const [row] = await database.select({ welcomedAt: settings.welcomedAt }).from(settings).where(eq(settings.id, 1));
-  return row?.welcomedAt != null;
+export interface StartState {
+  /** Whether the welcome screens are done. */
+  readonly welcomed: boolean;
+  readonly language: LanguagePreference;
+}
+
+/** Read once at start, before the live query has data, so the first screen is already right. */
+export async function readStartState(database: Db = db): Promise<StartState> {
+  const [row] = await database
+    .select({ welcomedAt: settings.welcomedAt, language: settings.language })
+    .from(settings)
+    .where(eq(settings.id, 1));
+  return { welcomed: row?.welcomedAt != null, language: row?.language ?? "system" };
 }
 
 export function useSettings(): Settings | undefined {
@@ -34,6 +44,11 @@ export function useSettings(): Settings | undefined {
 
 export async function setWeightUnit(unit: WeightUnit): Promise<void> {
   await db.update(settings).set({ weightUnit: unit, updatedAt: Date.now() }).where(eq(settings.id, 1));
+}
+
+export async function setLanguage(language: LanguagePreference): Promise<void> {
+  if (!LANGUAGE_PREFERENCES.includes(language)) throw new RangeError(`Not a language: ${String(language)}`);
+  await db.update(settings).set({ language, updatedAt: Date.now() }).where(eq(settings.id, 1));
 }
 
 export async function setGoalWeight(goalG: number | null): Promise<void> {
