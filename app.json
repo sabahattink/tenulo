@@ -63,7 +63,8 @@
       "expo-sharing",
       "expo-status-bar",
       "./plugins/with-dialog-button-case",
-      "./plugins/with-release-signing"
+      "./plugins/with-release-signing",
+      "./plugins/with-bundle-languages"
     ],
     "experiments": {
       "typedRoutes": true
