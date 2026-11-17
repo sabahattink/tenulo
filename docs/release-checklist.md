@@ -24,8 +24,11 @@ Everything in code is done; these steps need the Play Console account owner.
 pnpm install
 pnpm typecheck && pnpm lint && pnpm test
 npx expo-doctor            # see "Known doctor warnings" below
-npx eas-cli@latest build --platform android --profile production   # or a local signed build
+npx expo prebuild --platform android --no-install
+cd android && ./gradlew app:bundleRelease   # -> android/app/build/outputs/bundle/release/app-release.aab
 ```
+
+The AAB is built and signed here, with no Expo account (EAS stays possible: `eas.json` is kept).
 
 - `app.json`: `version` 1.0.0, `android.versionCode` 1. Bump `versionCode` on every upload and commit
   it: `eas.json` sets `appVersionSource: "local"`, so the version in git is the one that ships, for
@@ -34,7 +37,15 @@ npx eas-cli@latest build --platform android --profile production   # or a local 
   sideload (store screenshots, testing); `development` is the dev client. All enable `corepack`, so
   EAS installs the pnpm version pinned in `package.json` `packageManager`: the lockfile and
   `pnpm-workspace.yaml` (`allowBuilds`) need that pnpm major.
-- Signing: use Play App Signing; keep the upload key out of the repo (`*.jks` is gitignored).
+- Signing: Play App Signing holds the app signing key; we sign uploads with the owner's upload key.
+  It lives outside the repo (`~/keystores/tenulo-upload.jks`, made with Android Studio's
+  `keytool`), and `plugins/with-release-signing.js` reads it from four Gradle properties in
+  `~/.gradle/gradle.properties`: `TENULO_UPLOAD_STORE_FILE`, `TENULO_UPLOAD_STORE_PASSWORD`,
+  `TENULO_UPLOAD_KEY_ALIAS`, `TENULO_UPLOAD_KEY_PASSWORD`. Without them a release build stops with
+  an error; it never falls back to the debug key. Keep a backup of the `.jks` and its password; if
+  it is lost, Play Console can reset the upload key (Setup → App signing).
+- Check the signer before uploading: `keytool -printcert -jarfile app-release.aab` shows the
+  upload certificate (CN=Kalkan Software).
 - On a `preview` build with data in it, run Settings → Delete all data once. The alert must say
   "Tenulo is empty again. Reminders were cancelled too." with nothing after it. The other text means
   VACUUM or the WAL checkpoint failed on the device's SQLite, which the Node tests cannot show (see
@@ -89,7 +100,8 @@ Answers that match the code (re-check against Google's current definitions befor
      (`pm clear` resets it, so set it after clearing).
   2. In the dev build: finish the welcome pages, then Settings → "Load sample data". It names
      foods, the medication and notes in the app's language.
-  3. `adb install -r` a local release APK (`cd android && ./gradlew app:assembleRelease`) over
+  3. `adb install -r` a local release APK
+     (`cd android && ./gradlew app:assembleRelease -PtenuloDebugSignedRelease=true`) over
      the dev build: both are signed with the debug key, so the sample data stays.
   4. Demo-mode status bar, then capture `today`, `food`, `progress` (`tenulo://` deep links) and
      `log-injection` with the suggested site tapped, into `docs/store/screenshots/raw/<lang>/`.
