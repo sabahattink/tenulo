@@ -48,7 +48,7 @@ pnpm lint           # expo lint (eslint-config-expo)
 pnpm test           # domain, UI logic and migration tests
 pnpm db:generate    # after editing src/db/schema.ts
 pnpm android        # expo run:android (needs JDK 17+ and the Android SDK; see below on Windows)
-python scripts/brand.py path/to/Roboto.ttf   # regenerate icons, splash and store graphics
+python scripts/brand.py path/to/Roboto.ttf   # regenerate icons, splash, notification icon and store graphics
 python scripts/store_screens.py path/to/Roboto.ttf   # frame raw captures into store screenshots
 python scripts/foods/build_foods.py          # regenerate the food list after editing foods.json (--check in CI)
 ```

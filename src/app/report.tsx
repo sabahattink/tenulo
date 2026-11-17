@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
 import { loadReport, shareReportPdf } from "@/data/report";
 import { useSettings } from "@/data/repo";
 import { useToday } from "@/data/use-today";
@@ -9,6 +9,7 @@ import { useI18n } from "@/i18n/provider";
 import { useIsPro } from "@/platform/billing";
 import { Button, Card, Label, Segmented, useScrollEndPadding } from "@/ui/kit";
 import { type Theme, radius, space, type, useTheme } from "@/ui/theme";
+import { notify } from "@/ui/notice";
 
 export default function ReportScreen() {
   const theme = useTheme();
@@ -53,7 +54,7 @@ export default function ReportScreen() {
     try {
       await shareReportPdf(report, now, i18n);
     } catch (e) {
-      Alert.alert(t.report.couldNotCreate, e instanceof Error ? e.message : t.common.unknownError);
+      notify(t, t.report.couldNotCreate, e instanceof Error ? e.message : t.common.unknownError);
     } finally {
       setSharing(false);
     }

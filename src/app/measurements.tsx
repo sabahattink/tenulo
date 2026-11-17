@@ -11,6 +11,7 @@ import { Button, Card, Chip, raisedSurface, useScrollEndPadding } from "@/ui/kit
 import { Sparkline } from "@/ui/progress/Sparkline";
 import { formatLength, formatLengthChange } from "@/ui/progress/length";
 import { type Theme, radius, space, type, useTheme } from "@/ui/theme";
+import { notify } from "@/ui/notice";
 
 function isSite(value: string | undefined): value is MeasurementSite {
   return value !== undefined && (MEASUREMENT_SITES as readonly string[]).includes(value);
@@ -58,7 +59,7 @@ export default function MeasurementReadings() {
         style: "destructive",
         onPress: () =>
           void deleteMeasurement(r.id).catch((e: unknown) =>
-            Alert.alert(t.common.didNotWork, e instanceof Error ? e.message : t.common.somethingWentWrong),
+            notify(t, t.common.didNotWork, e instanceof Error ? e.message : t.common.somethingWentWrong),
           ),
       },
     ]);

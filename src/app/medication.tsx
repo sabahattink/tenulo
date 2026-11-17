@@ -10,6 +10,7 @@ import { useI18n } from "@/i18n/provider";
 import { DayPicker } from "@/ui/DayPicker";
 import { Button, Card, Label, useScrollEndPadding } from "@/ui/kit";
 import { radius, space, type, useTheme } from "@/ui/theme";
+import { notify } from "@/ui/notice";
 
 /** The user's own plan, shown back to them; and the medication's name. Tenulo never edits either. */
 export default function MedicationScreen() {
@@ -43,7 +44,7 @@ export default function MedicationScreen() {
     const interval = current?.step.intervalDays ?? sorted.at(-1)?.intervalDays ?? 7;
     void upsertPlanStep({ medicationId: medication.id, startDate: stepDate, doseMcg: stepParsed.mcg, intervalDays: interval })
       .then(() => setStepDose(""))
-      .catch((e: unknown) => Alert.alert(t.medication.couldNotAdd, e instanceof Error ? e.message : ""));
+      .catch((e: unknown) => notify(t, t.medication.couldNotAdd, e instanceof Error ? e.message : ""));
   };
 
   const field = [styles.input, { color: theme.text, backgroundColor: theme.surfaceAlt }];
@@ -129,7 +130,7 @@ export default function MedicationScreen() {
           onPress={() =>
             renameMedication(medication.id, name ?? medication.name)
               .then(() => setName(undefined))
-              .catch((e: unknown) => Alert.alert(t.medication.couldNotRename, e instanceof Error ? e.message : ""))
+              .catch((e: unknown) => notify(t, t.medication.couldNotRename, e instanceof Error ? e.message : ""))
           }
         />
       </Card>
