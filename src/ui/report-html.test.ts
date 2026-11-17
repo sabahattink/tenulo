@@ -146,8 +146,8 @@ describe("reportHtml", () => {
     expect(html).toContain("<th>Days with water logged</th><td>3 of 30</td>");
     expect(html).toContain("<td>1,833 ml</td>");
     expect(html).toContain("<h2>Body measurements</h2>");
-    expect(html).toContain("<td>Waist</td><td>100.5 cm · 1 Oct 2026</td><td>97 cm · 22 Oct 2026</td><td>−3.5 cm</td>");
-    expect(html).toContain("<td>Hip</td><td>112 cm · 1 Oct 2026</td><td>–</td><td>–</td>");
+    expect(html).toContain("<td>Waist</td><td>100.5\u00a0cm · 1 Oct 2026</td><td>97\u00a0cm · 22 Oct 2026</td><td>−3.5\u00a0cm</td>");
+    expect(html).toContain("<td>Hip</td><td>112\u00a0cm · 1 Oct 2026</td><td>–</td><td>–</td>");
     expect(html).toContain("<th>Sessions</th><td>3</td><th>Total time</th><td>105 min</td>");
     expect(html).toContain("<td>Walking</td><td>2</td><td>75 min</td>");
     expect(html).toContain("Energy burned is not included.");
@@ -159,7 +159,7 @@ describe("reportHtml", () => {
     expect(html).toContain("<td>2 / 30</td>");
     expect(html).toContain("<td>1.650 kcal</td>");
     expect(html).toContain("<td>1.833 ml</td>");
-    expect(html).toContain("<td>Bel</td><td>100,5 cm · 1 Ekim 2026</td><td>97 cm · 22 Ekim 2026</td><td>−3,5 cm</td>");
+    expect(html).toContain("<td>Bel</td><td>100,5\u00a0cm · 1 Ekim 2026</td><td>97\u00a0cm · 22 Ekim 2026</td><td>−3,5\u00a0cm</td>");
     expect(html).toContain("<th>İLK</th>");
     expect(html).toContain("<td>Yürüyüş</td><td>2</td><td>75 dk</td>");
     expect(html).toContain("Harcanan enerji dahil edilmemiştir.");
@@ -167,7 +167,7 @@ describe("reportHtml", () => {
   });
 
   it("shows lengths in inches next to pounds", () => {
-    expect(reportHtml(full, "lb", created, en)).toContain("<td>Waist</td><td>39.6 in · 1 Oct 2026</td>");
+    expect(reportHtml(full, "lb", created, en)).toContain("<td>Waist</td><td>39.6\u00a0in · 1 Oct 2026</td>");
   });
 
   it("leaves out daily-log sections that have nothing in the period", () => {
