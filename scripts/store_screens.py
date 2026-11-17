@@ -2,8 +2,9 @@
 Composes Tenulo's Play Store phone screenshots: a caption over the real app screen in a phone frame.
 
 One set per store language. Inputs are raw device captures (1080 x 2400) in
-docs/store/screenshots/raw/<lang>/, taken from a release build with the sample backup restored
-(never real data) and the phone set to that language. Output is 1080 x 1920 (9:16) PNGs in
+docs/store/screenshots/raw/<lang>/, taken from a release build holding the sample data (never
+real data) with the app set to that language (docs/release-checklist.md, step 5). Output is
+1080 x 1920 (9:16) PNGs in
 docs/store/screenshots/<lang>/. Captions match docs/store/listing.md. Deterministic: same input,
 same pixels. Run from the repo root:
     python scripts/store_screens.py path/to/Roboto.ttf

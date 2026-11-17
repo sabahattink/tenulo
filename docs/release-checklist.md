@@ -81,9 +81,20 @@ Answers that match the code (re-check against Google's current definitions befor
 - Graphics: `docs/store/icon-512.png`, `docs/store/feature-graphic.png` (regenerate with
   `python scripts/brand.py <Roboto.ttf>`).
 - Screenshots: the five screens and captions in `docs/store/listing.md` (1080 × 1920), once with
-  the phone in Turkish and once in English. To redo them: release build with the sample backup
-  restored (never real data), Android's demo-mode status bar, raw captures into
-  `docs/store/screenshots/raw/`, then `python scripts/store_screens.py <Roboto.ttf>`.
+  the app in Turkish and once in English. Sample data only, never real data. To redo them, per
+  language (`tr-TR`, then `en-US`) on the emulator:
+  1. `adb shell cmd locale set-app-locales com.kalkansoftware.tenulo --user 0 --locales tr-TR`
+     (`pm clear` resets it, so set it after clearing).
+  2. In the dev build: finish the welcome pages, then Settings → "Load sample data". It names
+     foods, the medication and notes in the app's language.
+  3. `adb install -r` a local release APK (`cd android && ./gradlew app:assembleRelease`) over
+     the dev build: both are signed with the debug key, so the sample data stays.
+  4. Demo-mode status bar, then capture `today`, `food`, `progress` (`tenulo://` deep links) and
+     `log-injection` with the suggested site tapped, into `docs/store/screenshots/raw/<lang>/`.
+  5. Settings → Delete all data (this also checks the alert text, see step 1), then capture the
+     last welcome page as `welcome-private.png`.
+  6. `python scripts/store_screens.py <Roboto.ttf>`. Android's own variable Roboto works:
+     `adb pull /system/fonts/Roboto-Regular.ttf`.
 - The release changes native code (the reminder module sets notification texts per language), so
   a store build must come from a fresh `eas build`, not an OTA update.
 - Content rating questionnaire: medical/health reference, no user-generated content shared.

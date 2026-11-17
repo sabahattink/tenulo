@@ -32,10 +32,9 @@ export function TrendChart({ trend, goalG, unit, theme, today }: Props) {
 
   const g =
     width > 0
-      ? chartGeometry(trend, { width, height: HEIGHT, ...PAD }, goalG, range === "all" ? Number.POSITIVE_INFINITY : range)
+      ? chartGeometry(trend, { width, height: HEIGHT, ...PAD }, goalG, range === "all" ? Number.POSITIVE_INFINITY : range, unit)
       : undefined;
-  const stepG = (g?.ticks[1]?.valueG ?? 0) - (g?.ticks[0]?.valueG ?? 0);
-  const decimals = fromGrams(stepG, unit) >= 1 ? 0 : 1;
+  const decimals = g?.tickDecimals ?? 0;
   const first = g?.trendPoints[0];
   const last = g?.trendPoints.at(-1);
   const bottom = HEIGHT - PAD.padBottom;

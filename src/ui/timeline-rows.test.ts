@@ -50,9 +50,9 @@ describe("timelineRows", () => {
 
   it("lists a measuring sitting in body order and deletes it as a whole", () => {
     const sitting = byId(rows, "2026-11-15|30");
-    expect(sitting).toMatchObject({ kind: "measurement", title: "Measurements", detail: "Waist 92.5 cm · Hip 104 cm" });
+    expect(sitting).toMatchObject({ kind: "measurement", title: "Measurements", detail: "Waist 92.5\u00a0cm · Hip 104\u00a0cm" });
     expect(sitting?.remove?.ids).toEqual(["m2", "m1"]);
-    expect(timelineRows(data, "measurement", "lb", en)[0]?.detail).toBe("Waist 36.4 in · Hip 40.9 in");
+    expect(timelineRows(data, "measurement", "lb", en)[0]?.detail).toBe("Waist 36.4\u00a0in · Hip 40.9\u00a0in");
   });
 
   it("shows exercise energy the user entered as is, and Tenulo's estimate marked as one", () => {
@@ -78,7 +78,7 @@ describe("timelineRows", () => {
     const turkish = timelineRows(data, "all", "kg", tr);
     expect(byId(turkish, "2026-11-16|lunch")).toMatchObject({ title: "Öğle yemeği", detail: "3 yiyecek · 1.640 kcal" });
     expect(byId(turkish, "2026-11-16")).toMatchObject({ title: "Su · 1.750 ml", detail: "2 kayıt" });
-    expect(byId(turkish, "2026-11-15|30")?.detail).toBe("Bel 92,5 cm · Kalça 104 cm");
+    expect(byId(turkish, "2026-11-15|30")?.detail).toBe("Bel 92,5\u00a0cm · Kalça 104\u00a0cm");
     expect(byId(turkish, "x1")).toMatchObject({ title: "Yürüyüş · 40 dk", detail: "Orta · ≈ 187 kcal (tahmini)" });
   });
 });

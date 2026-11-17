@@ -131,10 +131,11 @@ or pharmacist. Nutrition values are estimates.
 
 ## Phone screenshots (upload in this order)
 
-Made by `scripts/store_screens.py` from the release build with the sample backup restored, once
-per store language (the app follows the phone's language), from raw captures in
-`screenshots/raw/<lang>/` (`tr`, `en`). The 1.0 English set in `screenshots/` predates the daily log;
-replace it. Captions per language:
+Made by `scripts/store_screens.py` from a release build holding the sample data, once per store
+language (the app follows the phone's language), from raw captures in `screenshots/raw/<lang>/`
+(`tr`, `en`); how, in `docs/release-checklist.md` step 5. The Turkish set is in kilograms and
+centimetres, the English set in pounds and inches, as an en-US phone defaults to. Captions per
+language:
 
 | File | Turkish caption | English caption | Screen |
 | --- | --- | --- | --- |

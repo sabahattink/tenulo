@@ -15,7 +15,7 @@ import {
 import { type LocalDate, addDays } from "@/domain/date";
 import { ulid } from "@/domain/id";
 import { INJECTION_SITES } from "@/domain/injection";
-import { resolveLanguage } from "@/domain/language";
+import { type Language, resolveLanguage } from "@/domain/language";
 import { sampleExercise, sampleFoodLog, sampleMeasurements, sampleWater, sampleWeights } from "@/domain/sample";
 import type { SideEffectType } from "@/domain/side-effect";
 import { deviceLocale } from "@/i18n/device";
@@ -24,6 +24,15 @@ const DAYS = 63;
 /** The daily log is newer than the weight log: a few weeks of food and water, six of exercise. */
 const FOOD_DAYS = 28;
 const EXERCISE_DAYS = 42;
+
+/**
+ * What a person would have typed themselves, in the app's language: the medication is named the
+ * way a user would name it (generic, no brand) and notes read as their own words.
+ */
+const SAMPLE_TEXT = {
+  en: { medication: "My weekly pen", afterDinner: "after dinner", newDose: "first week on the new dose" },
+  tr: { medication: "Haftalık kalemim", afterDinner: "akşam yemeğinden sonra", newDose: "yeni dozun ilk haftası" },
+} as const satisfies Record<Language, { medication: string; afterDinner: string; newDose: string }>;
 
 /** The instant of a minute of a local calendar day, in the phone's time zone. */
 function instantOf(date: LocalDate, minuteOfDay: number): number {
@@ -35,8 +44,8 @@ function instantOf(date: LocalDate, minuteOfDay: number): number {
  * Development builds only: fills an empty log with realistic, deterministic sample data for trying
  * the app and taking store screenshots. Never reachable in a release build (the caller checks
  * __DEV__), and the medication name is generic: no brand names, even in sample data. Foods are
- * named in the app's current language, as a person logging them would see them. One synchronous
- * transaction: see src/db/ops.ts for why.
+ * named in the app's current language, as a person logging them would see them, and so are the
+ * medication name and notes. One synchronous transaction: see src/db/ops.ts for why.
  */
 export function seedSampleData(today: LocalDate): void {
   if (!__DEV__) throw new Error("Sample data is for development builds only");
@@ -51,19 +60,20 @@ export function seedSampleData(today: LocalDate): void {
     skipChance: 0.12,
     seed: 7,
   });
+  const [current] = db.select({ language: settings.language }).from(settings).where(eq(settings.id, 1)).all();
+  const lang = resolveLanguage(current?.language ?? "system", deviceLocale());
+  const text = SAMPLE_TEXT[lang];
   const medicationId = ulid(now - 1_000);
   const shots = Array.from({ length: Math.floor((DAYS - 1) / 7) + 1 }, (_, i) => addDays(start, i * 7));
   const effects: { day: number; type: SideEffectType; severity: number; note: string | null }[] = [
-    { day: 1, type: "nausea", severity: 2, note: "after dinner" },
+    { day: 1, type: "nausea", severity: 2, note: text.afterDinner },
     { day: 2, type: "nausea", severity: 1, note: null },
     { day: 9, type: "fatigue", severity: 1, note: null },
-    { day: 29, type: "nausea", severity: 2, note: "first week on the new dose" },
+    { day: 29, type: "nausea", severity: 2, note: text.newDose },
     { day: 30, type: "headache", severity: 1, note: null },
     { day: 44, type: "constipation", severity: 1, note: null },
   ];
 
-  const [current] = db.select({ language: settings.language }).from(settings).where(eq(settings.id, 1)).all();
-  const lang = resolveLanguage(current?.language ?? "system", deviceLocale());
   const food = sampleFoodLog({ endDate: today, days: FOOD_DAYS, seed: 11, lang });
   const water = sampleWater({ endDate: today, days: FOOD_DAYS, seed: 12 });
   // Measured on injection days, from the first one: the same weeks as the weigh-ins.
@@ -84,7 +94,7 @@ export function seedSampleData(today: LocalDate): void {
         updatedAt: now,
       })),
     ).run();
-    tx.insert(medications).values({ id: medicationId, name: "My weekly pen", active: true, createdAt: now, updatedAt: now }).run();
+    tx.insert(medications).values({ id: medicationId, name: text.medication, active: true, createdAt: now, updatedAt: now }).run();
     tx.insert(planSteps).values([
       { id: ulid(now - 900), medicationId, startDate: start, doseMcg: 2_500, intervalDays: 7, createdAt: now, updatedAt: now },
       {
