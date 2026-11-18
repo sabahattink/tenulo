@@ -131,3 +131,8 @@ package `com.kalkansoftware.tenulo`.
     Brazil 14+; interactive element "In-app purchases".
   - Store settings: category Health & Fitness; contact email support@kalkansoftware.com, website
     https://kalkansoftware.com (kalkansoftware.com/tenulo/ returns 404), no phone.
+- **Default store listing saved** (tr-TR and en-US; ready to send for review, not sent).
+  - AI-generated asset declaration: labelled. Labelled assets: both feature graphics and, in both
+    languages, `04-injection.png` (body figure made with Canva's AI image generation) and
+    `05-private.png` (paper-cut illustration made in Canva). The icon (drawn as geometry by
+    `scripts/brand.py`) and the other screenshots are not labelled.
