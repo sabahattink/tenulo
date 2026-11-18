@@ -111,3 +111,10 @@ package `com.kalkansoftware.tenulo`.
   account, logs and Health Connect are free, and lists three promo codes for the doctor report.
   The toggle that lets Google's test devices use these details is off, so automated runs do not
   spend the single-use codes.
+- **Internal testing release 3 (1.0.0) published at 16:56** (console time). It replaces release 2.
+  - versionCode 3: Health Connect free, Tenulo Pro is the doctor report (PR 14).
+  - Device support unchanged (11,546 phones); install size 14.2 MB.
+  - Release notes in tr-TR and en-US: Health Connect is free; Tenulo Pro is the PDF report.
+- **Next.** Redeem one promo code (not one of the three in the reviewer note) with the tester
+  account and check that Pro unlocks after reopening Tenulo. Then: data safety, content rating,
+  target audience.
