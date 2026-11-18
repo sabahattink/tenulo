@@ -39,7 +39,11 @@ export function escapeHtml(text: string): string {
 
 const e = escapeHtml;
 
-export function reportHtml(report: Report, unit: WeightUnit, created: LocalDate, i18n: I18n): string {
+/**
+ * With `medication` false (the narrow build) no medication, plan, injection or side-effect section
+ * or tile is rendered, whatever the report holds: a restored backup can put such rows in the database.
+ */
+export function reportHtml(report: Report, unit: WeightUnit, created: LocalDate, i18n: I18n, medication: boolean): string {
   const { lang, t, f } = i18n;
   const period = `${f.longDate(report.from)} – ${f.longDate(report.to)}`;
   return `<!DOCTYPE html>
@@ -56,22 +60,22 @@ export function reportHtml(report: Report, unit: WeightUnit, created: LocalDate,
   <h1>${e(t.reportPdf.heading)}</h1>
   <p class="period">${e(period)} · ${e(t.reportPdf.days(report.days))}</p>
 </header>
-${summary(report, unit, i18n)}
+${summary(report, unit, i18n, medication)}
 ${weightBlock(report, unit, i18n)}
 ${measurementBlock(report, unit, i18n)}
-${medicationBlock(report, i18n)}
-${sideEffectBlock(report, i18n)}
-${nutritionBlock(report, i18n)}
+${medication ? medicationBlock(report, i18n) : ""}
+${medication ? sideEffectBlock(report, i18n) : ""}
+${nutritionBlock(report, i18n, medication)}
 ${waterBlock(report, i18n)}
-${exerciseBlock(report, i18n)}
+${exerciseBlock(report, i18n, medication)}
 <footer>
-  ${e(t.reportPdf.footer(f.longDate(created), PUBLISHER))}
+  ${e((medication ? t.reportPdf.footer : t.reportPdf.narrow.footer)(f.longDate(created), PUBLISHER))}
 </footer>
 </body>
 </html>`;
 }
 
-function summary(r: Report, unit: WeightUnit, { t, f }: I18n): string {
+function summary(r: Report, unit: WeightUnit, { t, f }: I18n, medication: boolean): string {
   const w = r.weight;
   const tile = (label: string, value: string) =>
     `<div class="tile"><div class="tile-label">${e(f.upper(label))}</div><div class="tile-value">${e(value)}</div></div>`;
@@ -79,8 +83,8 @@ function summary(r: Report, unit: WeightUnit, { t, f }: I18n): string {
   ${tile(t.reportPdf.trendStart, w ? f.weight(w.startTrendG, unit) : t.common.noValue)}
   ${tile(t.reportPdf.trendEnd, w ? f.weight(w.endTrendG, unit) : t.common.noValue)}
   ${tile(t.reportPdf.change, w ? f.weightChange(w.changeG, unit) : t.common.noValue)}
-  ${tile(t.reportPdf.injections, f.integer(r.injections.count))}
-  ${tile(t.reportPdf.sideEffects, f.integer(r.sideEffects.total))}
+  ${medication ? tile(t.reportPdf.injections, f.integer(r.injections.count)) : ""}
+  ${medication ? tile(t.reportPdf.sideEffects, f.integer(r.sideEffects.total)) : ""}
 </section>`;
 }
 
@@ -245,7 +249,7 @@ function measurementBlock(r: Report, unit: WeightUnit, i18n: I18n): string {
 </section>`;
 }
 
-function nutritionBlock(r: Report, { t, f }: I18n): string {
+function nutritionBlock(r: Report, { t, f }: I18n, medication: boolean): string {
   const n = r.nutrition;
   if (n.daysLogged === 0) return "";
   const pdf = t.reportLog.pdf;
@@ -259,7 +263,7 @@ function nutritionBlock(r: Report, { t, f }: I18n): string {
     [pdf.energyPerDay, kcal],
     [pdf.proteinPerDay, protein],
   ])}
-  <p class="note">${e(`${pdf.nutritionNote}${incomplete}`)}</p>
+  <p class="note">${e(`${medication ? pdf.nutritionNote : pdf.narrow.nutritionNote}${incomplete}`)}</p>
 </section>`;
 }
 
@@ -276,7 +280,7 @@ function waterBlock(r: Report, { t, f }: I18n): string {
 </section>`;
 }
 
-function exerciseBlock(r: Report, i18n: I18n): string {
+function exerciseBlock(r: Report, i18n: I18n, medication: boolean): string {
   const { t, f } = i18n;
   const x = r.exercise;
   if (x.sessions === 0) return "";
@@ -293,7 +297,7 @@ function exerciseBlock(r: Report, i18n: I18n): string {
     [t.reportPdf.type, pdf.sessions, pdf.totalTime],
     x.byKind.map((k) => [t.exerciseLog.kinds[k.kind], f.integer(k.sessions), minutes(k.minutes)]),
   )}
-  <p class="note">${e(pdf.exerciseNote)}</p>
+  <p class="note">${e(medication ? pdf.exerciseNote : pdf.narrow.exerciseNote)}</p>
 </section>`;
 }
 

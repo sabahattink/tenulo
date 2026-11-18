@@ -7,6 +7,7 @@ import { useToday } from "@/data/use-today";
 import { REPORT_PERIODS, type Report, type ReportPeriod } from "@/domain/report";
 import { useI18n } from "@/i18n/provider";
 import { useIsPro } from "@/platform/billing";
+import { features } from "@/platform/features";
 import { Button, Card, Label, Segmented, useScrollEndPadding } from "@/ui/kit";
 import { type Theme, radius, space, type, useTheme } from "@/ui/theme";
 import { notify } from "@/ui/notice";
@@ -27,7 +28,7 @@ export default function ReportScreen() {
   useEffect(() => {
     if (!isPro) return;
     let alive = true;
-    loadReport(period, now)
+    loadReport(period, now, features.medication)
       .then((r) => {
         if (!alive) return;
         setReport(r);
@@ -42,7 +43,7 @@ export default function ReportScreen() {
   if (!isPro) {
     return (
       <View style={[styles.center, { backgroundColor: theme.background }]}>
-        <Text style={[type.body, { color: theme.text, textAlign: "center" }]}>{t.report.proOnly}</Text>
+        <Text style={[type.body, { color: theme.text, textAlign: "center" }]}>{features.medication ? t.report.proOnly : t.report.narrow.proOnly}</Text>
         <Button theme={theme} label={t.common.seePro} onPress={() => router.replace("/pro")} />
       </View>
     );
@@ -52,7 +53,7 @@ export default function ReportScreen() {
     if (report === undefined || sharing) return;
     setSharing(true);
     try {
-      await shareReportPdf(report, now, i18n);
+      await shareReportPdf(report, now, i18n, features.medication);
     } catch (e) {
       notify(t, t.report.couldNotCreate, e instanceof Error ? e.message : t.common.unknownError);
     } finally {
@@ -63,7 +64,7 @@ export default function ReportScreen() {
   const w = report?.weight;
   return (
     <ScrollView style={{ backgroundColor: theme.background }} contentContainerStyle={[styles.content, { paddingBottom: endPadding }]}>
-      <Text style={[type.body, { color: theme.muted }]}>{t.report.intro}</Text>
+      <Text style={[type.body, { color: theme.muted }]}>{features.medication ? t.report.intro : t.report.narrow.intro}</Text>
       <Segmented
         theme={theme}
         label={t.report.periodLabel}
@@ -90,9 +91,13 @@ export default function ReportScreen() {
             />
             <Fact theme={theme} label={t.report.change} value={w ? f.weightChange(w.changeG, unit) : t.common.noValue} />
             <Fact theme={theme} label={t.report.weighInDays} value={f.integer(w?.weighIns ?? 0)} />
-            <Fact theme={theme} label={t.report.injections} value={f.integer(report.injections.count)} />
-            <Fact theme={theme} label={t.report.sideEffects} value={f.integer(report.sideEffects.total)} />
-            <Fact theme={theme} label={t.report.medication} value={report.medicationName ?? t.report.notSetUp} />
+            {features.medication && (
+              <>
+                <Fact theme={theme} label={t.report.injections} value={f.integer(report.injections.count)} />
+                <Fact theme={theme} label={t.report.sideEffects} value={f.integer(report.sideEffects.total)} />
+                <Fact theme={theme} label={t.report.medication} value={report.medicationName ?? t.report.notSetUp} />
+              </>
+            )}
             {/* The daily-log sections are in the PDF only when the period has them; so is their preview. */}
             {report.nutrition.daysLogged > 0 && (
               <Fact theme={theme} label={t.reportLog.foodDays} value={f.integer(report.nutrition.daysLogged)} />
