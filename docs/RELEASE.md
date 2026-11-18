@@ -160,3 +160,11 @@ package `com.kalkansoftware.tenulo`.
 - **Next.** When approved: send the opt-in link to Beta Bench, ask the 5 feedback questions from
   day 1, and log feedback here dated. The 14-day counter starts once 12 testers have opted in; do
   not change the tester group while it runs.
+- **Rejected (2026-11-18): Play Console Requirements.** "Some types of apps can only be
+  distributed by organizations." The account is a personal one, and the policy reserves "Health
+  apps, such as medical apps and human subjects research apps" for organization accounts. The
+  health declaration lists "Medication and treatment management", which Google groups under
+  Medical; its examples include medication reminders, so Tenulo's injection log, dose plan and
+  injection-day reminder fit it. "Activity and fitness" and "Nutrition and weight management" are
+  in the Health and fitness group. Nothing was changed after the rejection; the way forward is the
+  owner's decision (organization account and app transfer, an appeal, or a narrower app).
