@@ -77,8 +77,12 @@ Play Console → App content → Health apps / Health Connect permissions:
 - Health Connect is free (ADR 0006), so the reviewer can turn it on without a purchase.
 
 App access (Play Console → App content → Sign-in details): "Yes". The one-time product counts as
-restricted. Tell the reviewer there is no account, every log is free, Health Connect is in
-Settings, and only the doctor PDF report needs the purchase.
+restricted, and "Yes" requires confirming the details give full access, paid content included.
+Tell the reviewer there is no account, every log and Health Connect is free, and give unused
+Google Play promo codes for `tenulo_pro` (Monetize → Promo codes; one-time products only get
+single-use codes, up to 500 a quarter, valid up to a year). Keep the test-device toggle off so
+automated runs do not spend the codes. Never commit the codes; when the listed ones are used or
+expire, put fresh ones in the note.
 
 ## 4. Data safety form
 

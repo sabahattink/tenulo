@@ -18,8 +18,12 @@ and adding one (a demo code, a reviewer flag) would be a second, weaker path aro
   (`src/data/use-app-sync.ts`) and "Sync now" depend only on the user turning it on.
 - Tenulo Pro unlocks the doctor PDF report only. The Pro screen and the Settings banner say so.
 - The store listing names Health Connect in the weight section, not under Tenulo Pro.
-- App access in Play Console: "Yes, restricted". The note tells the reviewer that there is no
-  account and that only the PDF report needs the one-time purchase.
+- App access in Play Console: "Yes, restricted". The console then requires confirming that the
+  details give full access, paid content included. The note tells the reviewer there is no
+  account and gives Google Play promo codes for `tenulo_pro` to open the PDF report. One-time
+  products only get single-use codes, so the note lists three and the rest are kept for later
+  reviews. Google's own test devices may not use these details (the toggle is off), so automated
+  runs cannot spend the codes.
 
 ## Consequences
 

@@ -100,3 +100,14 @@ package `com.kalkansoftware.tenulo`.
   `dataExtractionRules` present. Not uploaded yet.
 - Local build note: from Git Bash, put CMake on PATH with `cygpath -u "$LOCALAPPDATA"`; a Windows
   path with backslashes in PATH leaves Gradle unable to find CMake 4.1.2.
+- **In-app product `tenulo_pro` active.** Name "Tenulo Pro" (tr-TR, en-US), description: the
+  doctor PDF report, one purchase, no subscription. Purchase option `buy`, backwards compatible.
+  Base price USD 2,99 for all 174 countries, converted by Play (TRY 179,99 incl. 20 % KDV,
+  AZN 4,99, EUR 3,29). Tax category: digital app sales.
+- **Promo codes for review.** Promotion "Play review access - doctor report" (id 131813106):
+  10 single-use codes for `tenulo_pro`, 2026-11-18 12:00 to 2027-11-17. The codes live only in
+  the CSV the console exports (kept outside the repo).
+- **Sign-in details saved.** "Yes, restricted", full access confirmed: the note says there is no
+  account, logs and Health Connect are free, and lists three promo codes for the doctor report.
+  The toggle that lets Google's test devices use these details is off, so automated runs do not
+  spend the single-use codes.
