@@ -66,7 +66,8 @@
       "./plugins/with-release-signing",
       "./plugins/with-bundle-languages",
       "./plugins/with-no-data-extraction",
-      "./plugins/with-optional-portrait"
+      "./plugins/with-optional-portrait",
+      "./plugins/with-medication-switch"
     ],
     "extra": {
       "medication": false

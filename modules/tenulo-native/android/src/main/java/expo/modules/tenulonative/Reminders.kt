@@ -7,6 +7,7 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import androidx.core.app.NotificationCompat
@@ -82,8 +83,12 @@ object ReminderScheduler {
   private const val CHANNEL_DESCRIPTION = "channelDescription"
   private const val LOCKED_TITLE = "lockedTitle"
   private const val DEFAULT_CHANNEL_NAME = "Reminders"
-  private const val DEFAULT_CHANNEL_DESCRIPTION = "Injection and weigh-in reminders you set in Tenulo"
+  private const val DEFAULT_CHANNEL_DESCRIPTION = "Reminders you set in Tenulo"
   private const val DEFAULT_LOCKED_TITLE = "Tenulo reminder"
+  /** Same id as INJECTION_REMINDER_ID in src/platform/reminders.ts. */
+  const val INJECTION_ID = "injection"
+  /** Manifest meta-data written by plugins/with-medication-switch.js from expo.extra.medication. */
+  private const val MEDICATION_META = "tenulo.medication"
   const val ACTION_FIRE = "expo.modules.tenulonative.REMINDER_FIRE"
   const val EXTRA_ID = "reminderId"
   /** Put on the launch intent when a reminder notification is tapped. */
@@ -110,6 +115,17 @@ object ReminderScheduler {
     // commit, not apply: the process may be ended right after this, and the token must survive it.
     launches.edit().putString(LAST_LAUNCH, token).commit()
     return true
+  }
+
+  /**
+   * The medication switch from the manifest. Read here because the receiver runs without the JS
+   * runtime. True when the meta-data is absent (a build without the plugin keeps today's behaviour).
+   */
+  fun medicationEnabled(context: Context): Boolean = try {
+    val info = context.packageManager.getApplicationInfo(context.packageName, PackageManager.GET_META_DATA)
+    info.metaData?.getBoolean(MEDICATION_META, true) ?: true
+  } catch (e: PackageManager.NameNotFoundException) {
+    true
   }
 
   fun canNotify(context: Context): Boolean = NotificationManagerCompat.from(context).areNotificationsEnabled()
@@ -139,13 +155,22 @@ object ReminderScheduler {
 
   /** Re-creates every stored alarm: after a reboot, an app update or a clock/time-zone change. */
   fun rearmAll(context: Context) {
+    val medication = medicationEnabled(context)
+    // A build without medication features must not bring back an injection reminder that an
+    // earlier build armed: drop it and its alarm.
+    if (!medication) cancel(context, INJECTION_ID)
     for (json in prefs(context).all.values) {
       val reminder = (json as? String)?.let(Reminder::fromJson) ?: continue
+      if (!medication && reminder.id == INJECTION_ID) continue
       arm(context, reminder)
     }
   }
 
   fun fire(context: Context, id: String) {
+    if (id == INJECTION_ID && !medicationEnabled(context)) {
+      cancel(context, id)
+      return
+    }
     val reminder = prefs(context).getString(id, null)?.let(Reminder::fromJson) ?: return
     post(context, reminder)
     if (reminder.dailyMinute != null) {
