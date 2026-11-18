@@ -136,3 +136,15 @@ package `com.kalkansoftware.tenulo`.
     languages, `04-injection.png` (body figure made with Canva's AI image generation) and
     `05-private.png` (paper-cut illustration made in Canva). The icon (drawn as geometry by
     `scripts/brand.py`) and the other screenshots are not labelled.
+- **Closed testing (Alpha) set up, not sent for review.**
+  - Countries: all 178 countries and regions.
+  - Testers: Google Group `betabench@googlegroups.com` (Beta Bench). The console takes either
+    email lists or Google Groups per track, not both, so the 21-person "Test User" list is not on
+    this track. Feedback address: support@kalkansoftware.com.
+  - Release 1 on the track: versionCode 3 from the library, release notes in tr-TR and en-US.
+- **Pre-review check: `android.hardware.screen.portrait` required.** `"orientation": "portrait"`
+  gives the main activity `screenOrientation="portrait"`, which Play reads as a required portrait
+  screen and so hides the app from some tablets, desktops and Android XR. New
+  `plugins/with-optional-portrait.js` declares the feature with `android:required="false"`; the
+  app still opens in portrait. versionCode 4 carries it and replaces 3 on the closed track before
+  anything is sent for review.
