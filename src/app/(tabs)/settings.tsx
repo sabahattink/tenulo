@@ -118,7 +118,7 @@ export default function SettingsScreen() {
       const picked = await pickBackup();
       if (picked.canceled) return;
       if (!picked.ok) {
-        notify(t, t.settings.data.cannotRestore, f.backupProblem(picked));
+        notify(t, t.settings.data.cannotRestore, f.backupProblem(picked, features.medication));
         return;
       }
       const { backup } = picked;
@@ -130,7 +130,7 @@ export default function SettingsScreen() {
             try {
               const summary = restoreBackup(backup);
               const inactive = !features.medication || summary.inactiveMedications === 0 ? [] : [t.settings.data.inactiveMedications(summary.inactiveMedications)];
-              notify(t, t.settings.data.restoredTitle, [f.restoreSummary(summary), ...inactive].join(" "));
+              notify(t, t.settings.data.restoredTitle, [f.restoreSummary(summary, features.medication), ...inactive].join(" "));
             } catch (e) {
               notify(t, t.settings.data.restoreFailedTitle, t.settings.data.restoreFailedBody(errorText(e)));
             }

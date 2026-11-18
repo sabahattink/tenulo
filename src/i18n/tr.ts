@@ -641,7 +641,10 @@ export const tr: Messages = {
       measurements: countOf("measurements"),
       exercises: countOf("exercises"),
     },
-    keptHidden: (n) => `Başka bir sürümden ${n} kayıt saklandı; bu sürüm onları göstermiyor.`,
+    keptHidden: (n) =>
+      n === 1
+        ? "Başka bir sürümden 1 kayıt saklandı; bu sürüm onu göstermiyor."
+        : `Başka bir sürümden ${n} kayıt saklandı; bu sürüm onları göstermiyor.`,
   },
   ...todayTr,
   ...progressTr,

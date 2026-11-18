@@ -7,16 +7,13 @@ import { NARROW_DISCLAIMER, findForbiddenWords } from "../domain/narrow-words";
 import { en } from "./en";
 import { leaves } from "./leaves";
 import { MEDICATION_ONLY_KEYS, isMedicationOnly } from "./narrow-keys";
-import { BACKUP_RECORDS } from "./records";
+import { BACKUP_RECORDS, MEDICATION_RECORDS } from "./records";
 import { tr } from "./tr";
 
 const DICTIONARIES = [
   ["en", en],
   ["tr", tr],
 ] as const;
-
-/** Record kinds the narrow build never names (restore and backup errors use the neutral texts). */
-const HIDDEN_RECORDS: readonly string[] = ["medications", "planSteps", "injections", "sideEffects"];
 
 describe("narrow-build strings", () => {
   it.each(DICTIONARIES)("shows no medication word in %s", (_lang, messages) => {
@@ -35,7 +32,7 @@ describe("narrow-build strings", () => {
       t.restore.keptHidden(12),
       t.backup.problemAtHidden(undefined),
       t.backup.problemAtHidden(4),
-      ...BACKUP_RECORDS.filter((r) => !HIDDEN_RECORDS.includes(r)).flatMap((r) => [t.backup.problemAt(r, undefined), t.backup.problemAt(r, 4)]),
+      ...BACKUP_RECORDS.filter((r) => !MEDICATION_RECORDS.includes(r)).flatMap((r) => [t.backup.problemAt(r, undefined), t.backup.problemAt(r, 4)]),
     ];
     expect(texts.filter((text) => findForbiddenWords(text).length > 0)).toEqual([]);
   });
