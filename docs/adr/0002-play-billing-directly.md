@@ -25,8 +25,9 @@ for one one-time product, `tenulo_pro`:
 Ownership is never stored in Tenulo's database. `src/platform/billing.ts` asks Play on start, on
 foreground and after every purchase update; Play answers from its own cache when offline.
 
-Pro unlocks the doctor PDF report and Health Connect sync. Logging, trend, forecast, reminders,
-backup, restore and delete-all stay free: nobody's own data is held behind a paywall.
+Pro unlocks the doctor PDF report (Health Connect sync was Pro until ADR 0006). Logging, trend,
+forecast, Health Connect, reminders, backup, restore and delete-all stay free: nobody's own data
+is held behind a paywall.
 
 ## Consequences
 

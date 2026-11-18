@@ -31,8 +31,9 @@ one place, in Turkish and English. Local-first: no account, no analytics, no dat
   record, filterable.
 - **Reminders**: injection day (from the user's schedule) and daily weigh-in; local alarms only.
 - **Your data**: backup to a file and merge-restore, delete everything.
-- **Tenulo Pro** (one-time, Play Billing): doctor report as PDF (now with nutrition, water,
-  measurement and exercise summaries), Health Connect weight import (read-only).
+- **Health Connect**: weight import from smart scales and other apps (read-only, free).
+- **Tenulo Pro** (one-time, Play Billing): doctor report as PDF (with nutrition, water,
+  measurement and exercise summaries).
 
 ## Stack
 

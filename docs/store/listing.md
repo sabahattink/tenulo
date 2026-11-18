@@ -35,7 +35,8 @@ yalnızca senin hedefini gösterir.
 
 KİLO: GÜRÜLTÜ DEĞİL, TREND
 Günlük kilo su ve tuzla oynar. Tenulo tartımlarını bir trend çizgisine dönüştürür; verin
-yeterli olduğunda hedefine ne zaman varacağını tahmin eder, yetmediğinde uydurmaz.
+yeterli olduğunda hedefine ne zaman varacağını tahmin eder, yetmediğinde uydurmaz. Akıllı
+tartının ölçümleri istersen Health Connect'ten kendiliğinden gelir; Tenulo yalnızca okur.
 
 ÖLÇÜLER VE EGZERSİZ
 Bel, kalça, göğüs, boyun, kol ve uyluk ölçülerini kaydet, değişimi gör. Yürüyüş, koşu, ağırlık
@@ -64,7 +65,6 @@ VERİN SENİNDİR
 TENULO PRO (tek seferlik satın alma)
 - Doktor raporu: seçtiğin dönem için trendin, iğnelerin, planın, yan etkilerin, beslenme ve
   ölçü özetin; düzenli bir PDF olarak.
-- Health Connect: akıllı tartından gelen kilo ölçümleri kendiliğinden görünür. Yalnızca okuma.
 
 Tenulo yetişkinler için kişisel bir günlüktür. Tıbbi tavsiye değildir; doktorunun ya da
 eczacının yerini tutmaz. Besin değerleri tahminidir.
@@ -95,7 +95,8 @@ one, it only shows yours back.
 
 WEIGHT, WITHOUT THE NOISE
 Daily weight jumps around with water and salt. Tenulo smooths your weigh-ins into a trend line,
-and projects a date for your goal only when your data supports one.
+and projects a date for your goal only when your data supports one. If you like, readings from
+your smart scale come in through Health Connect; Tenulo only reads them.
 
 MEASUREMENTS AND EXERCISE
 Waist, hip, chest, neck, arm and thigh, with the change since you started. Walking, running,
@@ -124,7 +125,6 @@ YOUR DATA STAYS YOURS
 TENULO PRO (one-time purchase)
 - Doctor report: your trend, injections, plan, side effects, nutrition and measurements for a
   period, as a clean PDF.
-- Health Connect: weight readings from your smart scale appear automatically. Read-only.
 
 Tenulo is a personal log for adults. It is not medical advice and does not replace your doctor
 or pharmacist. Nutrition values are estimates.

@@ -60,7 +60,7 @@ Play Console → Monetize → Products → In-app products → Create:
 | Product ID | `tenulo_pro` (must match `PRO_PRODUCT_ID` in `src/platform/billing.ts`) |
 | Type | One-time, non-consumable |
 | Name | Tenulo Pro |
-| Description | Doctor report (PDF) and Health Connect sync. One purchase, no subscription. |
+| Description | Doctor report (PDF). One purchase, no subscription. |
 | Price | your choice |
 
 Test with a license-tester account on an internal testing track: buy, cancel, a pending payment
@@ -74,6 +74,11 @@ Play Console → App content → Health apps / Health Connect permissions:
 - Purpose: show smart-scale and other apps' weight readings in the user's own log and trend.
 - Privacy policy URL: https://kalkansoftware.com/tenulo/privacy/ (it already describes this).
 - Approval can take up to a week, plus 5–7 business days to propagate.
+- Health Connect is free (ADR 0006), so the reviewer can turn it on without a purchase.
+
+App access (Play Console → App content → Sign-in details): "Yes". The one-time product counts as
+restricted. Tell the reviewer there is no account, every log is free, Health Connect is in
+Settings, and only the doctor PDF report needs the purchase.
 
 ## 4. Data safety form
 
