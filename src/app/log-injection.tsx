@@ -8,13 +8,14 @@ import { type BodyFigure, DEFAULT_BODY_FIGURE } from "@/domain/body-figure";
 import { parseLocalDate } from "@/domain/date";
 import { type InjectionSite, injectionStatus } from "@/domain/injection";
 import { parseDoseInput } from "@/domain/parse";
+import { MedicationOnly } from "@/ui/MedicationOnly";
 import { DayPicker } from "@/ui/DayPicker";
 import { useI18n } from "@/i18n/provider";
 import { BodyMap } from "@/ui/BodyMap";
 import { Button, Label, useScrollEndPadding } from "@/ui/kit";
 import { radius, space, useTheme } from "@/ui/theme";
 
-export default function LogInjection() {
+function LogInjectionBody() {
   const theme = useTheme();
   const { t, f } = useI18n();
   const endPadding = useScrollEndPadding();
@@ -126,3 +127,11 @@ const styles = StyleSheet.create({
   hint: { fontSize: 13, marginBottom: space.m },
   save: { marginTop: space.xl },
 });
+
+export default function LogInjection() {
+  return (
+    <MedicationOnly>
+      <LogInjectionBody />
+    </MedicationOnly>
+  );
+}

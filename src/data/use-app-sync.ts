@@ -1,23 +1,20 @@
 import { router } from "expo-router";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { AppState } from "react-native";
 import { Launch, type LaunchInfo } from "../../modules/tenulo-native";
 import { parseLocalDate } from "@/domain/date";
+import { injectionReminderWanted } from "@/domain/reminder";
 import { injectionStatus } from "@/domain/injection";
 import { useI18n } from "@/i18n/provider";
 import { startBilling } from "@/platform/billing";
-import { INJECTION_REMINDER_ID, WEIGH_IN_REMINDER_ID, applyReminders } from "@/platform/reminders";
+import { features } from "@/platform/features";
+import { applyReminders } from "@/platform/reminders";
+import { launchRoute } from "./launch-route";
 import { syncHealthConnect } from "./health-sync";
 import { useActiveMedication, useInjections, usePlanSteps } from "./injections";
 import { sweepExports } from "./files";
 import { useSettings } from "./repo";
 import { useToday } from "./use-today";
-
-/** Health Connect opens Tenulo with one of these to show why it asks for access. */
-const HEALTH_RATIONALE_ACTIONS = new Set([
-  "androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE",
-  "android.intent.action.VIEW_PERMISSION_USAGE",
-]);
 
 /** Exported files older than this are swept on start: long enough for a share to finish. */
 const EXPORT_TTL_MS = 10 * 60_000;
@@ -26,9 +23,8 @@ const EXPORT_TTL_MS = 10 * 60_000;
 let initialLaunchHandled = false;
 
 function route(info: LaunchInfo): void {
-  if (info.action !== null && HEALTH_RATIONALE_ACTIONS.has(info.action)) router.push("/privacy");
-  else if (info.reminder === INJECTION_REMINDER_ID) router.push("/log-injection");
-  else if (info.reminder === WEIGH_IN_REMINDER_ID) router.push("/add-weight");
+  const target = launchRoute(info, features.medication);
+  if (target !== undefined) router.push(target);
 }
 
 /**
@@ -43,7 +39,11 @@ export function useAppSync(): void {
   const steps = usePlanSteps(medication?.id);
   const now = useToday();
   // One object per language, so this changes only when the language does.
-  const texts = useI18n().t.reminders;
+  const reminderTexts = useI18n().t.reminders;
+  const texts = useMemo(
+    () => (features.medication ? reminderTexts : { ...reminderTexts, ...reminderTexts.narrow }),
+    [reminderTexts],
+  );
 
   const nextDue = injectionStatus(
     history.map((i) => ({ date: parseLocalDate(i.localDate), site: i.site, doseMcg: i.doseMcg })),
@@ -61,7 +61,11 @@ export function useAppSync(): void {
     if (settings === undefined) return;
     applyReminders(
       {
-        injectionEnabled: injectionEnabled && hasMedication,
+        injectionEnabled: injectionReminderWanted({
+          medication: features.medication,
+          enabled: injectionEnabled,
+          hasMedication,
+        }),
         injectionMinute,
         nextDue,
         weighInEnabled,

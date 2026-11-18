@@ -5,11 +5,12 @@ import { type SideEffectType, injectionBefore, logSideEffect, useActiveMedicatio
 import { useToday } from "@/data/use-today";
 import { SEVERITIES, SIDE_EFFECT_TYPES } from "@/domain/side-effect";
 import { useI18n } from "@/i18n/provider";
+import { MedicationOnly } from "@/ui/MedicationOnly";
 import { DayPicker } from "@/ui/DayPicker";
 import { Button, Chip, Label, Segmented, useScrollEndPadding } from "@/ui/kit";
 import { radius, space, useTheme } from "@/ui/theme";
 
-export default function LogSideEffect() {
+function LogSideEffectBody() {
   const theme = useTheme();
   const { t } = useI18n();
   const endPadding = useScrollEndPadding();
@@ -83,3 +84,11 @@ const styles = StyleSheet.create({
   input: { borderWidth: 1.5, borderRadius: radius.m, paddingHorizontal: space.m, minHeight: 52, fontSize: 16 },
   safety: { fontSize: 13, lineHeight: 18, marginVertical: space.l },
 });
+
+export default function LogSideEffect() {
+  return (
+    <MedicationOnly>
+      <LogSideEffectBody />
+    </MedicationOnly>
+  );
+}

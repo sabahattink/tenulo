@@ -57,3 +57,15 @@ export function injectionReminderAt(nextDue: LocalDate | undefined, minute: numb
   const due = atLocalMinute(nextDue, minute);
   return due.getTime() > now.getTime() ? due : nextDailyAt(minute, now);
 }
+
+/**
+ * Whether the injection alarm should be armed. The narrow build (medication off) never arms it, so
+ * an alarm left over from a full build is cancelled on the first start.
+ */
+export function injectionReminderWanted(o: {
+  readonly medication: boolean;
+  readonly enabled: boolean;
+  readonly hasMedication: boolean;
+}): boolean {
+  return o.medication && o.enabled && o.hasMedication;
+}

@@ -5,13 +5,14 @@ import { createMedication } from "@/data/injections";
 import { useToday } from "@/data/use-today";
 import { parseDoseInput } from "@/domain/parse";
 import { useI18n } from "@/i18n/provider";
+import { MedicationOnly } from "@/ui/MedicationOnly";
 import { DayPicker } from "@/ui/DayPicker";
 import { Button, Label, Segmented, useScrollEndPadding } from "@/ui/kit";
 import { radius, space, useTheme } from "@/ui/theme";
 
 const INTERVALS = [7, 14, 1] as const;
 
-export default function SetupMedication() {
+function SetupMedicationBody() {
   const theme = useTheme();
   const { t, f } = useI18n();
   const endPadding = useScrollEndPadding();
@@ -101,3 +102,11 @@ const styles = StyleSheet.create({
   segment: { marginBottom: space.l },
   save: { marginTop: space.xl },
 });
+
+export default function SetupMedication() {
+  return (
+    <MedicationOnly>
+      <SetupMedicationBody />
+    </MedicationOnly>
+  );
+}
