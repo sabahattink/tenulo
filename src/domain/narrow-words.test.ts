@@ -50,4 +50,39 @@ describe("findForbiddenWords", () => {
   it("keeps the list as specified", () => {
     expect(NARROW_FORBIDDEN).toHaveLength(23);
   });
+
+  it("folds line breaks and repeated spaces inside phrases", () => {
+    expect(findForbiddenWords("side\neffect")).toEqual(["side effect"]);
+    expect(findForbiddenWords("yan  etki")).toEqual(["yan etki"]);
+    expect(findForbiddenWords("yan\u00a0\t etki")).toEqual(["yan etki"]);
+  });
+
+  it("matches a plain phrase", () => {
+    expect(findForbiddenWords("yan etki")).toEqual(["yan etki"]);
+  });
+
+  it("finds a word after a non-matching look-alike", () => {
+    expect(findForbiddenWords("adozen dose")).toEqual(["dose"]);
+  });
+
+  it("flags a word right after the Turkish disclaimer", () => {
+    expect(findForbiddenWords(`${NARROW_DISCLAIMER.tr} Tedavi`)).toEqual(["tedavi"]);
+  });
+
+  it("removes a disclaimer that is wrapped across lines", () => {
+    const wrapped = NARROW_DISCLAIMER.en.replace("not a medical", "not a\nmedical");
+    expect(wrapped).not.toBe(NARROW_DISCLAIMER.en);
+    expect(findForbiddenWords(wrapped)).toEqual([]);
+    const wrappedTr = NARROW_DISCLAIMER.tr.replace("tedavi etmez", "tedavi\n etmez");
+    expect(wrappedTr).not.toBe(NARROW_DISCLAIMER.tr);
+    expect(findForbiddenWords(wrappedTr)).toEqual([]);
+  });
+
+  it("returns nothing for an empty string", () => {
+    expect(findForbiddenWords("")).toEqual([]);
+  });
+
+  it("normalizes decomposed Unicode", () => {
+    expect(findForbiddenWords("ig\u0306ne")).toEqual(["iğne"]);
+  });
 });

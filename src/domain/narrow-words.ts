@@ -56,12 +56,21 @@ function entryMatches(entry: string, haystacks: readonly string[]): boolean {
   return needles.some((needle) => haystacks.some((text) => startsAtWordBoundary(text, needle)));
 }
 
+/** NFC-normalizes and collapses every whitespace run (line breaks, tabs, NBSP) to one space. */
+function fold(text: string): string {
+  return text.normalize("NFC").replace(/\s+/gu, " ");
+}
+
 /**
  * The forbidden entries found in `text`, in list order. Both disclaimers are removed first; the
  * text is lower-cased in English and in Turkish so "İĞNE" and "INJECTION" are both caught.
  */
 export function findForbiddenWords(text: string): string[] {
-  const stripped = text.split(NARROW_DISCLAIMER.en).join(" ").split(NARROW_DISCLAIMER.tr).join(" ");
+  const stripped = fold(text)
+    .split(fold(NARROW_DISCLAIMER.en))
+    .join(" ")
+    .split(fold(NARROW_DISCLAIMER.tr))
+    .join(" ");
   const haystacks = [stripped.toLocaleLowerCase("en"), stripped.toLocaleLowerCase("tr")];
   return NARROW_FORBIDDEN.filter((entry) => entryMatches(entry, haystacks));
 }
