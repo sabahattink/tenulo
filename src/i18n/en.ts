@@ -4,8 +4,12 @@
  *
  * Strings are final text. Functions take counts as numbers and anything with a decimal or a date
  * as text already formatted for the language (see format.ts), so a message never formats a number.
+ *
+ * A `narrow` object next to a text holds the wording the narrow build (`expo.extra.medication:
+ * false`) shows instead: no medication words (narrow-strings.test.ts, narrow-keys.ts).
  */
 import type { InjectionSite } from "../domain/injection";
+import { NARROW_DISCLAIMER } from "../domain/narrow-words";
 import type { ReportPeriod } from "../domain/report";
 import type { Severity, SideEffectType } from "../domain/side-effect";
 import type { WeightUnit } from "../domain/weight";
@@ -120,6 +124,7 @@ export const en = {
     pro: "Tenulo Pro",
     medication: "Medication & plan",
     privacy: "Privacy",
+    narrow: { report: "PDF report" },
   },
 
   today: {
@@ -199,6 +204,9 @@ export const en = {
     emptyFiltered: "Nothing of this kind yet.",
     longPressHint: "Tap a meal or a day's water to open that day. Long press an entry to delete it.",
     deleteHint: "Long press to delete",
+    narrow: {
+      emptyBody: "Weigh-ins, meals, water, measurements and exercise appear here as one timeline, newest first.",
+    },
   },
   addWeight: {
     weight: "Weight",
@@ -324,6 +332,14 @@ export const en = {
     readPolicy: "Read the full privacy policy",
     footer: (publisher: string, email: string) =>
       `Tenulo is made by ${publisher}. Questions: ${email}. Tenulo is meant for adults 18 and over. It is a personal log, not medical advice, and it does not recommend medications or doses.`,
+    narrow: {
+      intro: "Tenulo is a private log for your weight, meals, water, measurements and exercise. Here is what that means in practice.",
+      deviceBody:
+        "Your weigh-ins, meals, water, measurements, exercise and notes are stored in Tenulo's own database on this phone. There is no account and no Tenulo server.",
+      remindersBody: "Weigh-in reminders are scheduled by Android on this phone. No reminder passes through a server.",
+      footer: (publisher: string, email: string) =>
+        `Tenulo is made by ${publisher}. Questions: ${email}. ${NARROW_DISCLAIMER.en} It is meant for people 18 and over.`,
+    },
   },
   pro: {
     tagline: "One purchase. Yours on every phone signed in to your Google account.",
@@ -366,6 +382,14 @@ export const en = {
     pendingNote: "Your purchase is pending with Google Play.",
     unavailableNote: "Purchases are available in the version of Tenulo installed from Google Play.",
     paidOnce: "Paid once through Google Play. Refunds follow Google Play policy.",
+    narrow: {
+      features: {
+        report: {
+          title: "PDF report",
+          body: "Your trend, meals, water, measurements and exercise for any period, as a clean PDF you can print or send.",
+        },
+      },
+    },
   },
   report: {
     periods: { 30: "30 days", 90: "90 days", 180: "6 months", all: "All" } satisfies Record<ReportPeriod, string>,
@@ -387,8 +411,15 @@ export const en = {
     couldNotCreate: "Could not create the PDF",
     footnote: "The report shows your entries as you made them. It contains no advice and no assessment.",
     shareTitle: "Share your Tenulo report",
+    narrow: {
+      proOnly: "The PDF report is part of Tenulo Pro.",
+      intro: "A summary of what you logged, as a PDF you can keep, print or share. It is created on this phone; you choose where to send it.",
+    },
   },
-  /** The PDF a user hands to their doctor: written about "the patient", for the doctor. */
+  /**
+   * The PDF a user hands to their doctor: written about "the patient", for the doctor. The narrow
+   * build's PDF is the user's own copy, so its sentences say "you".
+   */
   reportPdf: {
     documentTitle: (from: string, to: string) => `Tenulo report ${from} – ${to}`,
     heading: "Personal log report",
@@ -432,6 +463,10 @@ export const en = {
     ratingsNote: "Ratings are the patient's own: mild, moderate or strong.",
     footer: (created: string, publisher: string) =>
       `Recorded by the patient in Tenulo, a personal log. Values are shown exactly as the patient entered them. Tenulo does not give medical advice and does not recommend medications or doses. Created ${created}. Tenulo by ${publisher}.`,
+    narrow: {
+      footer: (created: string, publisher: string) =>
+        `Recorded by you in Tenulo. Values are shown exactly as you entered them. ${NARROW_DISCLAIMER.en} Created ${created}. Tenulo by ${publisher}.`,
+    },
   },
   settings: {
     title: "Settings",
@@ -466,6 +501,7 @@ export const en = {
       notificationsOffBody: "Allow notifications for Tenulo in Android settings to get reminders.",
       notNow: "Not now",
       openSettings: "Open settings",
+      narrow: { footer: "Shown by this phone at the time you choose." },
     },
     healthConnect: {
       title: "Health Connect",
@@ -513,6 +549,12 @@ export const en = {
       deletedBody: "Tenulo is empty again. Reminders were cancelled too.",
       deletedPendingBody:
         "Tenulo is empty again. Reminders were cancelled too. Old copies in its database file are cleared the next time Tenulo starts.",
+      narrow: {
+        report: "PDF report",
+        reportDetail: "Trend, meals, water and measurements for a period",
+        deleteAllBody:
+          "Everything Tenulo keeps on this phone will be erased: weigh-ins, meals, water, measurements, exercise, notes, reminders and settings. This cannot be undone.",
+      },
     },
     medication: {
       title: "Medication",
@@ -534,9 +576,11 @@ export const en = {
     proBanner: {
       pending: "Your purchase is pending with Google Play. Pro unlocks as soon as it is confirmed.",
       pitch: "A PDF report for your doctor. One purchase, no subscription.",
+      narrow: { pitch: "A PDF report of your log. One purchase, no subscription." },
     },
     disclaimer:
       "Tenulo is a personal log. It does not give medical advice and does not recommend medications or doses. Always follow your doctor or pharmacist.",
+    narrow: { disclaimer: NARROW_DISCLAIMER.en },
   },
   health: {
     off: "Off",
@@ -577,7 +621,9 @@ export const en = {
     channelDescription: "Injection and weigh-in reminders you set in Tenulo",
     /** All a locked screen shows: what a reminder is about is health data. */
     lockedTitle: "Tenulo reminder",
-  } satisfies ReminderTexts,
+    /** The narrow build schedules weigh-in reminders only. */
+    narrow: { channelDescription: "Weigh-in reminders you set in Tenulo" },
+  } satisfies ReminderTexts & { readonly narrow: Pick<ReminderTexts, "channelDescription"> },
   backup: {
     notABackup: "This file is not a Tenulo backup.",
     newerVersion: "This backup was made by a newer version of Tenulo. Update Tenulo, then try again.",
@@ -589,6 +635,11 @@ export const en = {
       const [one, many] = BACKUP_RECORD_NAMES[record];
       return `The problem is in ${n === undefined ? `the ${many}` : `${one} ${n}`}.`;
     },
+    /** The narrow build's problemAt for a kind of record it does not show; `row` counts from 1. */
+    problemAtHidden: (row: number | undefined) =>
+      row === undefined
+        ? "The problem is in entries this version does not show."
+        : `The problem is in entries this version does not show (entry ${row}).`,
     /** A whole-backup check (src/domain/backup.ts), or undefined to leave it out. */
     wholeCheck: (detail: string): string | undefined => `${detail}.`,
   },
@@ -607,6 +658,11 @@ export const en = {
       measurements: countOf("measurements"),
       exercises: countOf("exercises"),
     } satisfies Record<RestoreCountKey, (n: number) => string>,
+    /** The narrow build's line for restored entries of kinds it does not show. */
+    keptHidden: (n: number) =>
+      n === 1
+        ? "1 entry from another version was kept; this version does not show it."
+        : `${n} entries from another version were kept; this version does not show them.`,
   },
   ...todayEn,
   ...progressEn,

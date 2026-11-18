@@ -6,6 +6,7 @@
  * the right suffix depends on how the number is read aloud, which a template cannot know.
  * After a number a Turkish noun stays singular ("3 gün", "12 tartım").
  */
+import { NARROW_DISCLAIMER } from "../domain/narrow-words";
 import type { Messages } from "./en";
 import { foodTr } from "./messages/food";
 import type { BackupRecord, RestoreCountKey } from "./records";
@@ -121,6 +122,7 @@ export const tr: Messages = {
     pro: "Tenulo Pro",
     medication: "İlaç ve doz planı",
     privacy: "Gizlilik",
+    narrow: { report: "PDF rapor" },
   },
 
   today: {
@@ -201,6 +203,10 @@ export const tr: Messages = {
     emptyFiltered: "Bu türde henüz bir kayıt yok.",
     longPressHint: "Bir öğüne ya da günün suyuna dokunursan o gün açılır. Bir kaydı silmek için üzerine basılı tut.",
     deleteHint: "Silmek için basılı tut",
+    narrow: {
+      emptyBody:
+        "Tartımların, öğünlerin, su, ölçüm ve egzersiz kayıtların burada tek bir zaman çizelgesinde görünür, en yenisi en üstte.",
+    },
   },
   addWeight: {
     weight: "Kilo",
@@ -325,6 +331,15 @@ export const tr: Messages = {
     readPolicy: "Gizlilik politikasının tamamını oku",
     footer: (publisher, email) =>
       `Tenulo'yu ${publisher} geliştirir. Soruların için: ${email}. Tenulo 18 yaş ve üzeri yetişkinler içindir. Kişisel bir kayıttır, tıbbi tavsiye değildir; ilaç ya da doz önermez.`,
+    narrow: {
+      intro:
+        "Tenulo; kilon, öğünlerin, suyun, vücut ölçülerin ve egzersizin için özel bir kayıttır. Bunun pratikte ne anlama geldiğini aşağıda bulabilirsin.",
+      deviceBody:
+        "Tartımların, öğünlerin, su, ölçüm ve egzersiz kayıtların ve notların bu telefonda, Tenulo'nun kendi veritabanında saklanır. Hesap yok, Tenulo sunucusu yok.",
+      remindersBody: "Tartım hatırlatıcılarını bu telefonda Android planlar. Hiçbir hatırlatıcı bir sunucudan geçmez.",
+      footer: (publisher, email) =>
+        `Tenulo'yu ${publisher} geliştirir. Soruların için: ${email}. ${NARROW_DISCLAIMER.tr} 18 yaş ve üzeri kişiler içindir.`,
+    },
   },
   pro: {
     tagline: "Tek seferlik satın alma. Google hesabınla giriş yaptığın her telefonda senin.",
@@ -363,6 +378,14 @@ export const tr: Messages = {
     pendingNote: "Satın alma işlemin Google Play'de beklemede.",
     unavailableNote: "Satın alma, Tenulo'nun Google Play'den yüklenen sürümünde yapılabilir.",
     paidOnce: "Google Play üzerinden bir kez ödenir. İadeler Google Play politikasına tabidir.",
+    narrow: {
+      features: {
+        report: {
+          title: "PDF rapor",
+          body: "İstediğin dönem için trendin, öğünlerin, suyun, ölçülerin ve egzersizin; yazdırabileceğin ya da gönderebileceğin sade bir PDF olarak.",
+        },
+      },
+    },
   },
   report: {
     periods: { 30: "30 gün", 90: "90 gün", 180: "6 ay", all: "Tümü" },
@@ -384,6 +407,11 @@ export const tr: Messages = {
     couldNotCreate: "PDF oluşturulamadı",
     footnote: "Rapor, kayıtlarını girdiğin gibi gösterir. Tavsiye ya da değerlendirme içermez.",
     shareTitle: "Tenulo raporunu paylaş",
+    narrow: {
+      proOnly: "PDF rapor Tenulo Pro'ya dahildir.",
+      intro:
+        "Kaydettiklerinin saklayabileceğin, yazdırabileceğin ya da paylaşabileceğin bir PDF özeti. Bu telefonda oluşturulur; nereye göndereceğini sen seçersin.",
+    },
   },
   reportPdf: {
     documentTitle: (from, to) => `Tenulo raporu ${from} – ${to}`,
@@ -428,6 +456,10 @@ export const tr: Messages = {
     ratingsNote: "Dereceler hastanın kendi değerlendirmesidir: hafif, orta ya da yoğun.",
     footer: (created, publisher) =>
       `Hasta tarafından kişisel bir kayıt uygulaması olan Tenulo'ya girilmiştir. Değerler hastanın girdiği şekliyle gösterilir. Tenulo tıbbi tavsiye vermez; ilaç ya da doz önermez. Oluşturulma tarihi: ${created}. Tenulo, ${publisher} ürünüdür.`,
+    narrow: {
+      footer: (created, publisher) =>
+        `Kayıtları Tenulo'ya sen girdin. Değerler girdiğin şekliyle gösterilir. ${NARROW_DISCLAIMER.tr} Oluşturulma tarihi: ${created}. Tenulo, ${publisher} ürünüdür.`,
+    },
   },
   settings: {
     title: "Ayarlar",
@@ -462,6 +494,7 @@ export const tr: Messages = {
       notificationsOffBody: "Hatırlatıcı alabilmek için Android ayarlarından Tenulo'nun bildirimlerine izin ver.",
       notNow: "Şimdi değil",
       openSettings: "Ayarları aç",
+      narrow: { footer: "Hatırlatıcıları seçtiğin saatte bu telefon gösterir." },
     },
     healthConnect: {
       title: "Health Connect",
@@ -509,6 +542,12 @@ export const tr: Messages = {
       deletedBody: "Tenulo yeniden boş. Hatırlatıcılar da iptal edildi.",
       deletedPendingBody:
         "Tenulo yeniden boş. Hatırlatıcılar da iptal edildi. Veritabanı dosyasındaki eski kopyalar Tenulo bir sonraki açılışında temizlenir.",
+      narrow: {
+        report: "PDF rapor",
+        reportDetail: "Bir dönem için trend, öğünler, su ve ölçümler",
+        deleteAllBody:
+          "Tenulo'nun bu telefonda tuttuğu her şey silinecek: tartımlar, öğünler, su, ölçümler, egzersizler, notlar, hatırlatıcılar ve ayarlar. Bu işlem geri alınamaz.",
+      },
     },
     medication: {
       title: "İlaç",
@@ -530,9 +569,11 @@ export const tr: Messages = {
     proBanner: {
       pending: "Satın alma işlemin Google Play'de beklemede. Onaylanır onaylanmaz Pro etkinleşir.",
       pitch: "Doktorun için PDF rapor. Tek seferlik satın alma, abonelik yok.",
+      narrow: { pitch: "Kayıtlarının PDF raporu. Tek seferlik satın alma, abonelik yok." },
     },
     disclaimer:
       "Tenulo kişisel bir kayıttır. Tıbbi tavsiye vermez; ilaç ya da doz önermez. Her zaman doktoruna ya da eczacına danış.",
+    narrow: { disclaimer: NARROW_DISCLAIMER.tr },
   },
   health: {
     off: "Kapalı",
@@ -571,6 +612,7 @@ export const tr: Messages = {
     channelName: "Hatırlatıcılar",
     channelDescription: "Tenulo'da kurduğun enjeksiyon ve tartım hatırlatıcıları",
     lockedTitle: "Tenulo hatırlatıcısı",
+    narrow: { channelDescription: "Tenulo'da kurduğun tartım hatırlatıcıları" },
   },
   backup: {
     notABackup: "Bu dosya bir Tenulo yedeği değil.",
@@ -579,6 +621,8 @@ export const tr: Messages = {
     damaged: "Yedek bozuk ya da düzenlenmiş, bu yüzden hiçbir şey geri yüklenmedi.",
     problemInSettings: "Sorun ayarlarda.",
     problemAt: (record, n) => (n === undefined ? `Sorun ${BACKUP_PLACES[record].all}.` : `Sorun ${n}. ${BACKUP_PLACES[record].one}.`),
+    problemAtHidden: (row) =>
+      row === undefined ? "Sorun, bu sürümün göstermediği kayıtlarda." : `Sorun, bu sürümün göstermediği kayıtlarda (${row}. kayıt).`,
     // Unknown checks are left out rather than shown in English.
     wholeCheck: (detail) => WHOLE_CHECKS[detail],
   },
@@ -597,6 +641,7 @@ export const tr: Messages = {
       measurements: countOf("measurements"),
       exercises: countOf("exercises"),
     },
+    keptHidden: (n) => `Başka bir sürümden ${n} kayıt saklandı; bu sürüm onları göstermiyor.`,
   },
   ...todayTr,
   ...progressTr,
