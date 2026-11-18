@@ -10,7 +10,7 @@
     "backgroundColor": "#F3F6F4",
     "android": {
       "package": "com.kalkansoftware.tenulo",
-      "versionCode": 4,
+      "versionCode": 5,
       "allowBackup": false,
       "permissions": ["android.permission.health.READ_WEIGHT"],
       "blockedPermissions": [
@@ -68,6 +68,9 @@
       "./plugins/with-no-data-extraction",
       "./plugins/with-optional-portrait"
     ],
+    "extra": {
+      "medication": false
+    },
     "experiments": {
       "typedRoutes": true
     }
