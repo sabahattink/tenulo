@@ -11,6 +11,7 @@ import { parseLocalDate } from "@/domain/date";
 import { WATER_SERVING_ML } from "@/domain/goals";
 import { summarizeWeights } from "@/domain/summary";
 import { useI18n } from "@/i18n/provider";
+import { features } from "@/platform/features";
 import { InjectionCard } from "@/ui/InjectionCard";
 import { ScreenTitle } from "@/ui/kit";
 import { space, type, useTheme } from "@/ui/theme";
@@ -90,7 +91,7 @@ export default function Today() {
       ) : (
         <EmptyWeight theme={theme} />
       )}
-      <InjectionCard theme={theme} today={now} />
+      {features.medication && <InjectionCard theme={theme} today={now} />}
       {!firstRun && <ExerciseCard theme={theme} entries={exercise} latestWeightG={weights[0]?.weightG} date={now} />}
       <Text style={[type.small, styles.footnote, { color: theme.muted }]}>{t.today.footnote}</Text>
     </ScrollView>

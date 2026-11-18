@@ -22,6 +22,7 @@ import type { LanguagePreference } from "@/domain/language";
 import { parseWeightInput } from "@/domain/parse";
 import { WEIGHT_UNITS, type WeightUnit } from "@/domain/weight";
 import { useI18n } from "@/i18n/provider";
+import { features } from "@/platform/features";
 import { setDevUnlocked, useIsPro, useProState } from "@/platform/billing";
 import {
   type HealthConnectAvailability,
@@ -128,7 +129,7 @@ export default function SettingsScreen() {
           onPress: () => {
             try {
               const summary = restoreBackup(backup);
-              const inactive = summary.inactiveMedications === 0 ? [] : [t.settings.data.inactiveMedications(summary.inactiveMedications)];
+              const inactive = !features.medication || summary.inactiveMedications === 0 ? [] : [t.settings.data.inactiveMedications(summary.inactiveMedications)];
               notify(t, t.settings.data.restoredTitle, [f.restoreSummary(summary), ...inactive].join(" "));
             } catch (e) {
               notify(t, t.settings.data.restoreFailedTitle, t.settings.data.restoreFailedBody(errorText(e)));
@@ -139,7 +140,7 @@ export default function SettingsScreen() {
     });
 
   const confirmDeleteAll = () =>
-    Alert.alert(t.settings.data.deleteAllTitle, t.settings.data.deleteAllBody, [
+    Alert.alert(t.settings.data.deleteAllTitle, features.medication ? t.settings.data.deleteAllBody : t.settings.data.narrow.deleteAllBody, [
       { text: t.common.cancel, style: "cancel" },
       {
         text: t.settings.data.deleteEverything,
@@ -213,30 +214,34 @@ export default function SettingsScreen() {
       <Section
         theme={theme}
         title={t.settings.reminders.title}
-        footer={reminders ? t.settings.reminders.footer : t.settings.reminders.footerUnavailable}
+        footer={reminders ? (features.medication ? t.settings.reminders.footer : t.settings.reminders.narrow.footer) : t.settings.reminders.footerUnavailable}
       >
-        <SwitchRow
-          theme={theme}
-          icon="bell"
-          title={t.settings.reminders.injection}
-          detail={medication ? t.settings.reminders.injectionDetail : t.settings.reminders.addMedicationFirst}
-          value={settings.injectionReminderEnabled}
-          disabled={!reminders || medication === undefined}
-          onChange={(on) =>
-            save(
-              on
-                ? enableReminder(() => setInjectionReminder(true, settings.injectionReminderMinute))
-                : setInjectionReminder(false, settings.injectionReminderMinute),
-            )
-          }
-        />
-        {settings.injectionReminderEnabled && (
-          <TimeStepper
-            theme={theme}
-            label={t.settings.reminders.injectionTime}
-            minute={settings.injectionReminderMinute}
-            onChange={(m) => save(setInjectionReminder(true, m))}
-          />
+        {features.medication && (
+          <>
+            <SwitchRow
+              theme={theme}
+              icon="bell"
+              title={t.settings.reminders.injection}
+              detail={medication ? t.settings.reminders.injectionDetail : t.settings.reminders.addMedicationFirst}
+              value={settings.injectionReminderEnabled}
+              disabled={!reminders || medication === undefined}
+              onChange={(on) =>
+                save(
+                  on
+                    ? enableReminder(() => setInjectionReminder(true, settings.injectionReminderMinute))
+                    : setInjectionReminder(false, settings.injectionReminderMinute),
+                )
+              }
+            />
+            {settings.injectionReminderEnabled && (
+              <TimeStepper
+                theme={theme}
+                label={t.settings.reminders.injectionTime}
+                minute={settings.injectionReminderMinute}
+                onChange={(m) => save(setInjectionReminder(true, m))}
+              />
+            )}
+          </>
         )}
         <SwitchRow
           theme={theme}
@@ -304,8 +309,8 @@ export default function SettingsScreen() {
         <ListRow
           theme={theme}
           icon="report"
-          title={t.settings.data.report}
-          detail={t.settings.data.reportDetail}
+          title={features.medication ? t.settings.data.report : t.settings.data.narrow.report}
+          detail={features.medication ? t.settings.data.reportDetail : t.settings.data.narrow.reportDetail}
           right={isPro ? undefined : <ProBadge theme={theme} />}
           onPress={() => router.push(isPro ? "/report" : "/pro")}
         />
@@ -328,16 +333,18 @@ export default function SettingsScreen() {
         <ListRow theme={theme} icon="trash" title={t.settings.data.deleteAll} danger last onPress={confirmDeleteAll} />
       </Section>
 
-      <Section theme={theme} title={t.settings.medication.title}>
-        <ListRow
-          theme={theme}
-          icon="pen"
-          title={medication ? medication.name : t.settings.medication.add}
-          detail={medication ? t.settings.medication.detail : t.settings.medication.addDetail}
-          last
-          onPress={() => router.push(medication ? "/medication" : "/setup-medication")}
-        />
-      </Section>
+      {features.medication && (
+        <Section theme={theme} title={t.settings.medication.title}>
+          <ListRow
+            theme={theme}
+            icon="pen"
+            title={medication ? medication.name : t.settings.medication.add}
+            detail={medication ? t.settings.medication.detail : t.settings.medication.addDetail}
+            last
+            onPress={() => router.push(medication ? "/medication" : "/setup-medication")}
+          />
+        </Section>
+      )}
 
       <Section theme={theme} title={t.settings.about.title}>
         <ListRow
@@ -373,7 +380,7 @@ export default function SettingsScreen() {
         />
       </Section>
 
-      <Text style={[type.small, styles.disclaimer, { color: theme.muted }]}>{t.settings.disclaimer}</Text>
+      <Text style={[type.small, styles.disclaimer, { color: theme.muted }]}>{features.medication ? t.settings.disclaimer : t.settings.narrow.disclaimer}</Text>
     </ScrollView>
   );
 }
@@ -388,7 +395,7 @@ function ProBanner({ theme, pending }: { theme: Theme; pending: boolean }) {
           <ProBadge theme={theme} />
         </View>
         <Text style={[type.small, { color: theme.text }]}>
-          {pending ? t.settings.proBanner.pending : t.settings.proBanner.pitch}
+          {pending ? t.settings.proBanner.pending : features.medication ? t.settings.proBanner.pitch : t.settings.proBanner.narrow.pitch}
         </Text>
       </View>
       <Button theme={theme} label={t.common.seePro} onPress={() => router.push("/pro")} />

@@ -10,11 +10,12 @@ import { deleteWeight, useSettings, useWeightEntries } from "@/data/repo";
 import { useToday } from "@/data/use-today";
 import { parseLocalDate } from "@/domain/date";
 import { useI18n } from "@/i18n/provider";
+import { features } from "@/platform/features";
 import { Illustration } from "@/ui/Illustration";
 import { Icon } from "@/ui/icons";
 import { Chip, ScreenTitle, raisedSurface } from "@/ui/kit";
 import { radius, space, type, useTheme } from "@/ui/theme";
-import { TIMELINE_FILTERS, type TimelineFilter, type TimelineKind, timeline } from "@/ui/timeline";
+import { type TimelineFilter, type TimelineKind, timeline, timelineFilters } from "@/ui/timeline";
 import { TimelineRow } from "@/ui/timeline-row";
 import {
   type TimelineRow as Row,
@@ -89,8 +90,7 @@ export default function History() {
   const sections = useMemo(() => {
     const rows = [
       ...weightLines,
-      ...injectionLines,
-      ...sideEffectLines,
+      ...(features.medication ? [...injectionLines, ...sideEffectLines] : []),
       ...foodLines,
       ...waterLines,
       ...measurementLines,
@@ -163,7 +163,7 @@ export default function History() {
         <View style={styles.header}>
           <ScreenTitle theme={theme} title={t.history.title} />
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters} accessibilityRole="radiogroup">
-            {TIMELINE_FILTERS.map((value) => (
+            {timelineFilters(features.medication).map((value) => (
               <Chip key={value} theme={theme} label={t.history.filters[value]} selected={filter === value} onPress={() => setFilter(value)} />
             ))}
           </ScrollView>
@@ -176,7 +176,7 @@ export default function History() {
             <>
               <Illustration name="journal" theme={theme} size={220} />
               <Text style={[type.heading, { color: theme.text }]}>{t.history.emptyTitle}</Text>
-              <Text style={[type.body, { color: theme.muted, textAlign: "center" }]}>{t.history.emptyBody}</Text>
+              <Text style={[type.body, { color: theme.muted, textAlign: "center" }]}>{features.medication ? t.history.emptyBody : t.history.narrow.emptyBody}</Text>
             </>
           ) : (
             <>

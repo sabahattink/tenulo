@@ -4,6 +4,7 @@ import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-n
 import type { StoreProduct } from "../../modules/tenulo-native";
 import type { Messages } from "@/i18n";
 import { useI18n } from "@/i18n/provider";
+import { features } from "@/platform/features";
 import { billingAvailable, buyPro, proProduct, refreshPro, useIsPro, useProState } from "@/platform/billing";
 import { Illustration } from "@/ui/Illustration";
 import { Icon, type IconName } from "@/ui/icons";
@@ -24,6 +25,7 @@ function errorCode(e: unknown): string | undefined {
 export default function ProScreen() {
   const theme = useTheme();
   const { t } = useI18n();
+  const featureTexts = features.medication ? t.pro.features : { ...t.pro.features, ...t.pro.narrow.features };
   const endPadding = useScrollEndPadding();
   const { width } = useWindowDimensions();
   const isPro = useIsPro();
@@ -78,7 +80,7 @@ export default function ProScreen() {
       </View>
 
       {FEATURES.map((f) => (
-        <Feature key={f.key} theme={theme} icon={f.icon} {...t.pro.features[f.key]} />
+        <Feature key={f.key} theme={theme} icon={f.icon} {...featureTexts[f.key]} />
       ))}
 
       {isPro ? (
