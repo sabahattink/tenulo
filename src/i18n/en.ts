@@ -332,10 +332,6 @@ export const en = {
         title: "Doctor report",
         body: "Your trend, injections, plan and side effects for any period, as a clean PDF you can print or send.",
       },
-      healthConnect: {
-        title: "Health Connect",
-        body: "Readings from your smart scale appear in your log automatically. Read-only; nothing is written back.",
-      },
       private: {
         title: "Still private",
         body: "No account, no subscription, no tracking. Google Play confirms the purchase; Tenulo never learns who you are.",
@@ -477,7 +473,6 @@ export const en = {
       read: "Read weight from Health Connect",
       unavailable: "Health Connect is not available on this phone",
       needsUpdate: "Update Health Connect from the Play Store first",
-      proDetail: "Smart-scale readings in your log · Pro",
       noAccessYetTitle: "No access yet",
       noAccessYetBody: "Allow Tenulo to read Weight in Health Connect, then turn this on again.",
       syncNow: "Sync now",
@@ -538,7 +533,7 @@ export const en = {
     },
     proBanner: {
       pending: "Your purchase is pending with Google Play. Pro unlocks as soon as it is confirmed.",
-      pitch: "A PDF report for your doctor and Health Connect sync. One purchase, no subscription.",
+      pitch: "A PDF report for your doctor. One purchase, no subscription.",
     },
     disclaimer:
       "Tenulo is a personal log. It does not give medical advice and does not recommend medications or doses. Always follow your doctor or pharmacist.",

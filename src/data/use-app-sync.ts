@@ -5,7 +5,7 @@ import { Launch, type LaunchInfo } from "../../modules/tenulo-native";
 import { parseLocalDate } from "@/domain/date";
 import { injectionStatus } from "@/domain/injection";
 import { useI18n } from "@/i18n/provider";
-import { startBilling, useIsPro } from "@/platform/billing";
+import { startBilling } from "@/platform/billing";
 import { INJECTION_REMINDER_ID, WEIGH_IN_REMINDER_ID, applyReminders } from "@/platform/reminders";
 import { syncHealthConnect } from "./health-sync";
 import { useActiveMedication, useInjections, usePlanSteps } from "./injections";
@@ -33,15 +33,14 @@ function route(info: LaunchInfo): void {
 
 /**
  * Keeps the device in step with the log: reminder alarms follow settings, the language and the
- * injection log, Health Connect is read when the app comes to the foreground, Pro is checked with
- * Play, and launches from Health Connect or a reminder open the right screen.
+ * injection log, Health Connect is read when the app comes to the foreground (when turned on), Pro
+ * is checked with Play, and launches from Health Connect or a reminder open the right screen.
  */
 export function useAppSync(): void {
   const settings = useSettings();
   const medication = useActiveMedication();
   const history = useInjections(medication?.id);
   const steps = usePlanSteps(medication?.id);
-  const isPro = useIsPro();
   const now = useToday();
   // One object per language, so this changes only when the language does.
   const texts = useI18n().t.reminders;
@@ -72,7 +71,7 @@ export function useAppSync(): void {
     );
   }, [settings, injectionEnabled, injectionMinute, weighInEnabled, weighInMinute, nextDue, hasMedication, texts]);
 
-  const healthConnect = (settings?.healthConnectEnabled ?? false) && isPro;
+  const healthConnect = settings?.healthConnectEnabled ?? false;
   useEffect(() => {
     if (!healthConnect) return;
     const run = () => void syncHealthConnect().catch(() => undefined);

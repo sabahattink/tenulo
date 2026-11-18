@@ -61,3 +61,78 @@ package `com.kalkansoftware.tenulo`.
   domain from both cloud backup and device transfer.
 - **versionCode 2.** Release 1 on internal testing does not have the transfer fix. The next upload
   is versionCode 2.
+- **versionCode 2 AAB built** (`tenulo-1.0.0-2.aab`, 66.9 MB). Checked before upload:
+  - Signed with the same upload key, SHA-256 `EB:11:C5:53:…:0F:71:67:0A`.
+  - The bundle manifest has `versionCode="2"`, `allowBackup="false"` and
+    `dataExtractionRules="@xml/data_extraction_rules"`.
+- **Default store listing saved as a draft.** Nothing is published yet.
+  - Default language: tr-TR. Name "Tenulo: GLP-1, Kilo, Beslenme"; short and full description from
+    `docs/store/listing.md`; `icon-512.png`, `feature-graphic-tr.png` and the five TR screenshots in
+    order (today, food, trend, injection, private).
+  - en-US translation added. Name "Tenulo: GLP-1, Weight & Food"; EN texts from `listing.md`;
+    `feature-graphic.png` and the five EN screenshots in the same order.
+  - A translation without its own graphics shows the default language's. Adding the first EN
+    screenshot replaced the whole inherited TR set for en-US; the TR listing kept its own.
+  - Uploading several screenshots back to back drops some of them. Upload one, wait until it shows
+    in the slot, then upload the next.
+- **Internal testing release 2 (1.0.0) published at 01:16** (console time, 2026-11-18). It replaces
+  release 1 on the track.
+  - versionCode 2. Release 1's bundle is not carried over.
+  - Device support is unchanged from release 1: 11,546 phones, no device lost or added.
+  - Release notes in tr-TR and en-US: data is no longer copied by device-to-device transfer, and
+    moves to a new phone only with a backup file the user makes.
+- **App content: six declarations saved** (not yet sent for review).
+  - Privacy policy: https://kalkansoftware.com/tenulo/privacy/.
+  - Ads: no. Advertising ID: no (`AD_ID` stays blocked). Government app: no. Financial features:
+    none.
+  - Health apps: activity and fitness, nutrition and weight management, medication and treatment
+    management. "Disease and condition management" is left out on purpose: Tenulo logs, it does
+    not manage a condition. The `READ_WEIGHT` reason is in English: read-only, Weight only,
+    foreground only, stored on the phone, free (ADR 0006). No regional requirements asked.
+- **Sign-in details not saved.** The console counts a one-time product as a restricted part, and
+  "Yes" requires ticking "these details give full access to all features, including premium or
+  paid content". Health Connect became free (ADR 0006) so the `READ_WEIGHT` reviewer needs no
+  purchase; the doctor report will be opened for the reviewer with a Play promo code for
+  `tenulo_pro`, once that product exists.
+- **Store listing drafts updated** in tr-TR and en-US: Health Connect moved to the weight section;
+  Tenulo Pro is the doctor report only. Both texts checked against `docs/store/listing.md` by hash.
+- **versionCode 3 AAB built** (`tenulo-1.0.0-3.aab`): same upload key, `versionCode="3"`,
+  `dataExtractionRules` present. Not uploaded yet.
+- Local build note: from Git Bash, put CMake on PATH with `cygpath -u "$LOCALAPPDATA"`; a Windows
+  path with backslashes in PATH leaves Gradle unable to find CMake 4.1.2.
+- **In-app product `tenulo_pro` active.** Name "Tenulo Pro" (tr-TR, en-US), description: the
+  doctor PDF report, one purchase, no subscription. Purchase option `buy`, backwards compatible.
+  Base price USD 2,99 for all 174 countries, converted by Play (TRY 179,99 incl. 20 % KDV,
+  AZN 4,99, EUR 3,29). Tax category: digital app sales.
+- **Promo codes for review.** Promotion "Play review access - doctor report" (id 131813106):
+  10 single-use codes for `tenulo_pro`, 2026-11-18 12:00 to 2027-11-17. The codes live only in
+  the CSV the console exports (kept outside the repo).
+- **Sign-in details saved.** "Yes, restricted", full access confirmed: the note says there is no
+  account, logs and Health Connect are free, and lists three promo codes for the doctor report.
+  The toggle that lets Google's test devices use these details is off, so automated runs do not
+  spend the single-use codes.
+- **Internal testing release 3 (1.0.0) published at 16:56** (console time). It replaces release 2.
+  - versionCode 3: Health Connect free, Tenulo Pro is the doctor report (PR 14).
+  - Device support unchanged (11,546 phones); install size 14.2 MB.
+  - Release notes in tr-TR and en-US: Health Connect is free; Tenulo Pro is the PDF report.
+- **Next.** Redeem one promo code (not one of the three in the reviewer note) with the tester
+  account and check that Pro unlocks after reopening Tenulo. Then: data safety, content rating,
+  target audience.
+- **App content complete** (10 of 11 setup items; the store listing is still a draft).
+  - Target audience: 18 and over only.
+  - Data safety: no data collected, none shared. Google's definitions: data processed only on the
+    device is not "collected"; a transfer the user starts and expects (backup file, PDF) is not
+    "sharing"; payment details collected by Play Billing need no declaration. Health Connect
+    readings stay on the phone.
+  - Content rating (IARC terms accepted; contact support@kalkansoftware.com; "All other app
+    types"): no rating-relevant content, no user interaction, no online content, no age-restricted
+    goods, no location sharing, digital purchases yes (no loot boxes), no cash prizes or NFTs, not
+    a browser, not news or education. Ratings: ESRB Everyone, PEGI 3, USK all ages, 3+ elsewhere,
+    Brazil 14+; interactive element "In-app purchases".
+  - Store settings: category Health & Fitness; contact email support@kalkansoftware.com, website
+    https://kalkansoftware.com (kalkansoftware.com/tenulo/ returns 404), no phone.
+- **Default store listing saved** (tr-TR and en-US; ready to send for review, not sent).
+  - AI-generated asset declaration: labelled. Labelled assets: both feature graphics and, in both
+    languages, `04-injection.png` (body figure made with Canva's AI image generation) and
+    `05-private.png` (paper-cut illustration made in Canva). The icon (drawn as geometry by
+    `scripts/brand.py`) and the other screenshots are not labelled.

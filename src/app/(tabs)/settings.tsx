@@ -103,10 +103,6 @@ export default function SettingsScreen() {
         await setHealthConnectEnabled(false);
         return;
       }
-      if (!isPro) {
-        router.push("/pro");
-        return;
-      }
       if (!(await requestWeightAccess())) {
         Alert.alert(t.settings.healthConnect.noAccessYetTitle, t.settings.healthConnect.noAccessYetBody, [{ text: t.common.ok }]);
         return;
@@ -278,16 +274,14 @@ export default function SettingsScreen() {
               ? t.settings.healthConnect.unavailable
               : hc === "needs-update"
                 ? t.settings.healthConnect.needsUpdate
-                : isPro
-                  ? f.synced(settings.healthConnectEnabled, settings.healthConnectSyncedAt)
-                  : t.settings.healthConnect.proDetail
+                : f.synced(settings.healthConnectEnabled, settings.healthConnectSyncedAt)
           }
-          value={settings.healthConnectEnabled && isPro}
+          value={settings.healthConnectEnabled}
           disabled={hc !== "available" || busy !== undefined}
           onChange={toggleHealthConnect}
-          last={!(settings.healthConnectEnabled && isPro)}
+          last={!settings.healthConnectEnabled}
         />
-        {settings.healthConnectEnabled && isPro && (
+        {settings.healthConnectEnabled && (
           <>
             <ListRow
               theme={theme}

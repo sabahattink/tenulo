@@ -16,7 +16,8 @@
   not already stored. `weight_entry.health_connect_id` is UNIQUE and tied to
   `source = 'health_connect'` by a CHECK. Rows and the sync cursor are written in one
   transaction; when the read hits the page cap, the cursor moves only to the last reading read.
-- Runs on start and on every return to the foreground while enabled and Pro.
+- Runs on start and on every return to the foreground while enabled (no Pro needed since
+  ADR 0006).
 - The rationale screen Health Connect opens is the in-app Privacy screen (`/privacy`), routed by
   `LaunchModule`.
 

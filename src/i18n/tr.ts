@@ -333,10 +333,6 @@ export const tr: Messages = {
         title: "Doktor raporu",
         body: "İstediğin dönem için trendin, enjeksiyonların, doz planın ve yan etkilerin; yazdırabileceğin ya da gönderebileceğin sade bir PDF olarak.",
       },
-      healthConnect: {
-        title: "Health Connect",
-        body: "Akıllı tartının ölçümleri kaydına kendiliğinden gelir. Yalnızca okuma; geriye hiçbir şey yazılmaz.",
-      },
       private: {
         title: "Yine gizli",
         body: "Hesap yok, abonelik yok, takip yok. Satın alma işlemini Google Play onaylar; Tenulo kim olduğunu asla öğrenmez.",
@@ -473,7 +469,6 @@ export const tr: Messages = {
       read: "Kiloyu Health Connect'ten oku",
       unavailable: "Health Connect bu telefonda kullanılamıyor",
       needsUpdate: "Önce Health Connect'i Play Store'dan güncelle",
-      proDetail: "Akıllı tartı ölçümleri kaydında · Pro",
       noAccessYetTitle: "Henüz erişim yok",
       noAccessYetBody: "Health Connect'te Tenulo'nun kilo kayıtlarını okumasına izin ver, sonra bunu yeniden aç.",
       syncNow: "Şimdi eşitle",
@@ -534,7 +529,7 @@ export const tr: Messages = {
     },
     proBanner: {
       pending: "Satın alma işlemin Google Play'de beklemede. Onaylanır onaylanmaz Pro etkinleşir.",
-      pitch: "Doktorun için PDF rapor ve Health Connect eşitlemesi. Tek seferlik satın alma, abonelik yok.",
+      pitch: "Doktorun için PDF rapor. Tek seferlik satın alma, abonelik yok.",
     },
     disclaimer:
       "Tenulo kişisel bir kayıttır. Tıbbi tavsiye vermez; ilaç ya da doz önermez. Her zaman doktoruna ya da eczacına danış.",

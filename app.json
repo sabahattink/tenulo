@@ -10,7 +10,7 @@
     "backgroundColor": "#F3F6F4",
     "android": {
       "package": "com.kalkansoftware.tenulo",
-      "versionCode": 2,
+      "versionCode": 3,
       "allowBackup": false,
       "permissions": ["android.permission.health.READ_WEIGHT"],
       "blockedPermissions": [

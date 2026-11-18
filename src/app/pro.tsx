@@ -13,7 +13,6 @@ import { notify } from "@/ui/notice";
 
 const FEATURES: readonly { key: keyof Messages["pro"]["features"]; icon: IconName }[] = [
   { key: "report", icon: "report" },
-  { key: "healthConnect", icon: "heart" },
   { key: "private", icon: "shield" },
 ];
 
