@@ -118,3 +118,16 @@ package `com.kalkansoftware.tenulo`.
 - **Next.** Redeem one promo code (not one of the three in the reviewer note) with the tester
   account and check that Pro unlocks after reopening Tenulo. Then: data safety, content rating,
   target audience.
+- **App content complete** (10 of 11 setup items; the store listing is still a draft).
+  - Target audience: 18 and over only.
+  - Data safety: no data collected, none shared. Google's definitions: data processed only on the
+    device is not "collected"; a transfer the user starts and expects (backup file, PDF) is not
+    "sharing"; payment details collected by Play Billing need no declaration. Health Connect
+    readings stay on the phone.
+  - Content rating (IARC terms accepted; contact support@kalkansoftware.com; "All other app
+    types"): no rating-relevant content, no user interaction, no online content, no age-restricted
+    goods, no location sharing, digital purchases yes (no loot boxes), no cash prizes or NFTs, not
+    a browser, not news or education. Ratings: ESRB Everyone, PEGI 3, USK all ages, 3+ elsewhere,
+    Brazil 14+; interactive element "In-app purchases".
+  - Store settings: category Health & Fitness; contact email support@kalkansoftware.com, website
+    https://kalkansoftware.com (kalkansoftware.com/tenulo/ returns 404), no phone.
