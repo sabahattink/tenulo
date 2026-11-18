@@ -148,3 +148,15 @@ package `com.kalkansoftware.tenulo`.
   `plugins/with-optional-portrait.js` declares the feature with `android:required="false"`; the
   app still opens in portrait. versionCode 4 carries it and replaces 3 on the closed track before
   anything is sent for review.
+- **Closed testing release 2 (versionCode 4) saved.** It replaces the unsent versionCode 3 release
+  on Alpha. Supported devices: no device lost; 6 tablets, 1 TV and 17 cars added by the optional
+  portrait screen. The pre-review check is clear.
+- **First submission to Google review** (16 changes): Alpha release with countries, Beta Bench
+  testers and feedback address; store listing tr-TR and en-US; content rating, target audience,
+  privacy policy, ads, data safety, health apps (with `READ_WEIGHT`), sign-in details, advertising
+  ID, government and financial declarations; category. Managed publishing is off, so the closed
+  test opens to Beta Bench as soon as Google approves it. Health Connect review can take up to a
+  week.
+- **Next.** When approved: send the opt-in link to Beta Bench, ask the 5 feedback questions from
+  day 1, and log feedback here dated. The 14-day counter starts once 12 testers have opted in; do
+  not change the tester group while it runs.
