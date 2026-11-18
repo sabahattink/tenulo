@@ -81,3 +81,22 @@ package `com.kalkansoftware.tenulo`.
   - Device support is unchanged from release 1: 11,546 phones, no device lost or added.
   - Release notes in tr-TR and en-US: data is no longer copied by device-to-device transfer, and
     moves to a new phone only with a backup file the user makes.
+- **App content: six declarations saved** (not yet sent for review).
+  - Privacy policy: https://kalkansoftware.com/tenulo/privacy/.
+  - Ads: no. Advertising ID: no (`AD_ID` stays blocked). Government app: no. Financial features:
+    none.
+  - Health apps: activity and fitness, nutrition and weight management, medication and treatment
+    management. "Disease and condition management" is left out on purpose: Tenulo logs, it does
+    not manage a condition. The `READ_WEIGHT` reason is in English: read-only, Weight only,
+    foreground only, stored on the phone, free (ADR 0006). No regional requirements asked.
+- **Sign-in details not saved.** The console counts a one-time product as a restricted part, and
+  "Yes" requires ticking "these details give full access to all features, including premium or
+  paid content". Health Connect became free (ADR 0006) so the `READ_WEIGHT` reviewer needs no
+  purchase; the doctor report will be opened for the reviewer with a Play promo code for
+  `tenulo_pro`, once that product exists.
+- **Store listing drafts updated** in tr-TR and en-US: Health Connect moved to the weight section;
+  Tenulo Pro is the doctor report only. Both texts checked against `docs/store/listing.md` by hash.
+- **versionCode 3 AAB built** (`tenulo-1.0.0-3.aab`): same upload key, `versionCode="3"`,
+  `dataExtractionRules` present. Not uploaded yet.
+- Local build note: from Git Bash, put CMake on PATH with `cygpath -u "$LOCALAPPDATA"`; a Windows
+  path with backslashes in PATH leaves Gradle unable to find CMake 4.1.2.
