@@ -32,7 +32,7 @@ cd android && ./gradlew app:bundleRelease   # -> android/app/build/outputs/bundl
 
 The AAB is built and signed here, with no Expo account (EAS stays possible: `eas.json` is kept).
 
-- `app.json`: `version` 1.0.0, `android.versionCode` 1. Bump `versionCode` on every upload and commit
+- `app.json`: `version` 1.0.0, `android.versionCode` as committed (5 for the narrow build). Bump `versionCode` on every upload and commit
   it: `eas.json` sets `appVersionSource: "local"`, so the version in git is the one that ships, for
   EAS and local builds alike (`package.json` `version` is kept equal to `expo.version`).
 - `eas.json` profiles: `production` builds the AAB for Play; `preview` is a release-mode APK to
@@ -70,7 +70,7 @@ Play Console → Monetize → Products → In-app products → Create:
 | Product ID | `tenulo_pro` (must match `PRO_PRODUCT_ID` in `src/platform/billing.ts`) |
 | Type | One-time, non-consumable |
 | Name | Tenulo Pro |
-| Description | Doctor report (PDF). One purchase, no subscription. |
+| Description | Narrow build: PDF report (weight trend, nutrition, water, measurements, exercise). One purchase, no subscription. With medication features (ADR 0007): doctor report. |
 | Price | your choice |
 
 Test with a license-tester account on an internal testing track: buy, cancel, a pending payment
@@ -131,7 +131,7 @@ Answers that match the code (re-check against Google's current definitions befor
      `adb pull /system/fonts/Roboto-Regular.ttf`.
 - The release changes native code (the reminder module sets notification texts per language), so
   a store build must come from a fresh `eas build`, not an OTA update.
-- Content rating questionnaire: medical/health reference, no user-generated content shared.
+- Content rating questionnaire: "All other app types"; no rating-relevant content, no user interaction, no online content, digital purchases yes (as answered on 2026-11-18, docs/RELEASE.md).
 - Target audience: 18+ (matches the privacy policy).
 
 ## Known doctor warnings
