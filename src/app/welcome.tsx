@@ -26,8 +26,9 @@ function deviceUnit(): WeightUnit {
 }
 
 /**
- * First launch, and again after "Delete all data": four pages, then the unit. Finishing sets
- * settings.welcomed_at; the root layout's guard then opens Today.
+ * First launch, and again after "Delete all data": the welcome pages (`welcomePages`: four with
+ * medication features, three without), then the unit. Finishing sets settings.welcomed_at; the
+ * root layout's guard then opens Today.
  */
 export default function Welcome() {
   const theme = useTheme();

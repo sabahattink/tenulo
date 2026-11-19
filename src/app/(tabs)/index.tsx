@@ -24,7 +24,8 @@ import { useWaterActions } from "@/ui/today/use-water-actions";
 
 /**
  * The whole day at a glance, and every log one tap away: the day's rings, quick actions, the
- * weight trend in brief, the injection schedule and the day's exercise.
+ * weight trend in brief, the injection schedule (with medication features only) and the day's
+ * exercise.
  */
 export default function Today() {
   const theme = useTheme();
