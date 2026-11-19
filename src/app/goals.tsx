@@ -4,6 +4,7 @@ import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } fr
 import { setDailyGoals, setWaterServing } from "@/data/goals";
 import { type Settings, useSettings } from "@/data/repo";
 import { useI18n } from "@/i18n/provider";
+import { features } from "@/platform/features";
 import { GOAL_RANGES, type GoalsField, type GoalsForm, goalsFormOf, parseGoalsForm } from "@/ui/food/forms";
 import { Field, problemText } from "@/ui/food/parts";
 import { GRAM, KCAL, ML } from "@/ui/food/units";
@@ -70,7 +71,7 @@ function GoalsEditor({ theme, settings }: { theme: Theme; settings: Settings }) 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={[styles.screen, { backgroundColor: theme.background }]}>
       <ScrollView contentContainerStyle={[styles.content, { paddingBottom: endPadding }]} keyboardShouldPersistTaps="handled">
-        <Text style={[type.body, { color: theme.text }]}>{t.goals.intro}</Text>
+        <Text style={[type.body, { color: theme.text }]}>{features.medication ? t.goals.intro : t.goals.narrow.intro}</Text>
         <Card theme={theme} style={styles.card}>
           {goalField("energy", t.goals.energy)}
           {goalField("protein", t.goals.protein)}

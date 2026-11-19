@@ -37,14 +37,14 @@ SCREENS: dict[str, list[tuple[str, str, str, str]]] = {
         ("today.png", "01-today.png", "Günün\ntek bakışta", "Kalori, protein ve su, kendi hedeflerinle."),
         ("food.png", "02-food.png", "Ne yediğin,\nkolayca", "Öğünü seç, yiyeceği ara, porsiyonu seç."),
         ("progress.png", "03-trend.png", "Gürültü değil,\ntrend", "Günlük tartımların, önemli olan çizgide."),
-        ("injection.png", "04-injection.png", "Senin planın,\nsenin bölgen", "Her iğneyi kaydet; en uzun süredir dinlenen bölgeyi gör."),
+        ("water.png", "04-water.png", "Su, tek\ndokunuşta", "Bir dokunuş bir bardak; hedefin senin."),
         ("welcome-private.png", "05-private.png", "Her şey\nbu telefonda", "Hesap yok. Analitik yok. Reklam yok."),
     ],
     "en": [
         ("today.png", "01-today.png", "Your day\nat a glance", "Energy, protein and water, against your own goals."),
         ("food.png", "02-food.png", "What you eat,\nmade easy", "Pick the meal, find the food, choose the portion."),
         ("progress.png", "03-trend.png", "Your trend,\nnot the noise", "Daily weigh-ins smoothed into the line that matters."),
-        ("injection.png", "04-injection.png", "Your plan,\nyour sites", "Log each injection; see the site you used longest ago."),
+        ("water.png", "04-water.png", "Water,\none tap away", "One tap, one glass; the goal is yours."),
         ("welcome-private.png", "05-private.png", "It stays on\nthis phone", "No account. No analytics. No ads."),
     ],
 }

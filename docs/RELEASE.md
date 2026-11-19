@@ -136,3 +136,51 @@ package `com.kalkansoftware.tenulo`.
     languages, `04-injection.png` (body figure made with Canva's AI image generation) and
     `05-private.png` (paper-cut illustration made in Canva). The icon (drawn as geometry by
     `scripts/brand.py`) and the other screenshots are not labelled.
+- **Closed testing (Alpha) set up, not sent for review.**
+  - Countries: all 178 countries and regions.
+  - Testers: Google Group `betabench@googlegroups.com` (Beta Bench). The console takes either
+    email lists or Google Groups per track, not both, so the 21-person "Test User" list is not on
+    this track. Feedback address: support@kalkansoftware.com.
+  - Release 1 on the track: versionCode 3 from the library, release notes in tr-TR and en-US.
+- **Pre-review check: `android.hardware.screen.portrait` required.** `"orientation": "portrait"`
+  gives the main activity `screenOrientation="portrait"`, which Play reads as a required portrait
+  screen and so hides the app from some tablets, desktops and Android XR. New
+  `plugins/with-optional-portrait.js` declares the feature with `android:required="false"`; the
+  app still opens in portrait. versionCode 4 carries it and replaces 3 on the closed track before
+  anything is sent for review.
+- **Closed testing release 2 (versionCode 4) saved.** It replaces the unsent versionCode 3 release
+  on Alpha. Supported devices: no device lost; 6 tablets, 1 TV and 17 cars added by the optional
+  portrait screen. The pre-review check is clear.
+- **First submission to Google review** (16 changes): Alpha release with countries, Beta Bench
+  testers and feedback address; store listing tr-TR and en-US; content rating, target audience,
+  privacy policy, ads, data safety, health apps (with `READ_WEIGHT`), sign-in details, advertising
+  ID, government and financial declarations; category. Managed publishing is off, so the closed
+  test opens to Beta Bench as soon as Google approves it. Health Connect review can take up to a
+  week.
+- **Next.** When approved: send the opt-in link to Beta Bench, ask the 5 feedback questions from
+  day 1, and log feedback here dated. The 14-day counter starts once 12 testers have opted in; do
+  not change the tester group while it runs.
+- **Rejected (2026-11-18): Play Console Requirements.** "Some types of apps can only be
+  distributed by organizations." The account is a personal one, and the policy reserves "Health
+  apps, such as medical apps and human subjects research apps" for organization accounts. The
+  health declaration lists "Medication and treatment management", which Google groups under
+  Medical; its examples include medication reminders, so Tenulo's injection log, dose plan and
+  injection-day reminder fit it. "Activity and fitness" and "Nutrition and weight management" are
+  in the Health and fitness group. Nothing was changed after the rejection; the way forward is the
+  owner's decision (organization account and app transfer, an appeal, or a narrower app).
+
+## 2026-11-19
+
+- **Narrow build implemented** (branch `feat/narrow-play-build`; spec
+  `docs/specs/2026-11-19-narrow-play-build.md`, ADR 0007). `expo.extra.medication` is `false`:
+  no medication, injection, side-effect or GLP-1 trace in the app, its notifications (including
+  the Android re-arm after an update), the PDF report, restore messages or the store listing. Data,
+  schema and backup format unchanged. 561 tests, typecheck and lint pass; whole-branch review clean.
+- **versionCode 5 AAB built** (`tenulo-1.0.0-5.aab`, 66.9 MB): upload key SHA-256
+  `EB:11:C5:53:…:0F:71:67:0A`; bundle manifest `versionCode="5"`, `allowBackup="false"`,
+  `dataExtractionRules`, optional portrait screen, `tenulo.medication` = `false`. Not uploaded yet.
+- **Emulator unavailable.** The `Medium_Phone_API_37.0` AVD (emulator 37.2.13) exits about 10 s
+  after start with no error message, with or without snapshots and with the software GPU; stale
+  locks were removed. On-device checks (alarm drop after update, neutral channel text, deep link,
+  restore summary, five-tile Quick Actions) and the new store screenshots wait for a working
+  emulator or a phone.

@@ -4,6 +4,7 @@ import {
   atLocalMinute,
   formatMinuteOfDay,
   injectionReminderAt,
+  injectionReminderWanted,
   nextDailyAt,
   parseMinuteOfDay,
   stepMinute,
@@ -67,5 +68,19 @@ describe("injectionReminderAt", () => {
   it("reminds once more at the next chosen time when the due time has passed", () => {
     const at = injectionReminderAt(d("2026-10-27"), 540, local(2026, 10, 29, 10, 0));
     expect(at?.getTime()).toBe(local(2026, 10, 30, 9, 0).getTime());
+  });
+});
+
+describe("injectionReminderWanted", () => {
+  it("is true only when the build, the setting and a medication all agree", () => {
+    for (const medication of [true, false]) {
+      for (const enabled of [true, false]) {
+        for (const hasMedication of [true, false]) {
+          expect(injectionReminderWanted({ medication, enabled, hasMedication })).toBe(
+            medication && enabled && hasMedication,
+          );
+        }
+      }
+    }
   });
 });

@@ -1,26 +1,15 @@
 import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { LocalDate } from "@/domain/date";
-import type { Messages } from "@/i18n";
 import { useI18n } from "@/i18n/provider";
-import { Icon, type IconName } from "../icons";
+import { features } from "@/platform/features";
+import { Icon } from "../icons";
 import { Label } from "../kit";
-import { type Kind, type Theme, radius, space } from "../theme";
+import { type Theme, radius, space } from "../theme";
+import { type QuickAction, quickActions } from "./actions";
 import { routes } from "./routes";
 import { mlText } from "./texts";
 import type { WaterActions } from "./use-water-actions";
-
-type Action = keyof Messages["daily"]["actions"];
-
-/** Each tile wears its kind's tint, the same color the record has in rings and in History. */
-const ACTIONS: readonly { action: Action; icon: IconName; kind: Kind }[] = [
-  { action: "food", icon: "food", kind: "food" },
-  { action: "water", icon: "glass", kind: "water" },
-  { action: "weight", icon: "scale", kind: "weight" },
-  { action: "measurement", icon: "tape", kind: "measurement" },
-  { action: "exercise", icon: "run", kind: "exercise" },
-  { action: "sideEffect", icon: "face", kind: "sideEffect" },
-];
 
 /** Every log one tap away. Water logs a glass right here; the others open their screen. */
 export function QuickActions({
@@ -37,7 +26,7 @@ export function QuickActions({
   const i18n = useI18n();
   const { t } = i18n;
 
-  const run = (action: Action) => {
+  const run = (action: QuickAction) => {
     switch (action) {
       case "food":
         return router.push(routes.foodAddNow(date));
@@ -60,7 +49,7 @@ export function QuickActions({
         <Label theme={theme}>{t.daily.quickLog}</Label>
       </View>
       <View style={styles.grid}>
-        {ACTIONS.map(({ action, icon, kind }) => {
+        {quickActions(features.medication).map(({ action, icon, kind }) => {
           const isWater = action === "water";
           const { ink, soft } = theme.kinds[kind];
           return (

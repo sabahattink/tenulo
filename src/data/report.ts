@@ -82,13 +82,11 @@ async function loadDailyLog(from: LocalDate, to: LocalDate) {
 }
 
 /** Collects the records for a report ending today. */
-export async function loadReport(period: ReportPeriod, to: LocalDate): Promise<Report> {
-  const [medication] = await db
-    .select()
-    .from(medications)
-    .where(eq(medications.active, true))
-    .orderBy(asc(medications.createdAt))
-    .limit(1);
+export async function loadReport(period: ReportPeriod, to: LocalDate, medicationOn: boolean): Promise<Report> {
+  // The narrow build reads no medication, plan, injection or side-effect rows at all; they stay in the database.
+  const [medication] = medicationOn
+    ? await db.select().from(medications).where(eq(medications.active, true)).orderBy(asc(medications.createdAt)).limit(1)
+    : [];
   const weights = (await db.select().from(weightEntries)).map((w) => ({
     date: parseLocalDate(w.localDate),
     weightG: w.weightG,
@@ -97,7 +95,7 @@ export async function loadReport(period: ReportPeriod, to: LocalDate): Promise<R
     medication === undefined ? [] : await db.select().from(injections).where(eq(injections.medicationId, medication.id));
   const steps =
     medication === undefined ? [] : await db.select().from(planSteps).where(eq(planSteps.medicationId, medication.id));
-  const effects = await db.select().from(sideEffects);
+  const effects = medicationOn ? await db.select().from(sideEffects) : [];
 
   const dates = [
     ...weights.map((w) => w.date),
@@ -127,9 +125,9 @@ export async function loadReport(period: ReportPeriod, to: LocalDate): Promise<R
  * Renders the report to a PDF on the device and opens the share sheet. The page is printed by
  * Android's own WebView from a self-contained HTML string; nothing is fetched.
  */
-export async function shareReportPdf(report: Report, created: LocalDate, i18n: I18n): Promise<void> {
+export async function shareReportPdf(report: Report, created: LocalDate, i18n: I18n, medication: boolean): Promise<void> {
   const [s] = await db.select().from(settings).limit(1);
-  const html = reportHtml(report, s?.weightUnit ?? "kg", created, i18n);
+  const html = reportHtml(report, s?.weightUnit ?? "kg", created, i18n, medication);
   const { uri } = await Print.printToFileAsync({ html, width: A4.width, height: A4.height });
   // Give the file a readable name; printToFileAsync picks a random one.
   const printed = new File(uri);

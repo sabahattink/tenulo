@@ -1,5 +1,8 @@
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { parseLocalDate as d } from "../domain/date";
+import { findForbiddenWords } from "../domain/narrow-words";
 import { i18nFor } from "./index";
 
 const en = i18nFor("en").f;
@@ -160,22 +163,22 @@ describe("due", () => {
 
 describe("restore summary", () => {
   it("summarizes a restore in a sentence", () => {
-    expect(en.restoreSummary({ weights: 12, injections: 1, sideEffects: 2 })).toBe(
+    expect(en.restoreSummary({ weights: 12, injections: 1, sideEffects: 2 }, true)).toBe(
       "Added 12 weigh-ins, 1 injection and 2 side effects.",
     );
-    expect(en.restoreSummary({ weights: 1 })).toBe("Added 1 weigh-in.");
-    expect(en.restoreSummary({ weights: 0, injections: 0 })).toBe("Nothing new: everything was already on this phone.");
-    expect(tr.restoreSummary({ weights: 12, injections: 1, sideEffects: 2 })).toBe("12 tartım, 1 enjeksiyon ve 2 yan etki eklendi.");
-    expect(tr.restoreSummary({})).toBe("Yeni bir şey yok: hepsi zaten bu telefondaydı.");
+    expect(en.restoreSummary({ weights: 1 }, true)).toBe("Added 1 weigh-in.");
+    expect(en.restoreSummary({ weights: 0, injections: 0 }, true)).toBe("Nothing new: everything was already on this phone.");
+    expect(tr.restoreSummary({ weights: 12, injections: 1, sideEffects: 2 }, true)).toBe("12 tartım, 1 enjeksiyon ve 2 yan etki eklendi.");
+    expect(tr.restoreSummary({}, true)).toBe("Yeni bir şey yok: hepsi zaten bu telefondaydı.");
   });
 
   it("counts the daily log too", () => {
     const counts = { foodEntries: 30, customFoods: 1, waterEntries: 14, measurements: 6, exercises: 2 };
-    expect(en.restoreSummary(counts)).toBe(
+    expect(en.restoreSummary(counts, true)).toBe(
       "Added 30 food entries, 1 custom food, 14 water entries, 6 measurements and 2 exercises.",
     );
-    expect(tr.restoreSummary(counts)).toBe("30 yiyecek kaydı, 1 özel yiyecek, 14 su kaydı, 6 ölçüm ve 2 egzersiz eklendi.");
-    expect(en.restoreSummary({ planSteps: 1, medications: 2, measurements: 1 })).toBe(
+    expect(tr.restoreSummary(counts, true)).toBe("30 yiyecek kaydı, 1 özel yiyecek, 14 su kaydı, 6 ölçüm ve 2 egzersiz eklendi.");
+    expect(en.restoreSummary({ planSteps: 1, medications: 2, measurements: 1 }, true)).toBe(
       "Added 1 plan step, 2 medications and 1 measurement.",
     );
   });
@@ -187,32 +190,32 @@ describe("backupProblem", () => {
   const invalid = (path: PropertyKey[], detail = "Too small") => ({ ok: false as const, reason: "invalid" as const, detail, path });
 
   it("explains refused backups", () => {
-    expect(en.backupProblem({ ok: false, reason: "not-json" })).toContain("not a Tenulo backup");
-    expect(en.backupProblem({ ok: false, reason: "newer-version" })).toContain("newer version");
-    expect(en.backupProblem({ ok: false, reason: "too-large" })).toContain("too large to be a Tenulo backup");
-    expect(tr.backupProblem({ ok: false, reason: "not-a-backup" })).toBe("Bu dosya bir Tenulo yedeği değil.");
-    expect(tr.backupProblem({ ok: false, reason: "newer-version" })).toContain("daha yeni bir sürümüyle");
+    expect(en.backupProblem({ ok: false, reason: "not-json" }, true)).toContain("not a Tenulo backup");
+    expect(en.backupProblem({ ok: false, reason: "newer-version" }, true)).toContain("newer version");
+    expect(en.backupProblem({ ok: false, reason: "too-large" }, true)).toContain("too large to be a Tenulo backup");
+    expect(tr.backupProblem({ ok: false, reason: "not-a-backup" }, true)).toBe("Bu dosya bir Tenulo yedeği değil.");
+    expect(tr.backupProblem({ ok: false, reason: "newer-version" }, true)).toContain("daha yeni bir sürümüyle");
   });
 
   it("points at the record a person could find, counted from 1", () => {
-    expect(en.backupProblem(invalid(["data", "weights", 3, "weightG"]))).toBe(`${damagedEn} The problem is in weigh-in 4.`);
-    expect(en.backupProblem(invalid(["data", "sideEffects", 0, "severity"]))).toBe(`${damagedEn} The problem is in side effect 1.`);
-    expect(en.backupProblem(invalid(["data", "settings", "goalWeightG"]))).toBe(`${damagedEn} The problem is in the settings.`);
-    expect(en.backupProblem(invalid(["data", "foodEntries", 9, "meal"]))).toBe(`${damagedEn} The problem is in food entry 10.`);
-    expect(en.backupProblem(invalid(["data", "waterEntries"]))).toBe(`${damagedEn} The problem is in the water entries.`);
-    expect(tr.backupProblem(invalid(["data", "weights", 3, "weightG"]))).toBe(`${damagedTr} Sorun 4. tartımda.`);
-    expect(tr.backupProblem(invalid(["data", "injections", 0]))).toBe(`${damagedTr} Sorun 1. enjeksiyonda.`);
-    expect(tr.backupProblem(invalid(["data", "measurements", 1, "site"]))).toBe(`${damagedTr} Sorun 2. ölçümde.`);
-    expect(tr.backupProblem(invalid(["data", "exercises"]))).toBe(`${damagedTr} Sorun egzersizlerde.`);
-    expect(tr.backupProblem(invalid(["data", "settings", "language"]))).toBe(`${damagedTr} Sorun ayarlarda.`);
+    expect(en.backupProblem(invalid(["data", "weights", 3, "weightG"]), true)).toBe(`${damagedEn} The problem is in weigh-in 4.`);
+    expect(en.backupProblem(invalid(["data", "sideEffects", 0, "severity"]), true)).toBe(`${damagedEn} The problem is in side effect 1.`);
+    expect(en.backupProblem(invalid(["data", "settings", "goalWeightG"]), true)).toBe(`${damagedEn} The problem is in the settings.`);
+    expect(en.backupProblem(invalid(["data", "foodEntries", 9, "meal"]), true)).toBe(`${damagedEn} The problem is in food entry 10.`);
+    expect(en.backupProblem(invalid(["data", "waterEntries"]), true)).toBe(`${damagedEn} The problem is in the water entries.`);
+    expect(tr.backupProblem(invalid(["data", "weights", 3, "weightG"]), true)).toBe(`${damagedTr} Sorun 4. tartımda.`);
+    expect(tr.backupProblem(invalid(["data", "injections", 0]), true)).toBe(`${damagedTr} Sorun 1. enjeksiyonda.`);
+    expect(tr.backupProblem(invalid(["data", "measurements", 1, "site"]), true)).toBe(`${damagedTr} Sorun 2. ölçümde.`);
+    expect(tr.backupProblem(invalid(["data", "exercises"]), true)).toBe(`${damagedTr} Sorun egzersizlerde.`);
+    expect(tr.backupProblem(invalid(["data", "settings", "language"]), true)).toBe(`${damagedTr} Sorun ayarlarda.`);
   });
 
   it("explains whole-backup checks, and leaves out what it cannot translate", () => {
     const detail = "Injection for a medication not in the backup";
-    expect(en.backupProblem(invalid([], detail))).toBe(`${damagedEn} Injection for a medication not in the backup.`);
-    expect(tr.backupProblem(invalid([], detail))).toBe(`${damagedTr} Bir enjeksiyon, yedekte olmayan bir ilaca ait.`);
-    expect(tr.backupProblem(invalid([], "Something new"))).toBe(damagedTr);
-    expect(en.backupProblem(invalid(["exportedAt"], "Invalid input"))).toBe(damagedEn);
+    expect(en.backupProblem(invalid([], detail), true)).toBe(`${damagedEn} Injection for a medication not in the backup.`);
+    expect(tr.backupProblem(invalid([], detail), true)).toBe(`${damagedTr} Bir enjeksiyon, yedekte olmayan bir ilaca ait.`);
+    expect(tr.backupProblem(invalid([], "Something new"), true)).toBe(damagedTr);
+    expect(en.backupProblem(invalid(["exportedAt"], "Invalid input"), true)).toBe(damagedEn);
   });
 });
 
@@ -237,5 +240,51 @@ describe("Health Connect", () => {
     expect(tr.healthSync({ added: 0, complete: false })).toBe(
       "Yeni ölçüm yok. Okunacak başka kayıt var; Tenulo bir sonraki açılışta devam eder.",
     );
+  });
+});
+
+describe("narrow build restore and backup messages", () => {
+  const lang = [
+    ["en", en],
+    ["tr", tr],
+  ] as const;
+
+  it.each(lang)("restoreSummary in %s keeps medication entries without naming them", (_l, f) => {
+    const text = f.restoreSummary({ weights: 2, injections: 3, sideEffects: 1 }, false);
+    expect(text).toContain(f.integer(2));
+    expect(text).toContain(i18nFor(_l).t.restore.keptHidden(4));
+    expect(findForbiddenWords(text)).toEqual([]);
+    expect(f.restoreSummary({ weights: 2, injections: 3, sideEffects: 1 }, true)).not.toBe(text);
+  });
+
+  it.each(lang)("restoreSummary in %s with only medication entries is the kept sentence", (_l, f) => {
+    expect(f.restoreSummary({ injections: 3 }, false)).toBe(i18nFor(_l).t.restore.keptHidden(3));
+    expect(f.restoreSummary({ medications: 1, planSteps: 1, injections: 1, sideEffects: 1 }, false)).toBe(i18nFor(_l).t.restore.keptHidden(4));
+    expect(f.restoreSummary({ injections: 0 }, false)).toBe(i18nFor(_l).t.restore.nothingNew);
+  });
+
+  it("reads TR keptHidden(1) in the singular", () => {
+    expect(tr.restoreSummary({ sideEffects: 1 }, false)).toBe("Başka bir sürümden 1 kayıt saklandı; bu sürüm onu göstermiyor.");
+  });
+
+  it.each(lang)("backupProblem in %s hides medication rows", (_l, f) => {
+    const t = i18nFor(_l).t;
+    for (const table of ["injections", "sideEffects", "planSteps", "medications"]) {
+      const text = f.backupProblem({ ok: false, reason: "invalid", detail: "Too small", path: ["data", table, 0] }, false);
+      expect(text).toContain(t.backup.problemAtHidden(1));
+      expect(findForbiddenWords(text)).toEqual([]);
+    }
+    const whole = f.backupProblem({ ok: false, reason: "invalid", detail: "Too small", path: ["data", "injections"] }, false);
+    expect(whole).toContain(t.backup.problemAtHidden(undefined));
+  });
+
+  it.each(lang)("backupProblem in %s names no medication word for any whole-backup check", (_l, f) => {
+    const source = readFileSync(fileURLToPath(new URL("../domain/backup.ts", import.meta.url)), "utf8");
+    const details = [...source.matchAll(/message: "([^"]+)"/g)].map((m) => m[1] ?? "");
+    expect(details.length).toBeGreaterThanOrEqual(5);
+    for (const detail of details) {
+      const text = f.backupProblem({ ok: false, reason: "invalid", detail, path: [] }, false);
+      expect(findForbiddenWords(text), `${detail} -> ${text}`).toEqual([]);
+    }
   });
 });

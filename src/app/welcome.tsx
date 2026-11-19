@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Animated, type FlatList, Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { finishWelcome } from "@/data/repo";
@@ -6,24 +6,19 @@ import { WEIGHT_UNITS, type WeightUnit, defaultWeightUnit } from "@/domain/weigh
 import type { Messages } from "@/i18n";
 import { deviceLocale } from "@/i18n/device";
 import { useI18n } from "@/i18n/provider";
-import { Illustration, type IllustrationName } from "@/ui/Illustration";
+import { features } from "@/platform/features";
+import { Illustration } from "@/ui/Illustration";
 import { Button, Label, Segmented } from "@/ui/kit";
 import { type Theme, radius, space, type, useTheme } from "@/ui/theme";
+import { type WelcomePage as Page, welcomePages } from "@/ui/welcome-pages";
 import { notify } from "@/ui/notice";
 
-/**
- * Each page is named by its illustration; its words are `t.welcome.pages[name]`, and for the daily
- * log page (`food`) `t.daily.welcomePage`.
- */
-type Page = Extract<IllustrationName, keyof Messages["welcome"]["pages"]> | "food";
-
-const PAGES: readonly Page[] = ["trend", "plan", "food", "private"];
-
+/** Words per page: `t.welcome.pages[name]`; the daily log page (`food`) is `t.daily.welcomePage`. */
 function pageText(t: Messages, page: Page): { readonly title: string; readonly body: string } {
-  return page === "food" ? t.daily.welcomePage : t.welcome.pages[page];
+  if (page !== "food") return t.welcome.pages[page];
+  const { title, body, narrow } = t.daily.welcomePage;
+  return { title, body: features.medication ? body : narrow.body };
 }
-
-const LAST = PAGES.length - 1;
 
 /** The unit the phone's region most likely uses; the user still chooses. */
 function deviceUnit(): WeightUnit {
@@ -31,14 +26,17 @@ function deviceUnit(): WeightUnit {
 }
 
 /**
- * First launch, and again after "Delete all data": four pages, then the unit. Finishing sets
- * settings.welcomed_at; the root layout's guard then opens Today.
+ * First launch, and again after "Delete all data": the welcome pages (`welcomePages`: four with
+ * medication features, three without), then the unit. Finishing sets settings.welcomed_at; the
+ * root layout's guard then opens Today.
  */
 export default function Welcome() {
   const theme = useTheme();
   const { t } = useI18n();
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
+  const pages = useMemo(() => welcomePages(features.medication), []);
+  const last = pages.length - 1;
   const [page, setPage] = useState(0);
   const [unit, setUnit] = useState<WeightUnit>(deviceUnit);
   const [saving, setSaving] = useState(false);
@@ -60,8 +58,8 @@ export default function Welcome() {
     <View style={[styles.screen, { backgroundColor: theme.background, paddingTop: insets.top + space.s, paddingBottom: insets.bottom + space.l }]}>
       <View style={styles.top}>
         <Text style={[styles.wordmark, { color: theme.accent }]}>Tenulo</Text>
-        {page < LAST && (
-          <Pressable accessibilityRole="button" onPress={() => goTo(LAST)} hitSlop={12} style={styles.skip}>
+        {page < last && (
+          <Pressable accessibilityRole="button" onPress={() => goTo(last)} hitSlop={12} style={styles.skip}>
             <Text style={[type.bodyStrong, { color: theme.muted }]}>{t.welcome.skip}</Text>
           </Pressable>
         )}
@@ -69,7 +67,7 @@ export default function Welcome() {
 
       <Animated.FlatList
         ref={scroller}
-        data={PAGES}
+        data={pages}
         keyExtractor={(p) => p}
         horizontal
         pagingEnabled
@@ -113,8 +111,8 @@ export default function Welcome() {
       />
 
       <View style={styles.bottom}>
-        <Dots theme={theme} scrollX={scrollX} width={width} />
-        {page === LAST && (
+        <Dots theme={theme} pages={pages} scrollX={scrollX} width={width} />
+        {page === last && (
           <View style={styles.unit}>
             <Label theme={theme}>{t.welcome.unit}</Label>
             <Segmented
@@ -128,11 +126,11 @@ export default function Welcome() {
         )}
         <Button
           theme={theme}
-          label={page < LAST ? t.welcome.next : t.welcome.start}
+          label={page < last ? t.welcome.next : t.welcome.start}
           disabled={saving}
-          onPress={() => (page < LAST ? goTo(page + 1) : start())}
+          onPress={() => (page < last ? goTo(page + 1) : start())}
         />
-        {page === LAST && (
+        {page === last && (
           <Text style={[type.small, styles.center, { color: theme.muted }]}>{t.welcome.footer}</Text>
         )}
       </View>
@@ -140,10 +138,10 @@ export default function Welcome() {
   );
 }
 
-function Dots({ theme, scrollX, width }: { theme: Theme; scrollX: Animated.Value; width: number }) {
+function Dots({ theme, pages, scrollX, width }: { theme: Theme; pages: readonly Page[]; scrollX: Animated.Value; width: number }) {
   return (
     <View style={styles.dots} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-      {PAGES.map((p, i) => {
+      {pages.map((p, i) => {
         const inputRange = [(i - 1) * width, i * width, (i + 1) * width];
         return (
           <Animated.View

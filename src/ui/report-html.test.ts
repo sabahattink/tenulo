@@ -3,6 +3,7 @@ import { addDays, parseLocalDate as d } from "../domain/date";
 import { buildReport } from "../domain/report";
 import { i18nFor } from "../i18n";
 import { PUBLISHER } from "./copy";
+import { findForbiddenWords } from "../domain/narrow-words";
 import { escapeHtml, reportHtml } from "./report-html";
 
 const en = i18nFor("en");
@@ -67,11 +68,11 @@ describe("reportHtml", () => {
 
   it("renders an empty period without inventing numbers", () => {
     for (const i18n of [en, tr]) {
-      const html = reportHtml(empty, "kg", created, i18n);
+      const html = reportHtml(empty, "kg", created, i18n, true);
       expect(html).not.toContain("NaN");
       expect(html).not.toContain("undefined");
     }
-    const html = reportHtml(empty, "kg", created, en);
+    const html = reportHtml(empty, "kg", created, en, true);
     expect(html).toContain("30 Sep 2026");
     expect(html).toContain("No weigh-ins in this period");
     expect(html).toContain("No injections in this period");
@@ -79,7 +80,7 @@ describe("reportHtml", () => {
 
   it("escapes what the user typed", () => {
     for (const i18n of [en, tr]) {
-      const html = reportHtml(full, "kg", created, i18n);
+      const html = reportHtml(full, "kg", created, i18n, true);
       expect(html).not.toContain("<img");
       expect(html).toContain("&lt;img src=x onerror=&quot;alert(1)&quot;&gt; &amp; Co");
       expect(html).toContain("&lt;b&gt;after&lt;/b&gt; dinner");
@@ -87,13 +88,13 @@ describe("reportHtml", () => {
   });
 
   it("names Tenulo's publisher in the footer", () => {
-    expect(footerOf(reportHtml(empty, "kg", created, en))).toContain(`Tenulo by ${PUBLISHER}`);
-    expect(footerOf(reportHtml(empty, "kg", created, tr))).toContain(`Tenulo, ${PUBLISHER} ürünüdür`);
+    expect(footerOf(reportHtml(empty, "kg", created, en, true))).toContain(`Tenulo by ${PUBLISHER}`);
+    expect(footerOf(reportHtml(empty, "kg", created, tr, true))).toContain(`Tenulo, ${PUBLISHER} ürünüdür`);
   });
 
   it("is self-contained: no external resources a renderer could fetch", () => {
     for (const i18n of [en, tr]) {
-      const html = reportHtml(full, "lb", created, i18n);
+      const html = reportHtml(full, "lb", created, i18n, true);
       expect(html).not.toMatch(/https?:\/\//);
       expect(html).not.toMatch(/<[^>]*\ssrc=/);
       expect(html).not.toMatch(/@import|url\(/);
@@ -101,7 +102,7 @@ describe("reportHtml", () => {
   });
 
   it("shows the weight trend, the plan, injections and side effects", () => {
-    const html = reportHtml(full, "kg", created, en);
+    const html = reportHtml(full, "kg", created, en, true);
     expect(html).toContain('<html lang="en">');
     expect(html).toContain("<svg");
     expect(html).toContain("0.25 mg");
@@ -115,7 +116,7 @@ describe("reportHtml", () => {
   });
 
   it("speaks Turkish, with a decimal comma and Turkish upper case", () => {
-    const html = reportHtml(full, "kg", created, tr);
+    const html = reportHtml(full, "kg", created, tr, true);
     expect(html).toContain('<html lang="tr">');
     expect(html).toContain("30 Eylül 2026 – 29 Ekim 2026 · 30 gün");
     expect(html).toContain("0,25 mg");
@@ -132,12 +133,12 @@ describe("reportHtml", () => {
   });
 
   it("labels the weekly rate and the chart ticks in the user's language", () => {
-    expect(reportHtml(full, "kg", created, en)).toMatch(/−\d\.\d kg per week/);
-    expect(reportHtml(full, "kg", created, tr)).toMatch(/haftada −\d,\d kg/);
+    expect(reportHtml(full, "kg", created, en, true)).toMatch(/−\d\.\d kg per week/);
+    expect(reportHtml(full, "kg", created, tr, true)).toMatch(/haftada −\d,\d kg/);
   });
 
   it("adds nutrition, water, measurements and exercise in English", () => {
-    const html = reportHtml(full, "kg", created, en);
+    const html = reportHtml(full, "kg", created, en, true);
     expect(html).toContain("<h2>Nutrition</h2>");
     expect(html).toContain("<th>Days with food logged</th><td>2 of 30</td>");
     expect(html).toContain("<th>Average energy per logged day</th><td>1,650 kcal</td>");
@@ -154,7 +155,7 @@ describe("reportHtml", () => {
   });
 
   it("adds the same sections in Turkish, with Turkish numbers and upper case", () => {
-    const html = reportHtml(full, "kg", created, tr);
+    const html = reportHtml(full, "kg", created, tr, true);
     expect(html).toContain("<h2>Beslenme</h2>");
     expect(html).toContain("<td>2 / 30</td>");
     expect(html).toContain("<td>1.650 kcal</td>");
@@ -167,12 +168,12 @@ describe("reportHtml", () => {
   });
 
   it("shows lengths in inches next to pounds", () => {
-    expect(reportHtml(full, "lb", created, en)).toContain("<td>Waist</td><td>39.6\u00a0in · 1 Oct 2026</td>");
+    expect(reportHtml(full, "lb", created, en, true)).toContain("<td>Waist</td><td>39.6\u00a0in · 1 Oct 2026</td>");
   });
 
   it("leaves out daily-log sections that have nothing in the period", () => {
     for (const i18n of [en, tr]) {
-      const html = reportHtml(empty, "kg", created, i18n);
+      const html = reportHtml(empty, "kg", created, i18n, true);
       for (const heading of ["Nutrition", "Beslenme", "Body measurements", "Vücut ölçüleri", "Exercise", "Egzersiz"]) {
         expect(html).not.toContain(`<h2>${heading}</h2>`);
       }
@@ -181,6 +182,42 @@ describe("reportHtml", () => {
   });
 
   it("never prints an energy estimate for exercise", () => {
-    expect(reportHtml(full, "kg", created, en)).not.toContain("≈");
+    expect(reportHtml(full, "kg", created, en, true)).not.toContain("≈");
+  });
+
+  it("keeps every section of the full build when the medication switch is on", () => {
+    const html = reportHtml(full, "kg", created, en, true);
+    expect(html).toContain("<h2>Medication</h2>");
+    expect(html).toContain("<h2>Side effects</h2>");
+    expect(html).toContain("<h3>Injections logged</h3>");
+    expect(html).toContain("<div class=\"tile-label\">INJECTIONS</div>");
+    expect(html).toContain("Recorded by the patient in Tenulo");
+  });
+
+  describe("narrow build (medication switch off)", () => {
+    for (const i18n of [en, tr]) {
+      it(`renders no medication wording in ${i18n.lang}, even when the report holds such rows`, () => {
+        const html = reportHtml(full, "kg", created, i18n, false);
+        const text = html
+          .replace(/<style>[\s\S]*?<\/style>/g, " ")
+          .replace(/<[^>]*>/g, " ");
+        expect(findForbiddenWords(text)).toEqual([]);
+        expect(html).not.toContain("&amp; Co");
+        expect(html).not.toContain("onerror");
+        expect(html).not.toContain("Nausea");
+        expect(html).not.toContain("Bulantı");
+      });
+    }
+
+    it("keeps weight, nutrition, water, measurements and exercise, with the narrow notes", () => {
+      const html = reportHtml(full, "kg", created, en, false);
+      expect(html).toContain("<h2>Weight</h2>");
+      expect(html).toContain("<h2>Nutrition</h2>");
+      expect(html).toContain("<h2>Body measurements</h2>");
+      expect(html).toContain("from the foods and amounts you logged");
+      expect(html).toContain("Type and duration as you logged them.");
+      expect(html).toContain("Recorded by you in Tenulo.");
+      expect(html.match(/class="tile"/g)).toHaveLength(3);
+    });
   });
 });

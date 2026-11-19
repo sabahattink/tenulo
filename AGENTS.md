@@ -54,6 +54,17 @@ Tenulo is a local-first GLP-1 and weight log for Android (`com.kalkansoftware.te
 - Data leaves the device only when the user exports it themselves (PDF report, backup file).
 - "Delete all data" in Settings must remove every row in every table.
 
+### Narrow build (personal Play account)
+
+- Play builds from the personal account keep `expo.extra.medication: false` in `app.json`. The
+  narrow-build word tests (`src/i18n/narrow-strings.test.ts`, the store listing test
+  `src/i18n/store-listing.test.ts`) must pass; `src/domain/narrow-words.ts` holds the list and the
+  one allowed disclaimer. Every message key is scanned unless it is registered as medication-only
+  in `src/i18n/narrow-keys.ts` (`MEDICATION_ONLY_KEYS`): register a key there only when the narrow
+  build never shows it.
+- Turning `medication` on follows ADR 0007: organization account, privacy policy first, health
+  declaration, new versionCode. Never ship `true` to Play before that.
+
 ### Medical boundaries
 
 - Tenulo logs what the user enters. It never recommends a medication, dose, dose change or injection site.
