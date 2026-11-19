@@ -82,10 +82,15 @@ object ReminderScheduler {
   private const val CHANNEL_NAME = "channelName"
   private const val CHANNEL_DESCRIPTION = "channelDescription"
   private const val LOCKED_TITLE = "lockedTitle"
+  /**
+   * Whether the stored texts were written with medication features on. Missing in texts stored by
+   * a build before the switch existed, which always had them on.
+   */
+  private const val TEXTS_MEDICATION = "textsMedication"
   private const val DEFAULT_CHANNEL_NAME = "Reminders"
   private const val DEFAULT_CHANNEL_DESCRIPTION = "Reminders you set in Tenulo"
   private const val DEFAULT_LOCKED_TITLE = "Tenulo reminder"
-  /** Same id as INJECTION_REMINDER_ID in src/platform/reminders.ts. */
+  /** Same id as INJECTION_REMINDER_ID in src/domain/reminder.ts. */
   const val INJECTION_ID = "injection"
   /** Manifest meta-data written by plugins/with-medication-switch.js from expo.extra.medication. */
   private const val MEDICATION_META = "tenulo.medication"
@@ -156,9 +161,13 @@ object ReminderScheduler {
   /** Re-creates every stored alarm: after a reboot, an app update or a clock/time-zone change. */
   fun rearmAll(context: Context) {
     val medication = medicationEnabled(context)
-    // A build without medication features must not bring back an injection reminder that an
-    // earlier build armed: drop it and its alarm.
-    if (!medication) cancel(context, INJECTION_ID)
+    if (!medication) {
+      // A build without medication features must not bring back an injection reminder that an
+      // earlier build armed: drop it, its alarm and a notification of it still on screen.
+      cancel(context, INJECTION_ID)
+      NotificationManagerCompat.from(context).cancel(INJECTION_ID.hashCode())
+      dropMedicationTexts(context)
+    }
     for (json in prefs(context).all.values) {
       val reminder = (json as? String)?.let(Reminder::fromJson) ?: continue
       if (!medication && reminder.id == INJECTION_ID) continue
@@ -221,7 +230,28 @@ object ReminderScheduler {
       .putString(CHANNEL_NAME, channelName)
       .putString(CHANNEL_DESCRIPTION, channelDescription)
       .putString(LOCKED_TITLE, lockedTitle)
+      .putBoolean(TEXTS_MEDICATION, medicationEnabled(context))
       .apply()
+    updateChannel(context)
+  }
+
+  /**
+   * After an update from a build with medication features, the stored channel description still
+   * names injections, and Android shows it in the notification settings until Tenulo is opened.
+   * Drops it once, so the channel falls back to the neutral default; JS stores the narrow text in
+   * the user's language on the next start. Texts stored by a build without medication features are
+   * left alone, so a reboot does not turn a Turkish description back into English.
+   */
+  private fun dropMedicationTexts(context: Context) {
+    val texts = textPrefs(context)
+    if (!texts.getBoolean(TEXTS_MEDICATION, true)) return
+    // commit, not apply: the receiver's process may be ended right after this.
+    texts.edit().remove(CHANNEL_DESCRIPTION).putBoolean(TEXTS_MEDICATION, false).commit()
+    updateChannel(context)
+  }
+
+  /** Renames an existing channel to the stored texts; a missing one is left to ensureChannel. */
+  private fun updateChannel(context: Context) {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
     val manager = context.getSystemService(NotificationManager::class.java)
     if (manager.getNotificationChannel(CHANNEL_ID) != null) createChannel(context, manager)
