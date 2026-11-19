@@ -199,3 +199,15 @@ package `com.kalkansoftware.tenulo`.
     shows the side-effect quick action) and `04-injection` removed, so each language has three
     (`02-food`, `03-trend`, `05-private`) until the emulator is back. AI labels: both feature
     graphics and `05-private`.
+- **versionCode 5 (narrow build):**
+  - The owner uploaded `tenulo-1.0.0-5.aab` to a new internal testing release. Preview: ready to
+    publish, no errors; no device lost, the optional portrait feature adds 6 tablets, 1 TV and
+    17 cars; 14.2 MB. Release notes in tr-TR and en-US (checked with `findForbiddenWords`):
+    a personal log for weight, food, water, body measurements and exercise; reminder texts and
+    the PDF report follow the same scope.
+  - Internal testing: published on the owner's approval ("Kaydet ve yayınla"), live at 14:55 for
+    internal testers, marked "unreviewed"; it went out without review and sent nothing else.
+  - Closed testing Alpha: new release with versionCode 5 from the library (4 not included), same
+    notes, saved to the publishing overview. 16 changes wait there, Alpha now shows 5 (1.0.0).
+    Not sent for review: the privacy policy pages were redeployed at 06:41 GMT but still carry
+    the full-build text (both languages).
