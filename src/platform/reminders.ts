@@ -5,10 +5,9 @@
  */
 import { Reminders } from "../../modules/tenulo-native";
 import type { LocalDate } from "../domain/date";
-import { injectionReminderAt } from "../domain/reminder";
+import { INJECTION_REMINDER_ID, WEIGH_IN_REMINDER_ID, injectionReminderAt } from "../domain/reminder";
 
-export const INJECTION_REMINDER_ID = "injection";
-export const WEIGH_IN_REMINDER_ID = "weigh-in";
+export { INJECTION_REMINDER_ID, WEIGH_IN_REMINDER_ID };
 
 export interface ReminderPlan {
   readonly injectionEnabled: boolean;

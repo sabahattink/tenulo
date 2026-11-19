@@ -6,6 +6,7 @@ import { parseLocalDate } from "@/domain/date";
 import { injectionReminderWanted } from "@/domain/reminder";
 import { injectionStatus } from "@/domain/injection";
 import { useI18n } from "@/i18n/provider";
+import { reminderTextsFor } from "@/i18n/reminder-texts";
 import { startBilling } from "@/platform/billing";
 import { features } from "@/platform/features";
 import { applyReminders } from "@/platform/reminders";
@@ -40,10 +41,7 @@ export function useAppSync(): void {
   const now = useToday();
   // One object per language, so this changes only when the language does.
   const reminderTexts = useI18n().t.reminders;
-  const texts = useMemo(
-    () => (features.medication ? reminderTexts : { ...reminderTexts, ...reminderTexts.narrow }),
-    [reminderTexts],
-  );
+  const texts = useMemo(() => reminderTextsFor(reminderTexts, features.medication), [reminderTexts]);
 
   const nextDue = injectionStatus(
     history.map((i) => ({ date: parseLocalDate(i.localDate), site: i.site, doseMcg: i.doseMcg })),

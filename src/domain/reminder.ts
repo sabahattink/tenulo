@@ -6,6 +6,13 @@ import { type LocalDate, addDays, localDateOf } from "./date";
 
 export const MINUTES_PER_DAY = 1_440;
 
+/**
+ * Reminder ids: the native module stores each alarm under its id and puts it on the launch intent
+ * of a tapped notification. INJECTION_ID in Reminders.kt (modules/tenulo-native) is the same text.
+ */
+export const INJECTION_REMINDER_ID = "injection";
+export const WEIGH_IN_REMINDER_ID = "weigh-in";
+
 export function isMinuteOfDay(n: number): boolean {
   return Number.isInteger(n) && n >= 0 && n < MINUTES_PER_DAY;
 }
