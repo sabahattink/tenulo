@@ -183,8 +183,8 @@ def main() -> None:
 
 # What the app is, per store language. No drug names, no claims.
 FEATURE_COPY = {
-    "en": ("Your whole day,", "in one calm log.", "GLP-1, weight, food and water.", "No account. Stays on your phone."),
-    "tr": ("Bütün günün,", "tek bir sakin kayıtta.", "GLP-1, kilo, beslenme ve su.", "Hesap yok. Telefonunda kalır."),
+    "en": ("Your whole day,", "in one calm log.", "Weight, food, water and exercise.", "No account. Stays on your phone."),
+    "tr": ("Bütün günün,", "tek bir sakin kayıtta.", "Kilo, beslenme, su ve egzersiz.", "Hesap yok. Telefonunda kalır."),
 }
 FEATURE_FILES = {"en": "feature-graphic.png", "tr": "feature-graphic-tr.png"}
 
