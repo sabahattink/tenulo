@@ -8,7 +8,8 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { NARROW_DISCLAIMER, findForbiddenWords } from "../domain/narrow-words";
 
-const LISTING = readFileSync(join(__dirname, "..", "..", "docs", "store", "listing.md"), "utf8");
+const ROOT = join(__dirname, "..", "..");
+const LISTING = readFileSync(join(ROOT, "docs", "store", "listing.md"), "utf8");
 
 const NAME_LIMIT = 30;
 const SHORT_LIMIT = 80;
@@ -23,8 +24,10 @@ interface StoreText {
 const ALL_CAPS_HEADING = /^[\p{Lu}0-9 ,.:&'()/-]+$/u;
 
 /**
- * Joins hard-wrapped lines the way Play does: lines of a paragraph join with a space, while blank
- * lines, `- ` bullets and ALL-CAPS headings start a new line.
+ * Joins hard-wrapped lines the way the owner pastes the text into Play Console: lines of a
+ * paragraph join with a space, while blank lines, `- ` bullets and ALL-CAPS headings start a new
+ * line. Play keeps every pasted line break, so this models the joined text as pasted, which is
+ * what the length limits count.
  */
 function joinWrapped(block: string): string {
   const out: string[] = [];
@@ -53,6 +56,23 @@ function field(section: string, title: string): string {
   return joinWrapped(end === -1 ? rest : rest.slice(0, end));
 }
 
+/**
+ * The lines of a Python script from the first one starting with `start` to the first `}` line
+ * after it. Python's `\n` escapes in the captions become spaces, so the word next to one is still
+ * matched as a whole word.
+ */
+function pythonBlock(source: string, start: string): string {
+  const lines = source.split(/\r?\n/);
+  const from = lines.findIndex((line) => line.startsWith(start));
+  if (from === -1) throw new Error(`missing "${start}"`);
+  const to = lines.findIndex((line, i) => i > from && line === "}");
+  if (to === -1) throw new Error(`no closing "}" after "${start}"`);
+  return lines
+    .slice(from, to + 1)
+    .join("\n")
+    .replace(/\\n/g, " ");
+}
+
 function storeText(sectionTitle: string): StoreText {
   const start = LISTING.indexOf(`## ${sectionTitle}`);
   if (start === -1) throw new Error(`missing "## ${sectionTitle}"`);
@@ -69,6 +89,15 @@ function storeText(sectionTitle: string): StoreText {
 const SECTIONS = [
   { lang: "tr", title: "Türkçe (tr-TR, default)", name: "Tenulo: Kilo, Beslenme, Su" },
   { lang: "en", title: "English (en-US)", name: "Tenulo: Weight, Food & Water" },
+] as const;
+
+/**
+ * The TR and EN captions drawn into the screenshots and the feature graphics. `holds` proves the
+ * block was found and is the one with both languages in it.
+ */
+const CAPTION_BLOCKS = [
+  { file: "scripts/store_screens.py", start: "SCREENS:", holds: ['"tr":', '"en":', "04-water.png"] },
+  { file: "scripts/brand.py", start: "FEATURE_COPY =", holds: ['"tr":', '"en":'] },
 ] as const;
 
 describe("store listing (narrow build)", () => {
@@ -90,6 +119,22 @@ describe("store listing (narrow build)", () => {
 
   it.each(SECTIONS)("$lang: closes with the allowed disclaimer", ({ lang, title }) => {
     expect(storeText(title).full.endsWith(NARROW_DISCLAIMER[lang])).toBe(true);
+  });
+
+  it("has no medication word anywhere in listing.md (captions and developer note included)", () => {
+    expect(findForbiddenWords(LISTING)).toEqual([]);
+  });
+
+  it.each(CAPTION_BLOCKS)("has no medication word in $start in $file", ({ file, start, holds }) => {
+    const block = pythonBlock(readFileSync(join(ROOT, file), "utf8"), start);
+    for (const text of holds) expect(block).toContain(text);
+    expect(findForbiddenWords(block)).toEqual([]);
+  });
+
+  it("reads a Python block up to its closing brace, with \\n escapes as spaces", () => {
+    const source = 'A = 1\nCOPY = {\n    "en": ("Your\\ninjection",),\n}\nB = "dose"\n';
+    expect(pythonBlock(source, "COPY =")).toBe('COPY = {\n    "en": ("Your injection",),\n}');
+    expect(findForbiddenWords(pythonBlock(source, "COPY ="))).toEqual(["injection", "inject"]);
   });
 
   it("names the water screenshot and no injection screenshot", () => {
