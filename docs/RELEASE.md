@@ -211,3 +211,14 @@ package `com.kalkansoftware.tenulo`.
     notes, saved to the publishing overview. 16 changes wait there, Alpha now shows 5 (1.0.0).
     Not sent for review: the privacy policy pages were redeployed at 06:41 GMT but still carry
     the full-build text (both languages).
+- **Privacy policy live in its narrow form** (site release `20261119-121719-881a08c`, deployed
+  by the site repo's own agent): both pages return 200 with Last-Modified 2026-11-19 12:13:40 GMT
+  and effective date 2026-11-19, and carry the earlier-test-versions sentence. Checked here at
+  12:45 GMT with `findForbiddenWords` over the full HTML (raw, entity-decoded and tag-stripped,
+  `__NEXT_DATA__` included): no match in either language; the disclaimer appears verbatim; no
+  "sabahattinkalkan". Section 12 is now "A personal log" / "Kişisel bir günlük".
+- **Sent for review** at 12:47 GMT on the owner's decision ("yayınla, karar senin"): publishing
+  overview → "16 değişikliği incelemeye gönder" → confirm. The console said reviews usually take
+  up to 7 days; the section is now "İncelenmekte olan değişiklikler", quick pre-review checks
+  running ("En fazla 15 dakika kaldı"). Contents: closed testing Alpha versionCode 5 (1.0.0) and
+  the store listing, app content and product changes logged above.
