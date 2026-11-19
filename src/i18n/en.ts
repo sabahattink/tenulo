@@ -551,7 +551,7 @@ export const en = {
         "Tenulo is empty again. Reminders were cancelled too. Old copies in its database file are cleared the next time Tenulo starts.",
       narrow: {
         report: "PDF report",
-        reportDetail: "Trend, meals, water and measurements for a period",
+        reportDetail: "Trend, meals, water, measurements and exercise for a period",
         deleteAllBody:
           "Everything Tenulo keeps on this phone will be erased: weigh-ins, meals, water, measurements, exercise, notes, reminders and settings. This cannot be undone.",
       },

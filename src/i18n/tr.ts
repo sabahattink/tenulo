@@ -544,7 +544,7 @@ export const tr: Messages = {
         "Tenulo yeniden boş. Hatırlatıcılar da iptal edildi. Veritabanı dosyasındaki eski kopyalar Tenulo bir sonraki açılışında temizlenir.",
       narrow: {
         report: "PDF rapor",
-        reportDetail: "Bir dönem için trend, öğünler, su ve ölçümler",
+        reportDetail: "Bir dönem için trend, öğünler, su, ölçümler ve egzersizler",
         deleteAllBody:
           "Tenulo'nun bu telefonda tuttuğu her şey silinecek: tartımlar, öğünler, su, ölçümler, egzersizler, notlar, hatırlatıcılar ve ayarlar. Bu işlem geri alınamaz.",
       },
