@@ -168,3 +168,19 @@ package `com.kalkansoftware.tenulo`.
   injection-day reminder fit it. "Activity and fitness" and "Nutrition and weight management" are
   in the Health and fitness group. Nothing was changed after the rejection; the way forward is the
   owner's decision (organization account and app transfer, an appeal, or a narrower app).
+
+## 2026-11-19
+
+- **Narrow build implemented** (branch `feat/narrow-play-build`; spec
+  `docs/specs/2026-11-19-narrow-play-build.md`, ADR 0007). `expo.extra.medication` is `false`:
+  no medication, injection, side-effect or GLP-1 trace in the app, its notifications (including
+  the Android re-arm after an update), the PDF report, restore messages or the store listing. Data,
+  schema and backup format unchanged. 561 tests, typecheck and lint pass; whole-branch review clean.
+- **versionCode 5 AAB built** (`tenulo-1.0.0-5.aab`, 66.9 MB): upload key SHA-256
+  `EB:11:C5:53:…:0F:71:67:0A`; bundle manifest `versionCode="5"`, `allowBackup="false"`,
+  `dataExtractionRules`, optional portrait screen, `tenulo.medication` = `false`. Not uploaded yet.
+- **Emulator unavailable.** The `Medium_Phone_API_37.0` AVD (emulator 37.2.13) exits about 10 s
+  after start with no error message, with or without snapshots and with the software GPU; stale
+  locks were removed. On-device checks (alarm drop after update, neutral channel text, deep link,
+  restore summary, five-tile Quick Actions) and the new store screenshots wait for a working
+  emulator or a phone.
