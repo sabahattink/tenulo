@@ -184,3 +184,18 @@ package `com.kalkansoftware.tenulo`.
   locks were removed. On-device checks (alarm drop after update, neutral channel text, deep link,
   restore summary, five-tile Quick Actions) and the new store screenshots wait for a working
   emulator or a phone.
+- **Privacy policy not yet live in its narrow form** (checked 06:09 GMT): both pages return 200 but
+  still have Last-Modified 2026-11-18 20:49 GMT, effective 2026-11-18, and medication words. No
+  resubmission until the new text is live.
+- **Console prepared for the narrow build (not sent for review):**
+  - Health apps: "Medication and treatment management" unticked; activity and fitness, nutrition
+    and weight management stay. `READ_WEIGHT` reason now opens "Tenulo is a personal weight and
+    food log."
+  - Sign-in details note: "The PDF report"; the same three promo codes.
+  - `tenulo_pro` description (tr-TR, en-US): PDF report of weight trend, nutrition, water,
+    measurements and exercise.
+  - Default store listing tr-TR and en-US: new names, short and full texts from
+    `docs/store/listing.md` (checked by hash), new feature graphics; screenshots `01-today` (it
+    shows the side-effect quick action) and `04-injection` removed, so each language has three
+    (`02-food`, `03-trend`, `05-private`) until the emulator is back. AI labels: both feature
+    graphics and `05-private`.
