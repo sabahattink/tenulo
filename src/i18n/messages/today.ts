@@ -50,6 +50,9 @@ export const todayEn = {
     welcomePage: {
       title: "Your whole day, one log",
       body: "Meals, water, body measurements and exercise sit next to your weight and your shots. Goals are yours to set; Tenulo never suggests one.",
+      narrow: {
+        body: "Meals, water, body measurements and exercise sit next to your weight. Goals are yours to set; Tenulo never suggests one.",
+      },
     },
   },
   waterLog: {
@@ -149,6 +152,9 @@ export const todayTr: TodayMessages = {
     welcomePage: {
       title: "Bütün günün, tek bir kayıtta",
       body: "Öğünlerin, suyun, vücut ölçülerin ve egzersizin, kilonla ve iğnelerinle yan yana. Hedefleri sen belirlersin; Tenulo hiçbir hedef önermez.",
+      narrow: {
+        body: "Öğünlerin, suyun, vücut ölçülerin ve egzersizin, kilonla yan yana. Hedefleri sen belirlersin; Tenulo hiçbir hedef önermez.",
+      },
     },
   },
   waterLog: {

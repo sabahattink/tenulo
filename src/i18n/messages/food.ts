@@ -150,6 +150,10 @@ export const foodEn = {
     glassHint: "What one tap of “+ glass” adds.",
     optional: "No goal",
     clearHint: "Leave a goal empty to have none.",
+    narrow: {
+      intro:
+        "These are your own numbers, for example the ones a dietitian gave you. Tenulo shows your day next to them; it never suggests a goal.",
+    },
   },
 };
 
@@ -296,5 +300,9 @@ export const foodTr: FoodMessages = {
     glassHint: "“+ bardak” düğmesine her dokunuşta eklenen miktar.",
     optional: "Hedef yok",
     clearHint: "Hedef istemiyorsan boş bırak.",
+    narrow: {
+      intro:
+        "Bunlar senin kendi sayıların; örneğin bir diyetisyenin sana verdikleri. Tenulo gününü bunların yanında gösterir; hiçbir zaman hedef önermez.",
+    },
   },
 };

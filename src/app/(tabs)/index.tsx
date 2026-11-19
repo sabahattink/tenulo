@@ -11,6 +11,7 @@ import { parseLocalDate } from "@/domain/date";
 import { WATER_SERVING_ML } from "@/domain/goals";
 import { summarizeWeights } from "@/domain/summary";
 import { useI18n } from "@/i18n/provider";
+import { features } from "@/platform/features";
 import { InjectionCard } from "@/ui/InjectionCard";
 import { ScreenTitle } from "@/ui/kit";
 import { space, type, useTheme } from "@/ui/theme";
@@ -23,7 +24,8 @@ import { useWaterActions } from "@/ui/today/use-water-actions";
 
 /**
  * The whole day at a glance, and every log one tap away: the day's rings, quick actions, the
- * weight trend in brief, the injection schedule and the day's exercise.
+ * weight trend in brief, the injection schedule (with medication features only) and the day's
+ * exercise.
  */
 export default function Today() {
   const theme = useTheme();
@@ -90,7 +92,7 @@ export default function Today() {
       ) : (
         <EmptyWeight theme={theme} />
       )}
-      <InjectionCard theme={theme} today={now} />
+      {features.medication && <InjectionCard theme={theme} today={now} />}
       {!firstRun && <ExerciseCard theme={theme} entries={exercise} latestWeightG={weights[0]?.weightG} date={now} />}
       <Text style={[type.small, styles.footnote, { color: theme.muted }]}>{t.today.footnote}</Text>
     </ScrollView>

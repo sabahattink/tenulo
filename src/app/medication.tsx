@@ -7,13 +7,14 @@ import { parseLocalDate, toDayNumber } from "@/domain/date";
 import { planPosition } from "@/domain/injection";
 import { parseDoseInput } from "@/domain/parse";
 import { useI18n } from "@/i18n/provider";
+import { MedicationOnly } from "@/ui/MedicationOnly";
 import { DayPicker } from "@/ui/DayPicker";
 import { Button, Card, Label, useScrollEndPadding } from "@/ui/kit";
 import { radius, space, type, useTheme } from "@/ui/theme";
 import { notify } from "@/ui/notice";
 
 /** The user's own plan, shown back to them; and the medication's name. Tenulo never edits either. */
-export default function MedicationScreen() {
+function MedicationScreenBody() {
   const theme = useTheme();
   const { t, f } = useI18n();
   const endPadding = useScrollEndPadding();
@@ -149,3 +150,11 @@ const styles = StyleSheet.create({
   line: { width: 2, flex: 1, marginVertical: 2 },
   stepText: { flex: 1, gap: 2, paddingBottom: space.m },
 });
+
+export default function MedicationScreen() {
+  return (
+    <MedicationOnly>
+      <MedicationScreenBody />
+    </MedicationOnly>
+  );
+}

@@ -13,10 +13,12 @@ Everything in code is done; these steps need the Play Console account owner.
 - The privacy policy the app links to (`PRIVACY_POLICY_URL` in `src/ui/copy.ts`) is live and
   names Kalkan Software: `curl -sL -o /dev/null -w "%{http_code}" https://kalkansoftware.com/tenulo/privacy/`
   prints `200`. Its source is the kalkansoftware.com site repo; change it there first, then here.
-- The policy describes everything the app stores, in Turkish and English: weigh-ins, injections,
-  plan, side effects, and the daily log (food entries and the user's own foods, water,
-  body measurements, exercise, daily goals, language, which body figure the site map shows). All
-  of it stays on the phone; nothing about Health Connect changes (Weight, read-only).
+- The policy describes the narrow app (`expo.extra.medication: false`), in Turkish and English:
+  weight, food entries and the user's own foods, water, body measurements, exercise, daily goals
+  and settings, weigh-in reminders, Health Connect `Weight` read-only, the PDF report and backup
+  files, plus the one neutral sentence about entries from earlier test versions. All of it stays
+  on the phone. It names no medication word; what it must say, and the word check after deploy,
+  are in `docs/store/site-privacy-update.md`.
 
 ## 1. Build
 
@@ -30,7 +32,7 @@ cd android && ./gradlew app:bundleRelease   # -> android/app/build/outputs/bundl
 
 The AAB is built and signed here, with no Expo account (EAS stays possible: `eas.json` is kept).
 
-- `app.json`: `version` 1.0.0, `android.versionCode` 1. Bump `versionCode` on every upload and commit
+- `app.json`: `version` 1.0.0, `android.versionCode` as committed (5 for the narrow build). Bump `versionCode` on every upload and commit
   it: `eas.json` sets `appVersionSource: "local"`, so the version in git is the one that ships, for
   EAS and local builds alike (`package.json` `version` is kept equal to `expo.version`).
 - `eas.json` profiles: `production` builds the AAB for Play; `preview` is a release-mode APK to
@@ -46,6 +48,14 @@ The AAB is built and signed here, with no Expo account (EAS stays possible: `eas
   it is lost, Play Console can reset the upload key (Setup → App signing).
 - Check the signer before uploading: `keytool -printcert -jarfile app-release.aab` shows the
   upload certificate (CN=Kalkan Software).
+- Check the medication switch before any Play upload (ADR 0007): `expo.extra.medication` is
+  `false` (`node -p "require('./app.json').expo.extra.medication"` prints `false`), and the bundle
+  manifest has `<meta-data android:name="tenulo.medication" android:value="false"/>`
+  (`grep tenulo.medication android/app/build/intermediates/bundle_manifest/release/processApplicationManifestReleaseForBundle/AndroidManifest.xml`,
+  the path the current Android Gradle Plugin writes). `android/` is generated, so every release
+  build runs `npx expo prebuild --platform android --no-install` first, as above: a build from an
+  older `android/` carries the old value or none, and the reminder module reads a missing value
+  as medication on.
 - On a `preview` build with data in it, run Settings → Delete all data once. The alert must say
   "Tenulo is empty again. Reminders were cancelled too." with nothing after it. The other text means
   VACUUM or the WAL checkpoint failed on the device's SQLite, which the Node tests cannot show (see
@@ -60,7 +70,7 @@ Play Console → Monetize → Products → In-app products → Create:
 | Product ID | `tenulo_pro` (must match `PRO_PRODUCT_ID` in `src/platform/billing.ts`) |
 | Type | One-time, non-consumable |
 | Name | Tenulo Pro |
-| Description | Doctor report (PDF). One purchase, no subscription. |
+| Description | Narrow build: PDF report (weight trend, nutrition, water, measurements, exercise). One purchase, no subscription. With medication features (ADR 0007): doctor report. |
 | Price | your choice |
 
 Test with a license-tester account on an internal testing track: buy, cancel, a pending payment
@@ -108,19 +118,20 @@ Answers that match the code (re-check against Google's current definitions befor
   1. `adb shell cmd locale set-app-locales com.kalkansoftware.tenulo --user 0 --locales tr-TR`
      (`pm clear` resets it, so set it after clearing).
   2. In the dev build: finish the welcome pages, then Settings → "Load sample data". It names
-     foods, the medication and notes in the app's language.
+     foods and notes in the app's language.
   3. `adb install -r` a local release APK
      (`cd android && ./gradlew app:assembleRelease -PtenuloDebugSignedRelease=true`) over
      the dev build: both are signed with the debug key, so the sample data stays.
-  4. Demo-mode status bar, then capture `today`, `food`, `progress` (`tenulo://` deep links) and
-     `log-injection` with the suggested site tapped, into `docs/store/screenshots/raw/<lang>/`.
+  4. Demo-mode status bar, then capture `today`, `food`, `progress` and `water`
+     (`tenulo://` deep links; `tenulo://water` is saved as `water.png`, which becomes
+     `04-water.png`) into `docs/store/screenshots/raw/<lang>/`.
   5. Settings → Delete all data (this also checks the alert text, see step 1), then capture the
      last welcome page as `welcome-private.png`.
   6. `python scripts/store_screens.py <Roboto.ttf>`. Android's own variable Roboto works:
      `adb pull /system/fonts/Roboto-Regular.ttf`.
 - The release changes native code (the reminder module sets notification texts per language), so
   a store build must come from a fresh `eas build`, not an OTA update.
-- Content rating questionnaire: medical/health reference, no user-generated content shared.
+- Content rating questionnaire: "All other app types"; no rating-relevant content, no user interaction, no online content, digital purchases yes (as answered on 2026-11-18, docs/RELEASE.md).
 - Target audience: 18+ (matches the privacy policy).
 
 ## Known doctor warnings

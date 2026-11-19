@@ -1,13 +1,16 @@
 import { Linking, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import type { Messages } from "@/i18n";
 import { useI18n } from "@/i18n/provider";
+import { features } from "@/platform/features";
 import { PRIVACY_POLICY_URL, PUBLISHER, SUPPORT_EMAIL } from "@/ui/copy";
 import { Illustration } from "@/ui/Illustration";
 import { Icon, type IconName } from "@/ui/icons";
 import { Button, useScrollEndPadding } from "@/ui/kit";
 import { type Theme, space, type, useTheme } from "@/ui/theme";
 
-const POINTS: readonly { key: keyof Messages["privacy"]["points"]; icon: IconName }[] = [
+type PointKey = keyof Messages["privacy"]["points"];
+
+const POINTS: readonly { key: PointKey; icon: IconName }[] = [
   { key: "device", icon: "lock" },
   { key: "healthConnect", icon: "heart" },
   { key: "reminders", icon: "bell" },
@@ -22,17 +25,26 @@ export default function PrivacyScreen() {
   const { t } = useI18n();
   const endPadding = useScrollEndPadding();
   const { width } = useWindowDimensions();
+  const medication = features.medication;
+  const narrow = t.privacy.narrow;
+  /** The narrow build replaces the body of the two points that mention medication. */
+  const bodyOf = (key: PointKey): string => {
+    if (medication) return t.privacy.points[key].body;
+    if (key === "device") return narrow.deviceBody;
+    if (key === "reminders") return narrow.remindersBody;
+    return t.privacy.points[key].body;
+  };
   return (
     <ScrollView style={{ backgroundColor: theme.background }} contentContainerStyle={[styles.content, { paddingBottom: endPadding }]}>
       <View style={styles.art}>
         <Illustration name="private" theme={theme} size={Math.min(width - space.xl * 2, 260)} />
       </View>
-      <Text style={[type.body, { color: theme.text }]}>{t.privacy.intro}</Text>
+      <Text style={[type.body, { color: theme.text }]}>{medication ? t.privacy.intro : narrow.intro}</Text>
       {POINTS.map((p) => (
-        <Point key={p.key} theme={theme} icon={p.icon} {...t.privacy.points[p.key]} />
+        <Point key={p.key} theme={theme} icon={p.icon} title={t.privacy.points[p.key].title} body={bodyOf(p.key)} />
       ))}
       <Button theme={theme} kind="secondary" label={t.privacy.readPolicy} onPress={() => void Linking.openURL(PRIVACY_POLICY_URL)} />
-      <Text style={[type.small, { color: theme.muted }]}>{t.privacy.footer(PUBLISHER, SUPPORT_EMAIL)}</Text>
+      <Text style={[type.small, { color: theme.muted }]}>{(medication ? t.privacy.footer : narrow.footer)(PUBLISHER, SUPPORT_EMAIL)}</Text>
     </ScrollView>
   );
 }

@@ -14,7 +14,7 @@ import { formatDose } from "../domain/parse";
 import { formatMinuteOfDay } from "../domain/reminder";
 import { type WeightUnit, formatWeight, formatWeightChange, weightNumber } from "../domain/weight";
 import type { Messages } from "./en";
-import { RESTORE_COUNTS, type RestoreCounts, isBackupRecord } from "./records";
+import { MEDICATION_RECORDS, MEDICATION_WHOLE_CHECKS, RESTORE_COUNTS, type RestoreCounts, isBackupRecord } from "./records";
 
 const MINUS = "−";
 /** 1970-01-01, day 0, was a Thursday: index 3 in a Monday-first week. */
@@ -61,10 +61,13 @@ export interface Formatters {
   forecast(forecast: Forecast, unit: WeightUnit, today: LocalDate): string;
   /** When the next injection is due by the user's own schedule. */
   due(daysUntilDue: number | undefined, nextDue: LocalDate | undefined, today: LocalDate): string;
-  /** "Added 12 weigh-ins, 1 injection and 2 side effects." */
-  restoreSummary(counts: RestoreCounts): string;
-  /** Why a backup file was refused, in words a person can act on. */
-  backupProblem(result: Extract<ParseBackupResult, { ok: false }>): string;
+  /**
+   * "Added 12 weigh-ins, 1 injection and 2 side effects." With `medication` false the medication
+   * kinds are not named; their total is appended as one neutral "kept" sentence.
+   */
+  restoreSummary(counts: RestoreCounts, medication: boolean): string;
+  /** Why a backup file was refused, in words a person can act on. With `medication` false, medication records are not named. */
+  backupProblem(result: Extract<ParseBackupResult, { ok: false }>, medication: boolean): string;
   /** The last Health Connect read, relative to `now`. */
   synced(enabled: boolean, syncedAt: number | null, now?: Date): string;
   /** After a Health Connect read: what was added, and whether more is still to come. */
@@ -112,21 +115,28 @@ export function createFormatters(lang: Language, t: Messages): Formatters {
 
   const weightChange = (grams: number, unit: WeightUnit) => localize(formatWeightChange(grams, unit));
 
-  const restoreSummary = (counts: RestoreCounts) => {
+  const restoreSummary = (counts: RestoreCounts, medication: boolean) => {
+    const isHidden = (key: (typeof RESTORE_COUNTS)[number]) => !medication && MEDICATION_RECORDS.includes(key);
     const parts = RESTORE_COUNTS.flatMap((key) => {
       const n = counts[key];
-      return n === undefined || n === 0 ? [] : [t.restore.counts[key](n)];
+      return n === undefined || n === 0 || isHidden(key) ? [] : [t.restore.counts[key](n)];
     });
-    return parts.length === 0 ? t.restore.nothingNew : t.restore.added(list(parts));
+    const hidden = RESTORE_COUNTS.filter(isHidden).reduce((sum, key) => sum + (counts[key] ?? 0), 0);
+    const sentences = [
+      ...(parts.length === 0 ? [] : [t.restore.added(list(parts))]),
+      ...(hidden > 0 ? [t.restore.keptHidden(hidden)] : []),
+    ];
+    return sentences.length === 0 ? t.restore.nothingNew : sentences.join(" ");
   };
 
   /** The record a person could find, counted from 1: ["data", "weights", 3, "weightG"] is weigh-in 4. */
-  const backupPlace = (path: readonly PropertyKey[]): string | undefined => {
+  const backupPlace = (path: readonly PropertyKey[], medication: boolean): string | undefined => {
     const [root, table, index] = path;
     if (root !== "data") return undefined;
     if (table === "settings") return t.backup.problemInSettings;
     if (!isBackupRecord(table)) return undefined;
-    return t.backup.problemAt(table, typeof index === "number" ? index + 1 : undefined);
+    const row = typeof index === "number" ? index + 1 : undefined;
+    return !medication && MEDICATION_RECORDS.includes(table) ? t.backup.problemAtHidden(row) : t.backup.problemAt(table, row);
   };
 
   return {
@@ -190,7 +200,7 @@ export function createFormatters(lang: Language, t: Messages): Formatters {
       return t.due.overdue(shortDate(nextDue, today), -daysUntilDue);
     },
     restoreSummary,
-    backupProblem: (r) => {
+    backupProblem: (r, medication) => {
       switch (r.reason) {
         case "not-json":
         case "not-a-backup":
@@ -201,7 +211,9 @@ export function createFormatters(lang: Language, t: Messages): Formatters {
           return t.backup.tooLarge;
         case "invalid": {
           // Whole-backup checks have no path; their messages are already sentences.
-          const why = backupPlace(r.path) ?? (r.path.length === 0 ? t.backup.wholeCheck(r.detail) : undefined);
+          const hiddenCheck = !medication && MEDICATION_WHOLE_CHECKS.includes(r.detail);
+          const whole = hiddenCheck ? t.backup.problemAtHidden(undefined) : t.backup.wholeCheck(r.detail);
+          const why = backupPlace(r.path, medication) ?? (r.path.length === 0 ? whole : undefined);
           return why === undefined ? t.backup.damaged : `${t.backup.damaged} ${why}`;
         }
       }
@@ -215,7 +227,7 @@ export function createFormatters(lang: Language, t: Messages): Formatters {
       return t.health.lastRead(relative(localDateOf(at), localDateOf(now), true), formatMinuteOfDay(minute));
     },
     healthSync: (r) => {
-      const added = r.added === 0 ? t.health.noNewReadings : restoreSummary({ weights: r.added });
+      const added = r.added === 0 ? t.health.noNewReadings : restoreSummary({ weights: r.added }, true);
       return r.complete ? added : `${added} ${t.health.moreToRead}`;
     },
   };

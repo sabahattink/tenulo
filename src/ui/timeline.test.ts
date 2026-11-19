@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parseLocalDate as d } from "../domain/date";
-import { TIMELINE_FILTERS, type TimelineItem, timeline } from "./timeline";
+import { TIMELINE_FILTERS, type TimelineItem, timeline, timelineFilters } from "./timeline";
 
 const items: TimelineItem[] = [
   { kind: "weight", id: "w1", date: d("2026-09-30"), at: 1 },
@@ -40,5 +40,13 @@ describe("timeline", () => {
 
   it("offers a filter for every kind, after 'all'", () => {
     expect(TIMELINE_FILTERS).toEqual(["all", "weight", "injection", "side-effect", "food", "water", "measurement", "exercise"]);
+  });
+
+  it("timelineFilters keeps every filter with medication on", () => {
+    expect(timelineFilters(true)).toEqual(TIMELINE_FILTERS);
+  });
+
+  it("timelineFilters drops injection and side-effect with medication off", () => {
+    expect(timelineFilters(false)).toEqual(["all", "weight", "food", "water", "measurement", "exercise"]);
   });
 });

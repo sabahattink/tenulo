@@ -37,3 +37,13 @@ export const RESTORE_COUNTS = [
 ] as const satisfies readonly BackupRecord[];
 export type RestoreCountKey = (typeof RESTORE_COUNTS)[number];
 export type RestoreCounts = Partial<Record<RestoreCountKey, number>>;
+
+/** Record kinds the narrow build (no medication features) never names; restores and errors use neutral texts. */
+export const MEDICATION_RECORDS: readonly BackupRecord[] = ["medications", "planSteps", "injections", "sideEffects"];
+
+/** Whole-backup check messages (src/domain/backup.ts) that name a medication record. */
+export const MEDICATION_WHOLE_CHECKS: readonly string[] = [
+  "Plan step for a medication not in the backup",
+  "Injection for a medication not in the backup",
+  "Side effect linked to an injection not in the backup",
+];

@@ -6,6 +6,14 @@ export type TimelineKind = (typeof TIMELINE_KINDS)[number];
 export type TimelineFilter = "all" | TimelineKind;
 export const TIMELINE_FILTERS: readonly TimelineFilter[] = ["all", ...TIMELINE_KINDS];
 
+/** Kinds that only exist with the medication feature. */
+const MEDICATION_KINDS: readonly TimelineKind[] = ["injection", "side-effect"];
+
+/** The chips History offers; the narrow build has no injection or side-effect lines. */
+export function timelineFilters(medication: boolean): readonly TimelineFilter[] {
+  return medication ? TIMELINE_FILTERS : TIMELINE_FILTERS.filter((f) => f === "all" || !MEDICATION_KINDS.includes(f));
+}
+
 export interface TimelineItem {
   readonly kind: TimelineKind;
   readonly id: string;

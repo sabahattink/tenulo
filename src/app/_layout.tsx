@@ -8,6 +8,7 @@ import { type StartState, ensureSettings, finishPendingPurge, readStartState, us
 import { useAppSync } from "@/data/use-app-sync";
 import { db } from "@/db/client";
 import { I18nProvider, useI18n } from "@/i18n/provider";
+import { features } from "@/platform/features";
 import { setNavigationBarLight } from "@/platform/system-bars";
 import { Button } from "@/ui/kit";
 import { type Theme, useTheme } from "@/ui/theme";
@@ -77,6 +78,9 @@ function Navigator({ theme, welcomed }: { theme: Theme; welcomed: boolean }) {
   useAppSync();
   const { t } = useI18n();
   const modal = { presentation: "modal" } as const;
+  // The four medication routes redirect home in the narrow build; no header (and so no medication
+  // title) is ever drawn for them, not even for a frame.
+  const hidden = features.medication ? {} : ({ headerShown: false } as const);
   return (
     <>
       <StatusBar style="auto" />
@@ -93,14 +97,14 @@ function Navigator({ theme, welcomed }: { theme: Theme; welcomed: boolean }) {
         <Stack.Protected guard={welcomed}>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="add-weight" options={{ title: t.screens.addWeight, ...modal }} />
-          <Stack.Screen name="setup-medication" options={{ title: t.screens.setupMedication, ...modal }} />
-          <Stack.Screen name="log-injection" options={{ title: t.screens.logInjection, ...modal }} />
-          <Stack.Screen name="log-side-effect" options={{ title: t.screens.logSideEffect, ...modal }} />
+          <Stack.Screen name="setup-medication" options={{ title: t.screens.setupMedication, ...modal, ...hidden }} />
+          <Stack.Screen name="log-injection" options={{ title: t.screens.logInjection, ...modal, ...hidden }} />
+          <Stack.Screen name="log-side-effect" options={{ title: t.screens.logSideEffect, ...modal, ...hidden }} />
           <Stack.Screen name="water" options={{ title: t.waterLog.title, ...modal }} />
           <Stack.Screen name="log-exercise" options={{ title: t.exerciseLog.title, ...modal }} />
-          <Stack.Screen name="report" options={{ title: t.screens.report, ...modal }} />
+          <Stack.Screen name="report" options={{ title: features.medication ? t.screens.report : t.screens.narrow.report, ...modal }} />
           <Stack.Screen name="pro" options={{ title: t.screens.pro, ...modal }} />
-          <Stack.Screen name="medication" options={{ title: t.screens.medication }} />
+          <Stack.Screen name="medication" options={{ title: t.screens.medication, ...hidden }} />
           <Stack.Screen name="privacy" options={{ title: t.screens.privacy }} />
           {/* Food & goals. The portion step, quick add and the custom-food form set their own titles. */}
           <Stack.Screen name="food/add" options={{ title: t.food.add.title, ...modal }} />

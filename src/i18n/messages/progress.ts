@@ -107,6 +107,11 @@ export const progressEn = {
       sessions: "Sessions",
       totalTime: "Total time",
       exerciseNote: "Type and duration as the patient logged them. Energy burned is not included.",
+      /** The narrow build's PDF is the user's own copy: "you", not "the patient". */
+      narrow: {
+        nutritionNote: "Energy and protein are added up from the foods and amounts you logged. Days without a food entry are not counted.",
+        exerciseNote: "Type and duration as you logged them. Energy burned is not included.",
+      },
     },
   },
 };
@@ -205,6 +210,10 @@ export const progressTr: ProgressMessages = {
       sessions: "Egzersiz sayısı",
       totalTime: "Toplam süre",
       exerciseNote: "Tür ve süre, hastanın kaydettiği gibidir. Harcanan enerji dahil edilmemiştir.",
+      narrow: {
+        nutritionNote: "Enerji ve protein, kaydettiğin yiyecek ve miktarlardan toplanmıştır. Yiyecek kaydı olmayan günler sayılmaz.",
+        exerciseNote: "Tür ve süre, kaydettiğin gibidir. Harcanan enerji dahil edilmemiştir.",
+      },
     },
   },
 };
