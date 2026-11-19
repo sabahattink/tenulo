@@ -219,6 +219,6 @@ package `com.kalkansoftware.tenulo`.
   "sabahattinkalkan". Section 12 is now "A personal log" / "Kişisel bir günlük".
 - **Sent for review** at 12:47 GMT on the owner's decision ("yayınla, karar senin"): publishing
   overview → "16 değişikliği incelemeye gönder" → confirm. The console said reviews usually take
-  up to 7 days; the section is now "İncelenmekte olan değişiklikler", quick pre-review checks
-  running ("En fazla 15 dakika kaldı"). Contents: closed testing Alpha versionCode 5 (1.0.0) and
+  up to 7 days; the section is now "İncelenmekte olan değişiklikler". The quick pre-review checks
+  passed within about two minutes; the changes are now in Google's review. Contents: closed testing Alpha versionCode 5 (1.0.0) and
   the store listing, app content and product changes logged above.
