@@ -222,3 +222,18 @@ package `com.kalkansoftware.tenulo`.
   up to 7 days; the section is now "İncelenmekte olan değişiklikler". The quick pre-review checks
   passed within about two minutes; the changes are now in Google's review. Contents: closed testing Alpha versionCode 5 (1.0.0) and
   the store listing, app content and product changes logged above.
+
+## 2026-11-22
+
+- **Review passed (2026-11-19).** Submission activity: submission 2 (closed testing Alpha, store
+  listing, app content, store settings), sent 12:48 GMT, status "Yayınlandı" at 13:02 GMT the
+  same day (the console shows 16:48 and 17:02, Baku time). The 2026-11-18 submission stays
+  "Reddedilen". Policy status: "Sorun bulunmadı". The publishing overview has nothing pending;
+  last published 2026-11-19.
+- **Closed testing Alpha is live:** versionCode 5 (1.0.0), 178 countries and regions, testers
+  Google Group `betabench@googlegroups.com`, feedback address support@kalkansoftware.com.
+  Opt-in links: web https://play.google.com/apps/testing/com.kalkansoftware.tenulo, Android
+  https://play.google.com/store/apps/details?id=com.kalkansoftware.tenulo (group members only).
+- **0 testers opted in** (dashboard, checked 2026-11-22: "An itibarıyla 0 test kullanıcısı
+  kayıtlı"). The opt-in link has not been sent to Beta Bench yet, so the 12 × 14 counter has not
+  started. Production access stays locked until 12 testers have been opted in for 14 days.
